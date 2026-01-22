@@ -56,10 +56,12 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 | `/pr-check` | skill | PR quality review against checklist |
 | `/security-review` | skill | Security-focused code review |
 | `/changelog` | skill | Changelog and release notes generation |
+| `/simplifier` | skill | Dead code removal, complexity reduction, code quality improvement |
 | `docs` | agent | Documentation architect (README, CLAUDE.md, API docs, modular structure, .drawio diagrams) |
 | `tester` | agent | Test specialist (coverage, AAA pattern, table-driven) |
 | `pr-check` | agent | PR quality reviewer (tests, secrets, error handling) |
 | `security-reviewer` | agent | Security expert (auth, injection, API security, file uploads, cryptography, business logic, client-side, HTTP headers, dependencies, modern attack vectors, OWASP Top 10) |
+| `simplifier` | agent | Code quality expert (dead code, complexity reduction, Go/JS/TS focus) |
 | `release-notes` | agent | Release documentation specialist |
 | `changelog-generator` | agent | CHANGELOG.md generation from git history |
 | `suggest-compact.sh` | hook | Context compaction suggestions at logical intervals |
@@ -84,6 +86,10 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 /security-review         # Security review of recent changes
 /security-review <path>  # Security review of specific file/module
 /security-review all     # Full security audit
+
+/simplifier              # Cleanup recent changes (dead code, complexity)
+/simplifier <scope>      # Cleanup specific module/file
+/simplifier all          # Full project code quality audit
 
 /changelog               # Update CHANGELOG.md from git history
 /changelog release       # Generate release notes for announcement
