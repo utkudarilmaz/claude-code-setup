@@ -38,14 +38,24 @@ make status           # Check sync status
 ### Use skills
 
 ```
-/docs                    # Update documentation for recent changes
-/docs all                # Full documentation audit
-/tester                  # Verify test coverage for recent changes
-/tester all              # Full test audit
-/pr-check                # Review current PR against quality checklist
+/docs                    # Document recent changes
+/docs <scope>            # Document specific file/module/feature
+/docs all                # Full documentation audit with planning
+
+/tester                  # Test recent changes
+/tester <scope>          # Test specific file/module/feature
+/tester all              # Full test audit with planning
+
+/pr-check                # Review current PR with full checklist
+/pr-check <focus>        # Review PR with focus on specific aspect
+
 /security-review         # Security review of recent changes
+/security-review <path>  # Review specific file/module
+/security-review all     # Full security audit with planning
+
 /changelog               # Update CHANGELOG.md from git history
 /changelog release       # Generate release notes for announcement
+/changelog <version>     # Generate notes for specific version
 ```
 
 ## Makefile Commands
@@ -315,13 +325,24 @@ Synchronize documentation with code changes.
 | Mode | Command | Description |
 |------|---------|-------------|
 | Default | `/docs` | Document recent changes |
-| Scoped | `/docs <scope>` | Document specific area |
-| Full Audit | `/docs all` | Complete repository documentation |
+| Scoped | `/docs <scope>` | Document specific area (file, module, feature) |
+| Comprehensive | `/docs all` | Complete repository documentation audit with TodoWrite planning |
 
-**Scope Examples:**
-- `/docs src/auth` - Authentication module
-- `/docs API` - API endpoints only
-- `/docs README` - README.md only
+**What it does:**
+- **Default:** Reviews recent changes and updates affected documentation (README.md, CLAUDE.md, API docs)
+- **Scoped:** Focuses only on specified area (e.g., module, API, specific file)
+- **Comprehensive:** Creates TodoWrite plan covering all documentation aspects (overview, installation, API, architecture, etc.), processes each aspect sequentially
+
+**Examples:**
+```
+/docs                    # Document recent changes
+/docs src/auth           # Document authentication module
+/docs API                # Document all API endpoints
+/docs README             # Update only README.md
+/docs config             # Document configuration options
+/docs UserService        # Document specific class/service
+/docs all                # Full documentation audit with planning
+```
 
 ### /tester
 
@@ -330,13 +351,23 @@ Verify and create test coverage.
 | Mode | Command | Description |
 |------|---------|-------------|
 | Default | `/tester` | Test recent changes |
-| Scoped | `/tester <scope>` | Test specific area |
-| Full Audit | `/tester all` | Complete test coverage audit |
+| Scoped | `/tester <scope>` | Test specific area (file, module, feature) |
+| Comprehensive | `/tester all` | Complete test coverage audit with TodoWrite planning |
 
-**Scope Examples:**
-- `/tester src/services/payment` - Payment service
-- `/tester utils/parser.ts` - Specific file
-- `/tester API endpoints` - All API routes
+**What it does:**
+- **Default:** Identifies recently modified files and ensures test coverage
+- **Scoped:** Tests only specified area (file, module, or feature)
+- **Comprehensive:** Creates TodoWrite plan covering all testing aspects (unit, integration, API, components, edge cases), processes each sequentially
+
+**Examples:**
+```
+/tester                      # Test recent changes
+/tester src/auth             # Test authentication module
+/tester utils/parser.ts      # Test specific file
+/tester API endpoints        # Test all API routes
+/tester UserService          # Test specific class/service
+/tester all                  # Full test audit with planning
+```
 
 ### /pr-check
 
@@ -344,14 +375,23 @@ Review current PR against quality checklist before merging.
 
 | Mode | Command | Description |
 |------|---------|-------------|
-| Default | `/pr-check` | Review current PR against full checklist |
-| Focused | `/pr-check <focus>` | Review with specific focus area |
+| Default | `/pr-check` | Review current PR against full quality checklist |
+| Focused | `/pr-check <focus>` | Review with emphasis on specific aspect |
 
-**Focus Examples:**
-- `/pr-check tests` - Deep dive on test coverage
-- `/pr-check security` - Focus on secrets, auth, input validation
-- `/pr-check docs` - Focus on documentation completeness
-- `/pr-check breaking` - Focus on breaking changes and migration
+**What it does:**
+- Uses `gh pr view` and `gh pr diff` to analyze the current PR
+- Evaluates against quality checklist: tests, secrets, error handling, breaking changes, commits, docs
+- Produces pass/fail report with overall verdict (Ready to Merge / Changes Required)
+- **Focused mode:** Prioritizes specified aspect while still checking other items
+
+**Examples:**
+```
+/pr-check                # Full quality review
+/pr-check tests          # Focus on test coverage and quality
+/pr-check security       # Focus on secrets, auth, input validation
+/pr-check docs           # Focus on documentation completeness
+/pr-check breaking       # Focus on breaking changes and migration
+```
 
 ### /security-review
 
@@ -359,14 +399,34 @@ Perform security-focused code review.
 
 | Mode | Command | Description |
 |------|---------|-------------|
-| Default | `/security-review` | Review recent changes for vulnerabilities |
-| Scoped | `/security-review <path>` | Review specific file/module |
-| Full Audit | `/security-review all` | Complete security audit |
+| Default | `/security-review` | Review recent changes for security vulnerabilities |
+| Scoped | `/security-review <path>` | Review specific file/module for security issues |
+| Comprehensive | `/security-review all` | Complete security audit with TodoWrite planning |
 
-**Scope Examples:**
-- `/security-review src/auth` - Authentication module
-- `/security-review api/handlers` - API endpoints
-- `/security-review lib/payment.ts` - Specific file
+**What it does:**
+- **Default:** Reviews recent commits for security vulnerabilities
+- **Scoped:** Deep security review of specified file/module
+- **Comprehensive:** Creates TodoWrite plan covering all security areas (auth, authorization, input validation, data exposure, secrets, crypto, API, files, dependencies, config), processes each thoroughly
+
+**Security Focus:**
+- Authentication & Authorization (login, session, access control, privilege escalation)
+- Input Validation (SQL injection, XSS, command injection, path traversal)
+- Data Exposure (PII leaks, logs, error messages)
+- Secrets Management (hardcoded credentials, API keys, tokens)
+- Cryptography (weak algorithms, key management)
+- OWASP Top 10 coverage
+
+**Severity Levels:** CRITICAL, HIGH, MEDIUM, LOW
+
+**Examples:**
+```
+/security-review                  # Review recent changes
+/security-review src/auth         # Deep review of authentication module
+/security-review api/handlers     # Review API endpoints
+/security-review lib/payment.ts   # Review specific file
+/security-review controllers/     # Review all controllers
+/security-review all              # Comprehensive security audit with planning
+```
 
 ### /changelog
 
@@ -374,14 +434,27 @@ Generate or update changelog, or create release notes.
 
 | Mode | Command | Description |
 |------|---------|-------------|
-| Default | `/changelog` | Update CHANGELOG.md from git history |
-| Release | `/changelog release` | Generate release notes for announcement |
-| Versioned | `/changelog <version>` | Generate notes for specific version |
+| Default | `/changelog` | Update CHANGELOG.md from git history (Keep a Changelog format) |
+| Release | `/changelog release` | Generate user-friendly release notes for latest version |
+| Versioned | `/changelog <version>` | Generate release notes for specific version or range |
+
+**What it does:**
+- **Default:** Updates or creates CHANGELOG.md using Keep a Changelog format, includes all versions from git tags plus [Unreleased] section
+- **Release mode:** Generates announcement-style release notes from last tag to HEAD, formatted for GitHub releases or announcements
+- **Versioned mode:** Generates release notes for specific version or version range
 
 **Agent Dispatch:**
-- `/changelog` → `changelog-generator` agent (updates CHANGELOG.md)
-- `/changelog release` → `release-notes` agent (generates announcement)
+- `/changelog` → `changelog-generator` agent (CHANGELOG.md file)
+- `/changelog release` → `release-notes` agent (release announcement markdown)
 - `/changelog <version>` → `release-notes` agent (version-specific notes)
+
+**Examples:**
+```
+/changelog                # Update CHANGELOG.md
+/changelog release        # Generate GitHub release notes for latest version
+/changelog 2.0.0          # Generate notes for version 2.0.0
+/changelog 1.5.0..2.0.0   # Generate notes for version range
+```
 
 ### strategic-compact
 
