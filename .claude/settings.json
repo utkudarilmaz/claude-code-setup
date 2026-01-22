@@ -1,0 +1,60 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/skills/strategic-compact/suggest-compact.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash -c '\"/usr/bin/node\" \"$(ls -td ~/.claude/plugins/cache/claude-hud/claude-hud/*/ 2>/dev/null | head -1)dist/index.js\"'"
+  },
+  "enabledPlugins": {
+    "claude-hud@claude-hud": true,
+    "commit-commands@claude-plugins-official": true,
+    "explanatory-output-style@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": false,
+    "github@claude-plugins-official": false,
+    "frontend-design@claude-plugins-official": false,
+    "security-guidance@claude-plugins-official": false,
+    "greptile@claude-plugins-official": false,
+    "stripe@claude-plugins-official": false,
+    "playwright@claude-plugins-official": false,
+    "code-simplifier@claude-plugins-official": false,
+    "feature-dev@claude-plugins-official": false,
+    "superpowers@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": false,
+    "threejs-webgl@claude-design-skillstack": false,
+    "gsap-scrolltrigger@claude-design-skillstack": false,
+    "extended-3d-scroll@claude-design-skillstack": false,
+    "core-3d-animation@claude-design-skillstack": false,
+    "authoring-motion@claude-design-skillstack": false,
+    "meta-skills@claude-design-skillstack": false,
+    "animation-components@claude-design-skillstack": false,
+    "aframe-webxr@claude-design-skillstack": false,
+    "animated-component-libraries@claude-design-skillstack": false,
+    "animejs@claude-design-skillstack": false,
+    "babylonjs-engine@claude-design-skillstack": false,
+    "barba-js@claude-design-skillstack": false,
+    "lightweight-3d-effects@claude-design-skillstack": false,
+    "locomotive-scroll@claude-design-skillstack": false,
+    "lottie-animations@claude-design-skillstack": false,
+    "modern-web-design@claude-design-skillstack": false,
+    "pixijs-2d@claude-design-skillstack": false,
+    "playcanvas-engine@claude-design-skillstack": false,
+    "rive-interactive@claude-design-skillstack": false,
+    "scroll-reveal-libraries@claude-design-skillstack": false,
+    "spline-interactive@claude-design-skillstack": false,
+    "substance-3d-texturing@claude-design-skillstack": false,
+    "web3d-integration-patterns@claude-design-skillstack": false,
+    "ui-ux-pro-max@ui-ux-pro-max-skill": false
+  }
+}

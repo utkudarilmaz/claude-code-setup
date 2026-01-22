@@ -1,0 +1,6 @@
+- Never add Claude Code references, Co-Authored-By Claude, or any AI attribution to commits
+- Always commit with conventional commits standards
+- Always tag without "v" prefix
+- Never commit before user manually asks
+- Always use camelCase for JSON field names
+- Always check available skills, agents, plugins, and MCP servers when planning or working on tasks
