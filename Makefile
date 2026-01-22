@@ -327,19 +327,33 @@ diff:
 		for f in $(REPO_DIR)/agents/*; do \
 			filename=$$(basename "$$f"); \
 			target="$(TARGET_DIR)/agents/$$filename"; \
-			if [ -e "$$target" ] && ! diff -q "$$f" "$$target" > /dev/null 2>&1; then \
+			if [ ! -e "$$target" ]; then \
+				printf "  $(GREEN)●$(NC) $$filename $(GREEN)(would add - not in ~/.claude)$(NC)\n"; \
+			elif ! diff -q "$$f" "$$target" > /dev/null 2>&1; then \
 				echo "$(YELLOW)--- $$filename ---$(NC)"; \
 				diff --color=always "$$f" "$$target" 2>/dev/null || diff "$$f" "$$target"; \
 				echo ""; \
 			fi \
 		done \
 	fi
+	@if [ -d $(TARGET_DIR)/agents ]; then \
+		for f in $(TARGET_DIR)/agents/*; do \
+			filename=$$(basename "$$f"); \
+			source="$(REPO_DIR)/agents/$$filename"; \
+			if [ ! -e "$$source" ]; then \
+				printf "  $(BLUE)●$(NC) $$filename $(BLUE)(extra - not in repo)$(NC)\n"; \
+			fi \
+		done \
+	fi
+	@echo ""
 	@echo "$(BOLD)Skills:$(NC)"
 	@if [ -d $(REPO_DIR)/skills ]; then \
 		for f in $(REPO_DIR)/skills/*; do \
 			filename=$$(basename "$$f"); \
 			target="$(TARGET_DIR)/skills/$$filename"; \
-			if [ -d "$$f" ] && [ -d "$$target" ]; then \
+			if [ ! -e "$$target" ]; then \
+				printf "  $(GREEN)●$(NC) $$filename $(GREEN)(would add - not in ~/.claude)$(NC)\n"; \
+			elif [ -d "$$f" ]; then \
 				if ! diff -rq "$$f" "$$target" > /dev/null 2>&1; then \
 					echo "$(YELLOW)--- $$filename ---$(NC)"; \
 					diff -r --color=always "$$f" "$$target" 2>/dev/null || diff -r "$$f" "$$target"; \
@@ -348,9 +362,21 @@ diff:
 			fi \
 		done \
 	fi
+	@if [ -d $(TARGET_DIR)/skills ]; then \
+		for f in $(TARGET_DIR)/skills/*; do \
+			filename=$$(basename "$$f"); \
+			source="$(REPO_DIR)/skills/$$filename"; \
+			if [ ! -e "$$source" ]; then \
+				printf "  $(BLUE)●$(NC) $$filename $(BLUE)(extra - not in repo)$(NC)\n"; \
+			fi \
+		done \
+	fi
+	@echo ""
 	@echo "$(BOLD)Config Files:$(NC)"
 	@for f in settings.json CLAUDE.md; do \
-		if [ -f $(TARGET_DIR)/$$f ] && ! diff -q $(REPO_DIR)/$$f $(TARGET_DIR)/$$f > /dev/null 2>&1; then \
+		if [ ! -f $(TARGET_DIR)/$$f ]; then \
+			printf "  $(GREEN)●$(NC) $$f $(GREEN)(would add - not in ~/.claude)$(NC)\n"; \
+		elif ! diff -q $(REPO_DIR)/$$f $(TARGET_DIR)/$$f > /dev/null 2>&1; then \
 			echo "$(YELLOW)--- $$f ---$(NC)"; \
 			diff --color=always $(REPO_DIR)/$$f $(TARGET_DIR)/$$f 2>/dev/null || diff $(REPO_DIR)/$$f $(TARGET_DIR)/$$f; \
 			echo ""; \
