@@ -61,28 +61,32 @@ Report findings with severity, location, and remediation."
 3. **Process sequentially** - Review each area thoroughly
 4. **Mark progress** - Update todos as each section completes
 
-#### Security Areas to Review
+#### 13 Security Areas to Review
 
-| Area | What to Check |
-|------|---------------|
-| Authentication | Login, session, password, MFA |
-| Authorization | Access control, IDOR, privilege escalation |
-| Input Validation | Injection (SQL, XSS, command, path) |
-| Data Exposure | PII, logs, error messages, debug info |
-| Secrets | Hardcoded credentials, API keys, tokens |
-| Cryptography | Weak algorithms, key management |
-| API Security | Rate limiting, auth, input validation |
-| File Handling | Upload, path traversal, permissions |
-| Dependencies | Known vulnerabilities, outdated packages |
-| Configuration | Security headers, CORS, default settings |
+| # | Area | What to Check |
+|---|------|---------------|
+| 1 | Authentication | Login, session, password, MFA, JWT |
+| 2 | Input Validation | Injection (SQL, XSS, command, path, XXE, LDAP, template) |
+| 3 | Data Exposure | PII, logs, error messages, debug info, stack traces |
+| 4 | Secrets | Hardcoded credentials, API keys, tokens, version control |
+| 5 | OWASP Top 10 | A01-A10 (2021) with cross-references to other areas |
+| 6 | API Security | Rate limiting, mass assignment, GraphQL, CORS, OAuth/OIDC |
+| 7 | File Upload | Type validation, size limits, malicious content, polyglots |
+| 8 | Cryptography | Hashing, salts, key derivation, weak ciphers, TLS, timing |
+| 9 | Business Logic | Race conditions, workflow bypass, integer overflow, replay |
+| 10 | Client-Side | localStorage tokens, postMessage, clickjacking, prototype pollution |
+| 11 | HTTP Headers/Cookies | CSP, HSTS, X-Frame-Options, Secure/HttpOnly/SameSite |
+| 12 | Dependencies | CVEs, outdated packages, supply chain, transitive deps |
+| 13 | Modern Attacks | Prototype pollution, ReDoS, smuggling, WebSocket, SSRF, deserialization |
 
 ## What the Agent Does
 
-- Maps entry points and data flows
-- Identifies vulnerable code patterns
-- Classifies by OWASP Top 10 categories
+- Maps entry points and data flows across 13 security focus areas
+- Identifies vulnerable code patterns (general + language-specific for Python/Go)
+- Checks expanded OWASP Top 10 with cross-references to 8 additional security areas
+- Covers modern attack vectors (prototype pollution, ReDoS, request smuggling, WebSocket, SSRF)
 - Rates severity (CRITICAL/HIGH/MEDIUM/LOW)
-- Provides specific remediation with code examples
+- Provides specific remediation with secure code examples
 
 ## Severity Levels
 
@@ -142,14 +146,19 @@ The agent produces a security report with:
 
 ## OWASP Top 10 Coverage
 
-The agent checks for all OWASP 2021 categories:
-- A01: Broken Access Control
-- A02: Cryptographic Failures
-- A03: Injection
-- A04: Insecure Design
-- A05: Security Misconfiguration
-- A06: Vulnerable Components
-- A07: Auth Failures
-- A08: Integrity Failures
-- A09: Logging Failures
-- A10: SSRF
+The agent checks all OWASP 2021 categories with cross-references to expanded areas:
+
+| OWASP Risk | Expanded Coverage |
+|------------|-------------------|
+| A01: Broken Access Control | §1 Authentication, §6 API Security, §9 Business Logic |
+| A02: Cryptographic Failures | §3 Data Exposure, §8 Cryptography |
+| A03: Injection | §2 Input Validation, §13 Modern Attack Vectors |
+| A04: Insecure Design | §9 Business Logic, §10 Client-Side Security |
+| A05: Security Misconfiguration | §6 API Security, §11 HTTP Headers/Cookies |
+| A06: Vulnerable Components | §12 Dependency Security |
+| A07: Auth Failures | §1 Authentication, §6 API Security |
+| A08: Integrity Failures | §12 Dependency Security, §13 Modern Attack Vectors |
+| A09: Logging Failures | §3 Data Exposure |
+| A10: SSRF | §13 Modern Attack Vectors |
+
+**Note:** Agent extends OWASP Top 10 with 8 additional security focus areas (§6-§13) covering API security, file uploads, business logic, client-side security, HTTP headers, dependencies, and modern attack vectors.
