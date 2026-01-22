@@ -60,18 +60,158 @@ Check for:
 
 ### 5. OWASP Top 10 (2021)
 
-| Risk | What to Check |
-|------|---------------|
-| A01:Broken Access Control | Auth bypass, IDOR, privilege escalation |
-| A02:Cryptographic Failures | Weak crypto, sensitive data exposure |
-| A03:Injection | SQLi, XSS, command injection |
-| A04:Insecure Design | Security by design issues |
-| A05:Security Misconfiguration | Default configs, unnecessary features |
-| A06:Vulnerable Components | Known vulnerable dependencies |
-| A07:Auth Failures | Session issues, weak passwords |
-| A08:Integrity Failures | Unsigned updates, insecure CI/CD |
-| A09:Logging Failures | Missing logs, sensitive data in logs |
-| A10:SSRF | Server-side request forgery |
+| Risk | What to Check | Expanded In |
+|------|---------------|-------------|
+| A01:Broken Access Control | Auth bypass, IDOR, privilege escalation | §1, §6, §9 |
+| A02:Cryptographic Failures | Weak crypto, sensitive data exposure | §3, §8 |
+| A03:Injection | SQLi, XSS, command injection | §2, §13 |
+| A04:Insecure Design | Security by design issues | §9, §10 |
+| A05:Security Misconfiguration | Default configs, unnecessary features | §6, §11 |
+| A06:Vulnerable Components | Known vulnerable dependencies | §12 |
+| A07:Auth Failures | Session issues, weak passwords | §1, §6 |
+| A08:Integrity Failures | Unsigned updates, insecure CI/CD | §12, §13 |
+| A09:Logging Failures | Missing logs, sensitive data in logs | §3 |
+| A10:SSRF | Server-side request forgery | §13 |
+
+> **Note**: This agent extends OWASP Top 10 with additional categories (§6-§13) covering API security, file uploads, business logic, client-side, HTTP headers, dependencies, and modern attack vectors.
+
+### 6. API Security
+
+Check for:
+- Missing rate limiting / throttling on sensitive endpoints
+- Mass assignment vulnerabilities (accepting all fields blindly)
+- GraphQL-specific issues:
+  - Deep query attacks (unbounded nesting)
+  - Introspection enabled in production
+  - Batching attacks (query multiplication)
+  - Missing query complexity limits
+- CORS misconfigurations (wildcard origins, credentials with wildcards)
+- OAuth/OIDC implementation flaws:
+  - Missing state parameter (CSRF in OAuth)
+  - Insecure redirect URI validation
+  - Token leakage in referrer headers
+  - Implicit flow in sensitive applications
+- API keys exposed in frontend code or URLs
+- Missing API versioning leading to breaking changes
+
+### 7. File Upload Security
+
+Check for:
+- Unrestricted file types (no whitelist validation)
+- Missing file size limits (DoS risk)
+- Storage in publicly accessible locations
+- Missing filename sanitization (null bytes, path traversal)
+- No content-type validation (MIME sniffing)
+- Malicious file content:
+  - Polyglot files (image/script hybrids)
+  - SVG with embedded JavaScript
+  - XML files with XXE payloads
+  - ZIP bombs / archive extraction attacks
+- Missing antivirus scanning for uploads
+- Executable files in upload directories
+
+### 8. Cryptography (Expanded)
+
+Check for:
+- Weak hashing algorithms (MD5, SHA1 for passwords)
+- Missing salt or predictable salts
+- Insufficient key derivation iterations (PBKDF2 < 100k, bcrypt cost < 10)
+- ECB mode usage (patterns visible in ciphertext)
+- Predictable IVs/nonces (same IV reused, counter starting at 0)
+- Hardcoded encryption keys
+- Missing key rotation mechanisms
+- Weak random number generation (Math.random() for crypto)
+- Deprecated TLS versions (TLS 1.0, 1.1)
+- Weak cipher suites (RC4, DES, 3DES, NULL ciphers)
+- Certificate validation disabled
+- Timing attacks in comparison operations
+
+### 9. Business Logic Vulnerabilities
+
+Check for:
+- Race conditions (TOCTOU - Time of Check to Time of Use)
+- Workflow bypass (skipping steps in multi-step processes)
+- Price/quantity manipulation
+- Negative quantity attacks
+- Integer overflow in calculations
+- Insufficient anti-automation (missing CAPTCHA on sensitive actions)
+- Account enumeration via timing or error differences
+- Insecure direct object references in business workflows
+- Missing transaction boundaries (partial updates on failure)
+- Replay attacks (missing nonces on sensitive operations)
+
+### 10. Client-Side Security
+
+Check for:
+- Sensitive data in localStorage/sessionStorage
+- Tokens in localStorage (XSS can steal them)
+- postMessage origin validation missing or incorrect
+- Clickjacking vulnerabilities (missing X-Frame-Options/CSP frame-ancestors)
+- Open redirects (redirect URLs from user input)
+- DOM clobbering (user input as element IDs)
+- Client-side prototype pollution
+- Insecure use of eval(), Function(), or document.write()
+- Sensitive data in browser history (GET params)
+- Service worker security (origin validation, update mechanisms)
+
+### 11. HTTP Security Headers & Cookies
+
+Check for:
+- Missing Content-Security-Policy (CSP)
+- Missing or weak HSTS (max-age too short, missing includeSubDomains)
+- Missing X-Frame-Options (when CSP frame-ancestors not used)
+- Missing X-Content-Type-Options: nosniff
+- Permissive Referrer-Policy (leaking URLs to third parties)
+- Missing Permissions-Policy (camera, microphone, geolocation)
+- Cookie security:
+  - Missing Secure flag (sent over HTTP)
+  - Missing HttpOnly flag (accessible to JavaScript)
+  - Missing or incorrect SameSite (CSRF risk)
+  - Overly broad Domain/Path attributes
+  - Excessive expiration times for session cookies
+
+### 12. Dependency Security
+
+Check for:
+- Known vulnerable dependencies (CVEs)
+- Outdated packages with security patches available
+- Unmaintained dependencies (no updates in 2+ years)
+- Supply chain risks:
+  - Typosquatting packages (similar names to popular packages)
+  - Dependency confusion (internal vs public package names)
+  - Compromised maintainer accounts
+- Lockfile manipulation (inconsistent dependency versions)
+- Dev dependencies in production builds
+- Missing integrity checks (no lock files, no subresource integrity)
+- Transitive dependencies with vulnerabilities
+
+### 13. Modern Attack Vectors
+
+Check for:
+- Prototype pollution (JavaScript)
+  - `__proto__` manipulation in object merging
+  - Constructor prototype modifications
+- ReDoS (Regular Expression Denial of Service)
+  - Catastrophic backtracking patterns
+  - User input in regex patterns
+- HTTP Request Smuggling
+  - Inconsistent Content-Length/Transfer-Encoding handling
+  - HTTP/1.1 to HTTP/2 desync
+- WebSocket security
+  - Missing origin validation
+  - Insufficient authentication after upgrade
+  - Cross-site WebSocket hijacking
+- Cache poisoning
+  - Unkeyed headers in cached responses
+  - Web cache deception
+- SSRF variations
+  - Cloud metadata endpoints (169.254.169.254)
+  - Internal service discovery
+  - DNS rebinding attacks
+- Insecure deserialization
+  - Java ObjectInputStream, Python pickle, PHP unserialize
+  - JSON parsing with type coercion
+  - YAML unsafe load
 
 ## Your Workflow
 
@@ -184,6 +324,85 @@ fs.readFile(basePath + userInput)
 
 // DANGEROUS: Hardcoded Secret
 const apiKey = "sk-live-abc123..."
+
+// DANGEROUS: Prototype Pollution
+function merge(target, source) {
+  for (let key in source) {
+    target[key] = source[key]  // __proto__ can be overwritten
+  }
+}
+Object.assign({}, JSON.parse(userInput))  // if input has __proto__
+
+// DANGEROUS: Insecure Deserialization
+pickle.loads(user_data)           // Python
+unserialize($user_input)          // PHP
+ObjectInputStream.readObject()     // Java (with untrusted data)
+yaml.load(user_input)             // YAML without safe_load
+
+// DANGEROUS: ReDoS (Catastrophic Backtracking)
+const regex = /^(a+)+$/           // Exponential backtracking
+const regex = /([a-zA-Z]+)*$/     // Nested quantifiers
+userInput.match(userProvidedPattern)  // User-controlled regex
+
+// DANGEROUS: Open Redirect
+res.redirect(req.query.returnUrl)
+window.location = urlParams.get('next')
+
+// DANGEROUS: Missing Origin Validation
+window.addEventListener('message', (e) => {
+  // Missing: if (e.origin !== 'https://trusted.com') return
+  processMessage(e.data)
+})
+
+// DANGEROUS: Mass Assignment
+User.create(req.body)             // Accepts isAdmin, role, etc.
+user.update(req.body)             // No field whitelist
+
+// DANGEROUS: SSRF
+fetch(userProvidedUrl)            // Can access internal services
+axios.get(config.webhookUrl)      // If URL from user/external
+
+// DANGEROUS: Race Condition
+if (user.balance >= amount) {     // Check
+  user.balance -= amount          // Use (no atomic operation)
+}
+
+// DANGEROUS: Weak Crypto
+crypto.createHash('md5')          // Weak for passwords
+crypto.createCipher('aes-ecb')    // ECB mode reveals patterns
+Math.random()                     // Not cryptographically secure
+```
+
+### Language-Specific Patterns
+
+```python
+# DANGEROUS: Python
+eval(user_input)
+exec(user_input)
+__import__(user_input)
+subprocess.call(cmd, shell=True)
+yaml.load(data)  # Use yaml.safe_load()
+```
+
+```java
+// DANGEROUS: Java
+Runtime.getRuntime().exec(userInput)
+new ProcessBuilder(userInput).start()
+Class.forName(userInput).newInstance()
+stmt.executeQuery("SELECT * FROM users WHERE id=" + userId)
+```
+
+```go
+// DANGEROUS: Go
+template.HTML(userInput)  // Bypasses escaping
+exec.Command("sh", "-c", userInput)
+```
+
+```ruby
+# DANGEROUS: Ruby
+eval(user_input)
+system(user_input)
+send(user_input.to_sym, args)
 ```
 
 Always suggest the secure alternative when identifying these patterns.
