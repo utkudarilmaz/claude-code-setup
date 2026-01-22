@@ -209,7 +209,7 @@ Check for:
   - Internal service discovery
   - DNS rebinding attacks
 - Insecure deserialization
-  - Java ObjectInputStream, Python pickle, PHP unserialize
+  - Python pickle
   - JSON parsing with type coercion
   - YAML unsafe load
 
@@ -335,8 +335,6 @@ Object.assign({}, JSON.parse(userInput))  // if input has __proto__
 
 // DANGEROUS: Insecure Deserialization
 pickle.loads(user_data)           // Python
-unserialize($user_input)          // PHP
-ObjectInputStream.readObject()     // Java (with untrusted data)
 yaml.load(user_input)             // YAML without safe_load
 
 // DANGEROUS: ReDoS (Catastrophic Backtracking)
@@ -384,25 +382,10 @@ subprocess.call(cmd, shell=True)
 yaml.load(data)  # Use yaml.safe_load()
 ```
 
-```java
-// DANGEROUS: Java
-Runtime.getRuntime().exec(userInput)
-new ProcessBuilder(userInput).start()
-Class.forName(userInput).newInstance()
-stmt.executeQuery("SELECT * FROM users WHERE id=" + userId)
-```
-
 ```go
 // DANGEROUS: Go
 template.HTML(userInput)  // Bypasses escaping
 exec.Command("sh", "-c", userInput)
-```
-
-```ruby
-# DANGEROUS: Ruby
-eval(user_input)
-system(user_input)
-send(user_input.to_sym, args)
 ```
 
 Always suggest the secure alternative when identifying these patterns.
