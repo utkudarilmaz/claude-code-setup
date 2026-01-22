@@ -49,10 +49,14 @@ make status           # Check sync status
 ### Use skills
 
 ```
-/docs          # Update documentation for recent changes
-/docs all      # Full documentation audit
-/tester        # Verify test coverage for recent changes
-/tester all    # Full test audit
+/docs                    # Update documentation for recent changes
+/docs all                # Full documentation audit
+/tester                  # Verify test coverage for recent changes
+/tester all              # Full test audit
+/pr-check                # Review current PR against quality checklist
+/security-review         # Security review of recent changes
+/changelog               # Update CHANGELOG.md from git history
+/changelog release       # Generate release notes for announcement
 ```
 
 ## Makefile Commands
@@ -117,10 +121,16 @@ claude-code-setup/              # This repository
 │   ├── agents/
 │   │   ├── docs.md             # Documentation agent
 │   │   ├── tester.md           # Test coverage agent
+│   │   ├── pr-check.md         # PR quality reviewer
+│   │   ├── security-reviewer.md # Security expert
+│   │   ├── release-notes.md    # Release documentation
 │   │   └── changelog-generator.md
 │   ├── skills/
 │   │   ├── docs/SKILL.md       # /docs command
 │   │   ├── tester/SKILL.md     # /tester command
+│   │   ├── pr-check/SKILL.md   # /pr-check command
+│   │   ├── security-review/SKILL.md # /security-review command
+│   │   ├── changelog/SKILL.md  # /changelog command
 │   │   └── strategic-compact/
 │   │       └── suggest-compact.sh
 │   ├── settings.json           # Hooks, plugins, statusLine
@@ -174,6 +184,8 @@ Hooks intercept tool calls for pre/post processing:
 
 Current hooks:
 - `suggest-compact.sh` - Suggests `/compact` at logical intervals (every 50 tool calls)
+- `sensitive-file-protection` - Blocks writes to protected files (.env, credentials, secrets, lock files)
+- `notification` - Plays audio notification on idle/permission prompts
 
 ## Configuration
 
@@ -242,11 +254,57 @@ go test -v ./package -run TestName         # Single test
 go test -coverprofile=coverage.out ./...   # Coverage
 ```
 
+### pr-check
+
+PR quality reviewer that verifies PRs against a quality checklist before merging.
+
+**Trigger:** Before merging a PR or after addressing review comments
+
+**Checklist:**
+- Tests added/updated for code changes
+- No hardcoded secrets or credentials
+- Error handling is appropriate
+- Breaking changes documented
+- Commit messages follow conventions
+- Documentation updated if needed
+- Dependencies justified and secure
+- No obvious code smells or anti-patterns
+
+**Focus Modes:** tests, security, docs, breaking
+
+### security-reviewer
+
+Security expert that performs security-focused code review.
+
+**Trigger:** When reviewing auth, payment, API endpoints, or input handling
+
+**Focus Areas:**
+- Authentication & Authorization (auth flows, session management, access control)
+- Input Validation (SQL injection, XSS, command injection, path traversal)
+- Data Exposure (PII leaks, sensitive data in logs, verbose errors)
+- Secrets Management (hardcoded credentials, API keys, tokens)
+- OWASP Top 10 vulnerabilities
+
+**Severity Levels:** CRITICAL, HIGH, MEDIUM, LOW
+
+### release-notes
+
+Release documentation specialist that generates user-friendly release notes.
+
+**Trigger:** When preparing a release or creating release announcements
+
+**Responsibilities:**
+- Parse git history since last tag
+- Categorize changes by type (features, fixes, improvements)
+- Write from user perspective with emojis
+- Highlight breaking changes with migration guidance
+- Format for GitHub releases or announcements
+
 ### changelog-generator
 
 Generates CHANGELOG.md from git history using Keep a Changelog format.
 
-**Trigger:** When explicitly requested
+**Trigger:** When explicitly requested via `/changelog`
 
 **Commit Type Mapping:**
 | Prefix | Changelog Section |
@@ -290,6 +348,51 @@ Verify and create test coverage.
 - `/tester src/services/payment` - Payment service
 - `/tester utils/parser.ts` - Specific file
 - `/tester API endpoints` - All API routes
+
+### /pr-check
+
+Review current PR against quality checklist before merging.
+
+| Mode | Command | Description |
+|------|---------|-------------|
+| Default | `/pr-check` | Review current PR against full checklist |
+| Focused | `/pr-check <focus>` | Review with specific focus area |
+
+**Focus Examples:**
+- `/pr-check tests` - Deep dive on test coverage
+- `/pr-check security` - Focus on secrets, auth, input validation
+- `/pr-check docs` - Focus on documentation completeness
+- `/pr-check breaking` - Focus on breaking changes and migration
+
+### /security-review
+
+Perform security-focused code review.
+
+| Mode | Command | Description |
+|------|---------|-------------|
+| Default | `/security-review` | Review recent changes for vulnerabilities |
+| Scoped | `/security-review <path>` | Review specific file/module |
+| Full Audit | `/security-review all` | Complete security audit |
+
+**Scope Examples:**
+- `/security-review src/auth` - Authentication module
+- `/security-review api/handlers` - API endpoints
+- `/security-review lib/payment.ts` - Specific file
+
+### /changelog
+
+Generate or update changelog, or create release notes.
+
+| Mode | Command | Description |
+|------|---------|-------------|
+| Default | `/changelog` | Update CHANGELOG.md from git history |
+| Release | `/changelog release` | Generate release notes for announcement |
+| Versioned | `/changelog <version>` | Generate notes for specific version |
+
+**Agent Dispatch:**
+- `/changelog` → `changelog-generator` agent (updates CHANGELOG.md)
+- `/changelog release` → `release-notes` agent (generates announcement)
+- `/changelog <version>` → `release-notes` agent (version-specific notes)
 
 ### strategic-compact
 

@@ -7,6 +7,21 @@
           {
             "type": "command",
             "command": "~/.claude/skills/strategic-compact/suggest-compact.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash -c '[[ \"$TOOL_INPUT\" =~ (\\.env|credentials|secrets|\\.lock|lock\\.json|lock\\.yaml) ]] && echo \"BLOCK: Protected file\" && exit 1 || exit 0'"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "idle_prompt|permission_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "paplay /usr/share/sounds/freedesktop/stereo/complete.oga 2>/dev/null || aplay /usr/share/sounds/alsa/Front_Center.wav 2>/dev/null || true"
           }
         ]
       }
@@ -17,10 +32,14 @@
     "command": "bash -c '\"/usr/bin/node\" \"$(ls -td ~/.claude/plugins/cache/claude-hud/claude-hud/*/ 2>/dev/null | head -1)dist/index.js\"'"
   },
   "enabledPlugins": {
-    "claude-hud@claude-hud": true,
+    "feature-dev@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
     "commit-commands@claude-plugins-official": true,
     "explanatory-output-style@claude-plugins-official": true,
     "context7@claude-plugins-official": true,
+    "claude-hud@claude-hud": true,
+    "hookify@claude-plugins-official": false,
+    "claude-code-setup@claude-plugins-official": false,
     "gopls-lsp@claude-plugins-official": false,
     "github@claude-plugins-official": false,
     "frontend-design@claude-plugins-official": false,
@@ -29,8 +48,6 @@
     "stripe@claude-plugins-official": false,
     "playwright@claude-plugins-official": false,
     "code-simplifier@claude-plugins-official": false,
-    "feature-dev@claude-plugins-official": false,
-    "superpowers@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": false,
     "threejs-webgl@claude-design-skillstack": false,
     "gsap-scrolltrigger@claude-design-skillstack": false,
