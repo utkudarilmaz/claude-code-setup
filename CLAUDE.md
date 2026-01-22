@@ -106,6 +106,7 @@ Key conventions for this repository:
 - **No AI attribution**: Never add Co-Authored-By Claude or AI references
 - **JSON fields**: Always use camelCase
 - **Agent/Skill files**: YAML frontmatter with `name`, `description`, optional `model`, `color`
+- **Never split agent/skill files**: Keep `.claude/agents/*.md` and `.claude/skills/*/SKILL.md` as single files - they are loaded as complete context for AI, not user documentation
 
 ### Skill/Agent Patterns
 
