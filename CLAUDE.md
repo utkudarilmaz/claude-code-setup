@@ -53,21 +53,40 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 |-----------|------|---------|
 | `/docs` | skill | Documentation synchronization after code changes |
 | `/tester` | skill | Test coverage verification and creation |
+| `/pr-check` | skill | PR quality review against checklist |
+| `/security-review` | skill | Security-focused code review |
+| `/changelog` | skill | Changelog and release notes generation |
 | `docs` | agent | Documentation architect (README, CLAUDE.md, API docs) |
 | `tester` | agent | Test specialist (coverage, AAA pattern, table-driven) |
+| `pr-check` | agent | PR quality reviewer (tests, secrets, error handling) |
+| `security-reviewer` | agent | Security expert (auth, injection, OWASP Top 10) |
+| `release-notes` | agent | Release documentation specialist |
 | `changelog-generator` | agent | CHANGELOG.md generation from git history |
 | `suggest-compact.sh` | hook | Context compaction suggestions at logical intervals |
+| `sensitive-file-protection` | hook | Blocks writes to protected files (.env, credentials) |
+| `notification` | hook | Audio notification on idle/permission prompts |
 
 ### Quick Command Reference
 
 ```
-/docs              # Document recent changes
-/docs <scope>      # Document specific module/file
-/docs all          # Full documentation audit
+/docs                    # Document recent changes
+/docs <scope>            # Document specific module/file
+/docs all                # Full documentation audit
 
-/tester            # Test recent changes
-/tester <scope>    # Test specific module/file
-/tester all        # Full test coverage audit
+/tester                  # Test recent changes
+/tester <scope>          # Test specific module/file
+/tester all              # Full test coverage audit
+
+/pr-check                # Review current PR against quality checklist
+/pr-check <focus>        # Review PR with specific focus (tests, security, docs)
+
+/security-review         # Security review of recent changes
+/security-review <path>  # Security review of specific file/module
+/security-review all     # Full security audit
+
+/changelog               # Update CHANGELOG.md from git history
+/changelog release       # Generate release notes for announcement
+/changelog <version>     # Generate notes for specific version
 ```
 
 ## Conventions
