@@ -15,6 +15,7 @@ claude-code-setup/              # This repository (shareable)
 │   ├── skills/                 # Skill commands
 │   ├── settings.json           # Configuration
 │   └── CLAUDE.md               # Global AI conventions (applied to all projects)
+├── Makefile                    # Sync management between repo and ~/.claude
 ├── CLAUDE.md                   # This file (repo-specific guidance)
 └── README.md                   # Project documentation
 ```
@@ -121,3 +122,24 @@ Add to `.claude/settings.json`:
   }
 }
 ```
+
+## Makefile Sync Management
+
+The Makefile provides commands to synchronize this repository's `.claude/` directory with `~/.claude`:
+
+**Update commands** (non-destructive):
+- Add missing files from repo to `~/.claude`
+- Update changed files in `~/.claude` with repo versions
+- Keep extra files in `~/.claude` that aren't in repo
+
+**Remove commands**:
+- Remove files from `~/.claude` that match files in repo
+- Useful for uninstalling repo-managed extensions
+
+**Key commands**:
+- `make update-all` - Sync all agents, skills, and config files
+- `make status` - View sync status with color-coded indicators
+- `make diff` - See detailed differences between repo and `~/.claude`
+- `make backup` - Create timestamped backup before making changes
+
+See README.md for complete Makefile documentation.
