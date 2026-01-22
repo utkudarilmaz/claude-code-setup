@@ -13,25 +13,14 @@ This repository provides a modular extension framework for Claude Code with:
 
 ## Quick Start
 
-### Option 1: Symlink (recommended)
+### Installation
 
 ```bash
-git clone https://github.com/yourusername/claude-code-setup ~/claude-code-setup
-ln -s ~/claude-code-setup/.claude ~/.claude
-```
-
-### Option 2: Direct clone
-
-```bash
+# Clone to any location
 git clone https://github.com/yourusername/claude-code-setup
-cp -r claude-code-setup/.claude ~/.claude
-```
+cd claude-code-setup
 
-### Option 3: Makefile update (selective)
-
-```bash
-git clone https://github.com/yourusername/claude-code-setup ~/claude-code-setup
-cd ~/claude-code-setup
+# Sync to ~/.claude
 make update-all       # Add missing + update changed files
 make status           # Check sync status
 ```
