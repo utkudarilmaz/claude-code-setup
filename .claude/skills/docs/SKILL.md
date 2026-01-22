@@ -1,6 +1,6 @@
 ---
 name: docs
-description: Use when code changes are made that could affect documentation, or with "all" argument for comprehensive repository-wide documentation audit
+description: Use when code changes are made that could affect documentation, with "all" for comprehensive audit, or "simplifier" to restructure and modularize existing documentation
 ---
 
 # Docs
@@ -102,6 +102,52 @@ Creates todos like:
 
 Then dispatches docs agent for each aspect sequentially, marking complete as each finishes.
 
+### Simplifier Mode: `/docs simplifier`
+
+When invoked with `/docs simplifier`, perform a **documentation restructuring analysis and execution** to transform monolithic documentation into a modular structure.
+
+**Purpose:** Analyze existing documentation, identify files needing restructuring, propose a modular split plan, and execute with proper cross-linking.
+
+#### Execution Flow
+
+1. **Analyze Current Structure**
+   - Measure line counts of all documentation files
+   - Identify files exceeding 300 lines
+   - Map existing cross-references and links
+   - Detect logical sections that can be extracted
+
+2. **Create TodoWrite Plan** - One todo per restructuring action
+
+3. **Execute Restructuring**
+   - Create modular directory structure (docs/architecture/, docs/guides/, docs/api/)
+   - Extract sections to new files
+   - Add navigation breadcrumbs
+   - Update cross-references in original files
+
+4. **Report Summary**
+   - Files created/modified
+   - Links added
+   - Size reduction achieved
+
+#### Simplifier Analysis Checklist
+
+| Check | Threshold | Action |
+|-------|-----------|--------|
+| README.md length | >300 lines | Extract to docs/guides/ |
+| CLAUDE.md length | >200 lines | Extract examples to docs/ |
+| Single doc file | >300 lines | Split by H2 sections |
+| API documentation | >10 endpoints | Create docs/api/endpoints/ |
+| Architecture docs | >3 diagrams | Create docs/architecture/diagrams/ |
+
+#### Simplifier vs All Mode
+
+| Aspect | `/docs all` | `/docs simplifier` |
+|--------|-------------|-------------------|
+| **Purpose** | Comprehensive content audit | Structure optimization |
+| **Focus** | Documentation completeness | Documentation organization |
+| **Creates** | Missing documentation | Modular file structure |
+| **When to use** | Content gaps exist | Files too large/complex |
+
 ## What the Agent Updates
 
 - README.md - project overview, setup, usage
@@ -109,6 +155,30 @@ Then dispatches docs agent for each aspect sequentially, marking complete as eac
 - API documentation
 - Configuration docs
 - Any docs/* files
+
+## Supported File Types
+
+| File Type | Extension | Purpose | Validation Rules |
+|-----------|-----------|---------|------------------|
+| Markdown | .md | Primary documentation | Valid markdown, working links |
+| Postman | .json | API testing collection | Valid JSON, camelCase fields |
+| Draw.io | .drawio | Architecture diagrams | Opens in draw.io, has export |
+| Images | .png, .svg | Diagram exports | Referenced in markdown |
+
+### Postman Collection Validation
+
+When updating `postman_collection.json`:
+- Validate JSON structure
+- Ensure all field names use camelCase
+- Add missing endpoints from codebase
+- Include realistic example data
+
+### Draw.io Diagram Guidelines
+
+When working with `.drawio` files:
+- Store in `docs/architecture/diagrams/`
+- Export PNG to same directory
+- Reference in markdown with relative paths
 
 ## Examples
 
@@ -134,4 +204,22 @@ Then dispatches docs agent for each aspect sequentially, marking complete as eac
 ```
 /docs all
 → Creates plan, systematically documents every aspect
+```
+
+**Restructure large documentation:**
+```
+/docs simplifier
+→ Analyzes file sizes, proposes modular structure, executes split
+```
+
+**Document with diagram:**
+```
+/docs architecture
+→ Updates docs/architecture/, ensures .drawio files have exports
+```
+
+**Validate API collection:**
+```
+/docs postman
+→ Validates postman_collection.json, ensures camelCase
 ```

@@ -18,7 +18,41 @@ You are solely responsible for managing all documentation files in this reposito
 1. **CLAUDE.md** - Project-specific instructions for AI assistants
 2. **README.md** - Project overview, setup, usage, and contribution guidelines
 3. **postman_collection.json** - API collection for testing and exploration
-4. **docs/*** - All files within the docs directory
+4. **docs/** - All documentation within the docs directory:
+   - **docs/architecture/** - System design, diagrams, technical decisions
+   - **docs/guides/** - User guides, tutorials, how-tos
+   - **docs/api/** - API reference, endpoint documentation, schemas
+5. **Architecture diagrams** - `.drawio` files for visual documentation
+
+### Modular Documentation Structure
+
+When the project documentation exceeds 300 lines in a single file, enforce this modular structure:
+
+```
+docs/
+├── architecture/          # System design and technical decisions
+│   ├── overview.md        # High-level architecture
+│   ├── data-flow.md       # Data flow documentation
+│   ├── decisions/         # Architecture Decision Records (ADRs)
+│   └── diagrams/          # .drawio source files
+├── guides/                # User-facing documentation
+│   ├── getting-started.md # Quick start guide
+│   ├── installation.md    # Detailed setup
+│   ├── configuration.md   # Config options
+│   └── troubleshooting.md # Common issues
+├── api/                   # API documentation
+│   ├── overview.md        # API introduction
+│   ├── authentication.md  # Auth documentation
+│   ├── endpoints/         # Per-resource endpoint docs
+│   └── schemas/           # Request/response schemas
+└── contributing/          # Contributor documentation
+```
+
+**Cross-linking requirements:**
+- README.md must link to relevant docs/ files
+- CLAUDE.md must reference docs/ structure
+- Each modular doc must link back to README.md
+- Related docs must cross-reference each other
 
 ## Your Workflow
 
@@ -68,6 +102,45 @@ When invoked, you must:
 - Keep changelog current
 - Organize files logically
 
+### File-Specific Update Rules
+
+| File Type | Location | When to Create/Update | Validation |
+|-----------|----------|----------------------|------------|
+| README.md | Root | Always present; update for user-facing changes | Links work, examples run |
+| CLAUDE.md | Root | Always present; update for structure/pattern changes | Instructions actionable |
+| postman_collection.json | Root | When API exists; add/update endpoints | Valid JSON, camelCase fields |
+| .drawio | docs/architecture/diagrams/ | When architecture documented visually | File opens in draw.io |
+| overview.md | docs/architecture/ | When system has >3 components | Links to component docs |
+| getting-started.md | docs/guides/ | When README quickstart >50 lines | Complete runnable flow |
+| endpoints/*.md | docs/api/endpoints/ | When >5 API endpoints | All endpoints documented |
+
+### Size Thresholds for Splitting
+
+| Condition | Action |
+|-----------|--------|
+| README.md > 300 lines | Extract sections to docs/guides/ |
+| Single doc file > 300 lines | Split into logical sub-documents |
+| API docs > 10 endpoints | Create docs/api/endpoints/ structure |
+| >3 architecture diagrams | Create docs/architecture/diagrams/ |
+
+### Architecture Diagrams (.drawio)
+
+When creating or updating `.drawio` files:
+- Store source files in `docs/architecture/diagrams/`
+- Export PNG/SVG versions for README and markdown docs
+- Use consistent naming: `<subject>-diagram.drawio`
+- Include in documentation with relative image links
+- Document what each diagram represents in accompanying markdown
+
+**Diagram types to maintain:**
+
+| Diagram | Filename | Description |
+|---------|----------|-------------|
+| System overview | system-overview.drawio | High-level component view |
+| Data flow | data-flow.drawio | How data moves through system |
+| Deployment | deployment.drawio | Infrastructure and deployment |
+| Entity relationships | entity-relationships.drawio | Database/domain models |
+
 ### 4. Quality Assurance
 
 Before completing, verify:
@@ -78,6 +151,40 @@ Before completing, verify:
 - [ ] postman_collection.json is valid JSON with camelCase field names
 - [ ] CLAUDE.md provides clear, actionable instructions
 - [ ] README.md is welcoming and comprehensive
+- [ ] Modular structure enforced (no file >300 lines)
+- [ ] Cross-links between modular docs and main docs work
+- [ ] .drawio files have corresponding exported images
+- [ ] Navigation breadcrumbs in modular docs
+
+### Documentation Simplification
+
+When analyzing documentation for restructuring:
+
+**Analysis Phase:**
+1. Measure file lengths (target: <300 lines per file)
+2. Identify logical sections that can be extracted
+3. Find duplicated content across files
+4. Detect missing cross-references
+5. Assess navigation complexity
+
+**Restructuring Criteria:**
+
+| Indicator | Recommended Action |
+|-----------|-------------------|
+| README.md > 300 lines | Extract detailed sections to docs/guides/ |
+| Single topic > 100 lines | Consider dedicated file |
+| Repeated content | Consolidate and link |
+| Deep nesting in one file | Split by heading level 2 |
+| No table of contents | Add TOC or split into smaller files |
+
+**Cross-linking Template:**
+```markdown
+<!-- In README.md -->
+For detailed configuration, see [Configuration Guide](docs/guides/configuration.md).
+
+<!-- In docs/guides/configuration.md -->
+> **Navigation:** [Back to README](../../README.md) | [Installation](installation.md)
+```
 
 ## Documentation Standards
 

@@ -51,15 +51,15 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 
 | Extension | Type | Purpose |
 |-----------|------|---------|
-| `/docs` | skill | Documentation synchronization after code changes |
+| `/docs` | skill | Documentation synchronization with modular structure enforcement |
 | `/tester` | skill | Test coverage verification and creation |
 | `/pr-check` | skill | PR quality review against checklist |
 | `/security-review` | skill | Security-focused code review |
 | `/changelog` | skill | Changelog and release notes generation |
-| `docs` | agent | Documentation architect (README, CLAUDE.md, API docs) |
+| `docs` | agent | Documentation architect (README, CLAUDE.md, API docs, modular structure, .drawio diagrams) |
 | `tester` | agent | Test specialist (coverage, AAA pattern, table-driven) |
 | `pr-check` | agent | PR quality reviewer (tests, secrets, error handling) |
-| `security-reviewer` | agent | Security expert (auth, injection, OWASP Top 10) |
+| `security-reviewer` | agent | Security expert (auth, injection, API security, file uploads, cryptography, business logic, client-side, HTTP headers, dependencies, modern attack vectors, OWASP Top 10) |
 | `release-notes` | agent | Release documentation specialist |
 | `changelog-generator` | agent | CHANGELOG.md generation from git history |
 | `suggest-compact.sh` | hook | Context compaction suggestions at logical intervals |
@@ -72,6 +72,7 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 /docs                    # Document recent changes
 /docs <scope>            # Document specific module/file
 /docs all                # Full documentation audit
+/docs simplifier         # Restructure large documentation into modular files
 
 /tester                  # Test recent changes
 /tester <scope>          # Test specific module/file
@@ -102,10 +103,11 @@ Key conventions for this repository:
 
 ### Skill/Agent Patterns
 
-Skills support three invocation modes:
+Skills support multiple invocation modes:
 1. **Default** (`/command`): Process recent changes
 2. **Scoped** (`/command <scope>`): Target specific file/module/feature
 3. **Comprehensive** (`/command all`): Full project audit with TodoWrite planning
+4. **Special modes** (skill-specific): Additional modes like `/docs simplifier` for restructuring
 
 Agent frontmatter structure:
 ```yaml
