@@ -57,11 +57,13 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 | `/security-review` | skill | Security-focused code review |
 | `/changelog` | skill | Changelog and release notes generation |
 | `/simplifier` | skill | Dead code removal, complexity reduction, code quality improvement |
+| `/devops` | skill | Review and design infrastructure (Kubernetes, Helm, ArgoCD, Terraform, Terragrunt) |
 | `docs` | agent | Documentation architect (README, CLAUDE.md, API docs, modular structure, .drawio diagrams) |
 | `tester` | agent | Test specialist (coverage, AAA pattern, table-driven) |
 | `pr-check` | agent | PR quality reviewer (tests, secrets, error handling) |
 | `security-reviewer` | agent | Security expert (auth, injection, API security, file uploads, cryptography, business logic, client-side, HTTP headers, dependencies, modern attack vectors, OWASP Top 10) |
 | `simplifier` | agent | Code quality expert (dead code, complexity reduction, Go/JS/TS focus) |
+| `devops` | agent | DevOps architect (Kubernetes, Helm, ArgoCD, Terraform, Terragrunt review and design) |
 | `release-notes` | agent | Release documentation specialist |
 | `changelog-generator` | agent | CHANGELOG.md generation from git history |
 | `suggest-compact.sh` | hook | Context compaction suggestions at logical intervals |
@@ -94,6 +96,11 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 /changelog               # Update CHANGELOG.md from git history
 /changelog release       # Generate release notes for announcement
 /changelog <version>     # Generate notes for specific version
+
+/devops                  # Review recent infrastructure changes
+/devops review <path>    # Review specific IaC directory/file
+/devops design <request> # Design and generate new infrastructure
+/devops all              # Full infrastructure audit
 ```
 
 ## Conventions

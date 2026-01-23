@@ -58,14 +58,18 @@ Hooks intercept tool calls for pre/post processing:
 │   ├── tester.md
 │   ├── pr-check.md
 │   ├── security-reviewer.md
+│   ├── simplifier.md
 │   ├── release-notes.md
-│   └── changelog-generator.md
+│   ├── changelog-generator.md
+│   └── devops.md
 ├── skills/           # Skill commands (user interface)
 │   ├── docs/SKILL.md
 │   ├── tester/SKILL.md
 │   ├── pr-check/SKILL.md
 │   ├── security-review/SKILL.md
+│   ├── simplifier/SKILL.md
 │   ├── changelog/SKILL.md
+│   ├── devops/SKILL.md
 │   └── strategic-compact/suggest-compact.sh
 ├── settings.json     # Hooks, plugins, statusLine
 └── CLAUDE.md         # Global conventions

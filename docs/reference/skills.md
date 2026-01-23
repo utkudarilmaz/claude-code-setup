@@ -168,6 +168,68 @@ Generate or update changelog, or create release notes.
 
 ---
 
+## /simplifier
+
+Cleanup dead code and reduce complexity.
+
+| Mode | Command | Description |
+|------|---------|-------------|
+| Default | `/simplifier` | Cleanup recent changes |
+| Scoped | `/simplifier <scope>` | Cleanup specific area (file, module, directory) |
+| Comprehensive | `/simplifier all` | Complete code quality audit with TodoWrite planning |
+
+**What it does:**
+- **Default:** Reviews recent changes for dead code, unused imports, overly complex functions
+- **Scoped:** Focuses cleanup on specified area
+- **Comprehensive:** Creates TodoWrite plan covering all aspects (dead code, complexity, patterns, organization), processes each sequentially
+
+**Examples:**
+```
+/simplifier                  # Cleanup recent changes
+/simplifier src/utils        # Cleanup utils directory
+/simplifier handlers/        # Cleanup all handlers
+/simplifier all              # Full code quality audit with planning
+```
+
+---
+
+## /devops
+
+Review and design infrastructure configurations.
+
+| Mode | Command | Description |
+|------|---------|-------------|
+| Default | `/devops` | Review recent infrastructure changes |
+| Scoped | `/devops <context>` | Review or design based on context |
+| Comprehensive | `/devops all` | Complete infrastructure audit with TodoWrite planning |
+
+**What it does:**
+- **Default:** Reviews recent IaC changes for security, best practices, reliability
+- **Scoped:** Review specific files/directories OR design new configurations based on context
+- **Comprehensive:** Creates TodoWrite plan covering all infrastructure types (K8s, Helm, ArgoCD, Terraform, Terragrunt), processes each thoroughly
+
+**Infrastructure Coverage:**
+- Kubernetes: Security contexts, resource limits, probes, RBAC, NetworkPolicies
+- Helm: Chart structure, values templating, defaults, documentation
+- ArgoCD: Sync policies, health checks, RBAC, progressive delivery
+- Terraform: State management, modules, security, variable validation
+- Terragrunt: DRY patterns, dependencies, remote state configuration
+
+**Severity Levels:** CRITICAL, HIGH, MEDIUM, LOW
+
+**Examples:**
+```
+/devops                              # Review recent infrastructure changes
+/devops review k8s/                  # Review Kubernetes manifests
+/devops review terraform/modules/vpc # Review Terraform module
+/devops design helm chart for redis  # Generate Helm chart
+/devops design argocd app for apis   # Generate ArgoCD config
+/devops review values.yaml           # Review Helm values
+/devops all                          # Full infrastructure audit with planning
+```
+
+---
+
 ## strategic-compact
 
 Hook that suggests context compaction at logical intervals.
