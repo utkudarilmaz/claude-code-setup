@@ -40,7 +40,6 @@
     "explanatory-output-style@claude-plugins-official": true,
     "context7@claude-plugins-official": true,
     "claude-hud@claude-hud": true,
-    "claude-mem@thedotmack": true,
     "plugin-dev@claude-plugins-official": false,
     "hookify@claude-plugins-official": false,
     "claude-code-setup@claude-plugins-official": false,
@@ -95,12 +94,6 @@
       "source": {
         "source": "github",
         "repo": "nextlevelbuilder/ui-ux-pro-max-skill"
-      }
-    },
-    "claude-mem": {
-      "source": {
-        "source": "github",
-        "repo": "thedotmack/claude-mem"
       }
     },
     "claude-pray": {

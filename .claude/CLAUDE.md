@@ -5,3 +5,8 @@
 - Always use camelCase for JSON field names
 - Always check available skills, agents, plugins, and MCP servers when planning or working on tasks
 - Always use tofu instead of terraform
+
+
+<claude-mem-context>
+
+</claude-mem-context>
