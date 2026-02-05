@@ -38,6 +38,7 @@ External plugin marketplaces are configured via `extraKnownMarketplaces` in sett
 | `claude-design-skillstack` | `freshtechbro/claudedesignskills` | Design and animation plugins |
 | `ui-ux-pro-max-skill` | `nextlevelbuilder/ui-ux-pro-max-skill` | UI/UX design skills |
 | `claude-mem` | `thedotmack/claude-mem` | Memory and context persistence |
+| `claude-pray` | `utkudarilmaz/claude-pray` | Prayer times and Islamic utilities |
 
 The official `claude-plugins-official` marketplace from Anthropic is built-in and doesn't require configuration.
 
@@ -59,6 +60,7 @@ Plugins are toggled via `enabledPlugins` map:
 | Plugin | Purpose |
 |--------|---------|
 | `claude-hud` | Status line UI |
+| `claude-pray` | Prayer times and Islamic utilities |
 | `commit-commands` | Git commit helpers |
 | `explanatory-output-style` | Output formatting |
 | `context7` | Documentation queries |

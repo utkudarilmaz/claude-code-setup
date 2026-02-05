@@ -32,6 +32,7 @@
     "command": "bash -c '\"/usr/bin/node\" \"$(ls -td ~/.claude/plugins/cache/claude-hud/claude-hud/*/ 2>/dev/null | head -1)dist/index.js\"'"
   },
   "enabledPlugins": {
+    "claude-pray@claude-pray": true,
     "claude-md-management@claude-plugins-official": true,
     "feature-dev@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true,
@@ -100,6 +101,12 @@
       "source": {
         "source": "github",
         "repo": "thedotmack/claude-mem"
+      }
+    },
+    "claude-pray": {
+      "source": {
+        "source": "github",
+        "repo": "utkudarilmaz/claude-pray"
       }
     }
   }
