@@ -5,10 +5,11 @@
 ```json
 {
   "hooks": {
-    "PreToolUse": [...]     // Tool call interception
+    "PreToolUse": [...]           // Tool call interception
   },
-  "statusLine": {...},       // Status bar configuration
-  "enabledPlugins": {...}    // Plugin enable/disable map
+  "statusLine": {...},             // Status bar configuration
+  "enabledPlugins": {...},         // Plugin enable/disable map
+  "extraKnownMarketplaces": {...}  // External plugin sources
 }
 ```
 
@@ -36,6 +37,7 @@ External plugin marketplaces are configured via `extraKnownMarketplaces` in sett
 | `claude-hud` | `jarrodwatts/claude-hud` | Status line HUD plugin |
 | `claude-design-skillstack` | `freshtechbro/claudedesignskills` | Design and animation plugins |
 | `ui-ux-pro-max-skill` | `nextlevelbuilder/ui-ux-pro-max-skill` | UI/UX design skills |
+| `claude-mem` | `thedotmack/claude-mem` | Memory and context persistence |
 
 The official `claude-plugins-official` marketplace from Anthropic is built-in and doesn't require configuration.
 
@@ -60,6 +62,7 @@ Plugins are toggled via `enabledPlugins` map:
 | `commit-commands` | Git commit helpers |
 | `explanatory-output-style` | Output formatting |
 | `context7` | Documentation queries |
+| `claude-mem` | Memory and context persistence |
 | `superpowers` | Advanced skill framework |
 
 ## Hook Configuration

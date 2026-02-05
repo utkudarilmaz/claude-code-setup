@@ -31,26 +31,6 @@
     "type": "command",
     "command": "bash -c '\"/usr/bin/node\" \"$(ls -td ~/.claude/plugins/cache/claude-hud/claude-hud/*/ 2>/dev/null | head -1)dist/index.js\"'"
   },
-  "extraKnownMarketplaces": {
-    "claude-hud": {
-      "source": {
-        "source": "github",
-        "repo": "jarrodwatts/claude-hud"
-      }
-    },
-    "claude-design-skillstack": {
-      "source": {
-        "source": "github",
-        "repo": "freshtechbro/claudedesignskills"
-      }
-    },
-    "ui-ux-pro-max-skill": {
-      "source": {
-        "source": "github",
-        "repo": "nextlevelbuilder/ui-ux-pro-max-skill"
-      }
-    }
-  },
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": true,
     "feature-dev@claude-plugins-official": true,
@@ -59,6 +39,7 @@
     "explanatory-output-style@claude-plugins-official": true,
     "context7@claude-plugins-official": true,
     "claude-hud@claude-hud": true,
+    "claude-mem@thedotmack": true,
     "plugin-dev@claude-plugins-official": false,
     "hookify@claude-plugins-official": false,
     "claude-code-setup@claude-plugins-official": false,
@@ -95,5 +76,31 @@
     "substance-3d-texturing@claude-design-skillstack": false,
     "web3d-integration-patterns@claude-design-skillstack": false,
     "ui-ux-pro-max@ui-ux-pro-max-skill": false
+  },
+  "extraKnownMarketplaces": {
+    "claude-hud": {
+      "source": {
+        "source": "github",
+        "repo": "jarrodwatts/claude-hud"
+      }
+    },
+    "claude-design-skillstack": {
+      "source": {
+        "source": "github",
+        "repo": "freshtechbro/claudedesignskills"
+      }
+    },
+    "ui-ux-pro-max-skill": {
+      "source": {
+        "source": "github",
+        "repo": "nextlevelbuilder/ui-ux-pro-max-skill"
+      }
+    },
+    "claude-mem": {
+      "source": {
+        "source": "github",
+        "repo": "thedotmack/claude-mem"
+      }
+    }
   }
 }
