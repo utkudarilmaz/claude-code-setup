@@ -31,13 +31,35 @@
     "type": "command",
     "command": "bash -c '\"/usr/bin/node\" \"$(ls -td ~/.claude/plugins/cache/claude-hud/claude-hud/*/ 2>/dev/null | head -1)dist/index.js\"'"
   },
+  "extraKnownMarketplaces": {
+    "claude-hud": {
+      "source": {
+        "source": "github",
+        "repo": "jarrodwatts/claude-hud"
+      }
+    },
+    "claude-design-skillstack": {
+      "source": {
+        "source": "github",
+        "repo": "freshtechbro/claudedesignskills"
+      }
+    },
+    "ui-ux-pro-max-skill": {
+      "source": {
+        "source": "github",
+        "repo": "nextlevelbuilder/ui-ux-pro-max-skill"
+      }
+    }
+  },
   "enabledPlugins": {
+    "claude-md-management@claude-plugins-official": true,
     "feature-dev@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true,
     "commit-commands@claude-plugins-official": true,
     "explanatory-output-style@claude-plugins-official": true,
     "context7@claude-plugins-official": true,
     "claude-hud@claude-hud": true,
+    "plugin-dev@claude-plugins-official": false,
     "hookify@claude-plugins-official": false,
     "claude-code-setup@claude-plugins-official": false,
     "gopls-lsp@claude-plugins-official": false,
