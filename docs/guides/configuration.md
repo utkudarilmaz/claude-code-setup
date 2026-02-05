@@ -12,6 +12,33 @@
 }
 ```
 
+## Marketplace Configuration
+
+External plugin marketplaces are configured via `extraKnownMarketplaces` in settings.json:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "marketplace-name": {
+      "source": {
+        "source": "github",
+        "repo": "owner/repository"
+      }
+    }
+  }
+}
+```
+
+### Configured Marketplaces
+
+| Marketplace | Repository | Description |
+|-------------|------------|-------------|
+| `claude-hud` | `jarrodwatts/claude-hud` | Status line HUD plugin |
+| `claude-design-skillstack` | `freshtechbro/claudedesignskills` | Design and animation plugins |
+| `ui-ux-pro-max-skill` | `nextlevelbuilder/ui-ux-pro-max-skill` | UI/UX design skills |
+
+The official `claude-plugins-official` marketplace from Anthropic is built-in and doesn't require configuration.
+
 ## Plugin Management
 
 Plugins are toggled via `enabledPlugins` map:
