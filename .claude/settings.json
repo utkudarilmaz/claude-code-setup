@@ -78,29 +78,40 @@
     "ui-ux-pro-max@ui-ux-pro-max-skill": false
   },
   "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      },
+      "autoUpdate": true
+    },
     "claude-hud": {
       "source": {
         "source": "github",
         "repo": "jarrodwatts/claude-hud"
-      }
+      },
+      "autoUpdate": true
     },
     "claude-design-skillstack": {
       "source": {
         "source": "github",
         "repo": "freshtechbro/claudedesignskills"
-      }
+      },
+      "autoUpdate": true
     },
     "ui-ux-pro-max-skill": {
       "source": {
         "source": "github",
         "repo": "nextlevelbuilder/ui-ux-pro-max-skill"
-      }
+      },
+      "autoUpdate": true
     },
     "claude-pray": {
       "source": {
         "source": "github",
         "repo": "utkudarilmaz/claude-pray"
-      }
+      },
+      "autoUpdate": true
     }
   }
 }
