@@ -1,6 +1,6 @@
 ---
 name: pr-check
-description: Review current PR against quality checklist before merging
+description: This skill should be used when the user asks to "review my PR", "check if PR is ready", "run PR checklist", "verify PR quality", "review pull request", or "/pr-check". Reviews test coverage, secrets, error handling, and documentation against a quality checklist.
 ---
 
 # PR Check

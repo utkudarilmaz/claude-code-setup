@@ -1,6 +1,6 @@
 ---
 name: tester
-description: Use when code changes need test coverage verification, after implementing features, fixing bugs, refactoring, or with "all" for project-wide test audit
+description: This skill should be used when the user asks to "write tests", "add test coverage", "check test coverage", "test this function", "run test audit", "add regression tests", or "/tester". Verifies, creates, and updates test coverage.
 ---
 
 # Tester

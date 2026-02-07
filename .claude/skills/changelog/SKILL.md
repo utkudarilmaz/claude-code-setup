@@ -1,6 +1,6 @@
 ---
 name: changelog
-description: Generate or update changelog, or create release notes for announcements
+description: This skill should be used when the user asks to "generate changelog", "update changelog", "create release notes", "prepare release documentation", "what changed since last release", or "/changelog". Dispatches to changelog-generator or release-notes agents based on mode.
 ---
 
 # Changelog

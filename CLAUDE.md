@@ -12,6 +12,7 @@ This repository contains Claude Code configuration files (`.claude/`) designed t
 claude-code-setup/              # This repository (shareable)
 ├── .claude/                    # Claude Code config (becomes ~/.claude)
 │   ├── agents/                 # Agent definitions
+│   ├── hooks/                  # Hook scripts (PreToolUse, PostToolUse, etc.)
 │   ├── skills/                 # Skill commands
 │   ├── settings.json           # Configuration
 │   └── CLAUDE.md               # Global AI conventions (applied to all projects)
@@ -46,6 +47,7 @@ claude-code-setup/              # This repository (shareable)
 Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 - `PreToolUse` hooks run before specified tools execute
 - Configured via `matcher` regex patterns (e.g., `Edit|Write`)
+- Hook scripts live in `.claude/hooks/`
 
 ### Current Extensions
 
@@ -66,7 +68,7 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 | `devops` | agent | DevOps architect (Kubernetes, Helm, ArgoCD, Terraform, Terragrunt review and design) |
 | `release-notes` | agent | Release documentation specialist |
 | `changelog-generator` | agent | CHANGELOG.md generation from git history |
-| `suggest-compact.sh` | hook | Context compaction suggestions at logical intervals |
+| `hooks/suggest-compact.sh` | hook | Context compaction suggestions at logical intervals |
 | `sensitive-file-protection` | hook | Blocks writes to protected files (.env, credentials) |
 | `notification` | hook | Audio notification on idle/permission prompts |
 

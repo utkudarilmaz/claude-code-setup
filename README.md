@@ -7,8 +7,8 @@ Personal Claude Code configuration repository containing custom agents, skills, 
 This repository provides a modular extension framework for Claude Code with:
 
 - **Agents** - Specialized AI assistants for documentation, testing, security review, code quality, changelog generation, and infrastructure
-- **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`) with multiple invocation modes
-- **Hooks** - Tool call interception for automation (strategic context compaction, sensitive file protection)
+- **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`, `/changelog`, `/pr-check`) with multiple invocation modes
+- **Hooks** - Tool call interception for automation (context compaction suggestions, sensitive file protection, notifications)
 - **Plugin Management** - Centralized plugin enable/disable configuration
 
 ## Quick Start
@@ -52,6 +52,7 @@ See [Skills Reference](docs/reference/skills.md) for complete documentation.
 claude-code-setup/
 ├── .claude/                    # Claude Code config (becomes ~/.claude)
 │   ├── agents/                 # Agent definitions
+│   ├── hooks/                  # Hook scripts (PreToolUse, PostToolUse, etc.)
 │   ├── skills/                 # Skill commands
 │   ├── settings.json           # Hooks, plugins, statusLine
 │   └── CLAUDE.md               # Global conventions

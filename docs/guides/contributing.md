@@ -34,17 +34,19 @@
 
 ### New Hook
 
-Add to `.claude/settings.json`:
-```json
-{
-  "hooks": {
-    "PreToolUse": [{
-      "matcher": "ToolPattern",
-      "hooks": [{"type": "command", "command": "path/to/script.sh"}]
-    }]
-  }
-}
-```
+1. Create hook script in `.claude/hooks/<script>.sh`
+2. Make it executable: `chmod +x .claude/hooks/<script>.sh`
+3. Add to `.claude/settings.json`:
+   ```json
+   {
+     "hooks": {
+       "PreToolUse": [{
+         "matcher": "ToolPattern",
+         "hooks": [{"type": "command", "command": "~/.claude/hooks/<script>.sh"}]
+       }]
+     }
+   }
+   ```
 
 ## Code Guidelines
 
@@ -71,6 +73,6 @@ Format: `<type>: <description>`
 
 - Agent files: `.claude/agents/<name>.md`
 - Skill files: `.claude/skills/<name>/SKILL.md`
-- Hook scripts: `.claude/skills/<name>/<script>.sh`
+- Hook scripts: `.claude/hooks/<script>.sh`
 - JSON fields: always camelCase
 - Tags: without `v` prefix (e.g., `1.0.0`, not `v1.0.0`)

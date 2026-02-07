@@ -1,6 +1,6 @@
 ---
 name: docs
-description: Use when code changes are made that could affect documentation, with "all" for comprehensive audit, or "simplifier" to restructure and modularize existing documentation
+description: This skill should be used when the user asks to "update documentation", "document this change", "sync docs with code", "audit documentation", "restructure docs", "update README", "update CLAUDE.md", or "/docs". Supports scoped, comprehensive ("all"), and restructuring ("simplifier") modes.
 ---
 
 # Docs

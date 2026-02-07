@@ -7,9 +7,10 @@ The Makefile provides granular control over syncing between this repo and `~/.cl
 Add missing files and update changed files, keep extras:
 
 ```bash
-make update-all       # Update agents, skills, and config
+make update-all       # Update agents, skills, hooks, and config
 make update-agents    # Update .claude/agents/ only
 make update-skills    # Update .claude/skills/ only
+make update-hooks     # Update .claude/hooks/ only
 make update-config    # Update settings.json and CLAUDE.md
 ```
 
@@ -20,6 +21,7 @@ Remove repo-managed files from `~/.claude`:
 ```bash
 make rm-agents    # Remove matching agents
 make rm-skills    # Remove matching skills
+make rm-hooks     # Remove matching hooks
 ```
 
 ## Utility Commands

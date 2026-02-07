@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/skills/strategic-compact/suggest-compact.sh"
+            "command": "~/.claude/hooks/suggest-compact.sh"
           },
           {
             "type": "command",

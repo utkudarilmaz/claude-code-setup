@@ -1,6 +1,6 @@
 ---
 name: devops
-description: Review and design infrastructure configurations (Kubernetes, Helm, ArgoCD, Terraform, Terragrunt)
+description: This skill should be used when the user asks to "review infrastructure", "design helm chart", "check kubernetes manifests", "review terraform", "review terragrunt", "create argocd application", "audit infrastructure", or "/devops". Covers Kubernetes, Helm, ArgoCD, Terraform, and Terragrunt review and design.
 ---
 
 # DevOps
