@@ -19,6 +19,7 @@ After installation, your `~/.claude` directory should contain:
 ```
 ~/.claude/
 ├── agents/           # Agent definitions
+├── hooks/            # Hook scripts
 ├── skills/           # Skill commands
 ├── settings.json     # Configuration
 └── CLAUDE.md         # Global AI conventions

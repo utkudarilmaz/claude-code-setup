@@ -1,6 +1,6 @@
 ---
 name: simplifier
-description: Use when code needs cleanup, dead code removal, complexity reduction, or quality improvement, with "all" for project-wide audit
+description: This skill should be used when the user asks to "clean up code", "remove dead code", "simplify this function", "reduce complexity", "find unused imports", "code quality sweep", or "/simplifier". Focuses on dead code, complexity reduction, and duplication removal.
 ---
 
 # Simplifier

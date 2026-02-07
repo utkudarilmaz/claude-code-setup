@@ -62,6 +62,8 @@ Hooks intercept tool calls for pre/post processing:
 │   ├── release-notes.md
 │   ├── changelog-generator.md
 │   └── devops.md
+├── hooks/            # Hook scripts (tool call interception)
+│   └── suggest-compact.sh
 ├── skills/           # Skill commands (user interface)
 │   ├── docs/SKILL.md
 │   ├── tester/SKILL.md
@@ -69,8 +71,7 @@ Hooks intercept tool calls for pre/post processing:
 │   ├── security-review/SKILL.md
 │   ├── simplifier/SKILL.md
 │   ├── changelog/SKILL.md
-│   ├── devops/SKILL.md
-│   └── strategic-compact/suggest-compact.sh
+│   └── devops/SKILL.md
 ├── settings.json     # Hooks, plugins, statusLine
 └── CLAUDE.md         # Global conventions
 ```

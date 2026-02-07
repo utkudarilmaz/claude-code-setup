@@ -227,18 +227,3 @@ Review and design infrastructure configurations.
 /devops review values.yaml           # Review Helm values
 /devops all                          # Full infrastructure audit with planning
 ```
-
----
-
-## strategic-compact
-
-Hook that suggests context compaction at logical intervals.
-
-**Why Manual Compaction:**
-- Auto-compact happens at arbitrary points, often mid-task
-- Strategic compacting preserves context through logical phases
-- Compact after exploration, before execution
-
-**Trigger Points:**
-- After 50 tool calls (configurable via `COMPACT_THRESHOLD`)
-- Every 25 calls thereafter

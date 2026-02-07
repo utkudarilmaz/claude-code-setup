@@ -1,6 +1,6 @@
 ---
 name: security-review
-description: Perform security-focused code review
+description: This skill should be used when the user asks to "security review", "check for vulnerabilities", "audit security", "review code for security", "check for secrets", "OWASP review", or "/security-review". Covers authentication, input validation, data exposure, secrets, and OWASP Top 10.
 ---
 
 # Security Review
