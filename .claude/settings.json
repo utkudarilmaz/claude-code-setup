@@ -29,10 +29,9 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "bash -c '\"/usr/bin/node\" \"$(ls -td ~/.claude/plugins/cache/claude-hud/claude-hud/*/ 2>/dev/null | head -1)dist/index.js\"'"
+    "command": "bash -c 'EXISTING=$(\"/usr/bin/node\" \"$(ls -td ~/.claude/plugins/cache/claude-hud/claude-hud/*/ 2>/dev/null | head -1)dist/index.js\" 2>/dev/null); PRAY=$(\"/usr/bin/node\" \"$(ls -td ~/.claude/plugins/cache/claude-pray/claude-pray/*/ 2>/dev/null | head -1)dist/index.js\" 2>/dev/null); echo \"${EXISTING} ${PRAY}\"'"
   },
   "enabledPlugins": {
-    "claude-pray@claude-pray": true,
     "claude-md-management@claude-plugins-official": true,
     "feature-dev@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true,
@@ -83,36 +82,25 @@
       "source": {
         "source": "github",
         "repo": "anthropics/claude-plugins-official"
-      },
-      "autoUpdate": true
+      }
     },
     "claude-hud": {
       "source": {
         "source": "github",
         "repo": "jarrodwatts/claude-hud"
-      },
-      "autoUpdate": true
+      }
     },
     "claude-design-skillstack": {
       "source": {
         "source": "github",
         "repo": "freshtechbro/claudedesignskills"
-      },
-      "autoUpdate": true
+      }
     },
     "ui-ux-pro-max-skill": {
       "source": {
         "source": "github",
         "repo": "nextlevelbuilder/ui-ux-pro-max-skill"
-      },
-      "autoUpdate": true
-    },
-    "claude-pray": {
-      "source": {
-        "source": "github",
-        "repo": "utkudarilmaz/claude-pray"
-      },
-      "autoUpdate": true
+      }
     }
   }
 }
