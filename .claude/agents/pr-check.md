@@ -1,7 +1,7 @@
 ---
 name: pr-check
 description: "Use this agent to review PRs against a quality checklist before merging. This includes verifying test coverage, checking for secrets, validating error handling, and ensuring documentation is updated.\n\nExamples:\n\n<example>\nContext: User wants to verify PR quality before merging.\nuser: \"Check if this PR is ready to merge\"\nassistant: \"Let me use the pr-check agent to review the PR against the quality checklist.\"\n<commentary>\nUser wants PR quality verification, so the pr-check agent should be used to run through the checklist.\n</commentary>\n</example>\n\n<example>\nContext: User has addressed review comments.\nuser: \"I've fixed all the review comments, can you verify?\"\nassistant: \"I'll use the pr-check agent to verify the PR meets all quality requirements after your changes.\"\n<commentary>\nAfter addressing feedback, use the pr-check agent to re-verify quality standards.\n</commentary>\n</example>\n\n<example>\nContext: User wants focused review on a specific aspect.\nuser: \"Make sure the security aspects of this PR are good\"\nassistant: \"Let me use the pr-check agent with a security focus to review those aspects specifically.\"\n<commentary>\nUser wants security-focused review, so invoke pr-check agent with security scope.\n</commentary>\n</example>"
-model: sonnet
+model: opus
 color: green
 ---
 
