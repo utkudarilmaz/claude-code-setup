@@ -135,3 +135,15 @@ Then dispatches simplifier agent for each area sequentially.
 | Go | Unchecked errors, empty interface abuse, defer in loops, context propagation |
 | JS/TS | `any` abuse, unused hooks deps, mixed async patterns, optional chaining opportunities |
 | Python | Mutable defaults, broad exceptions, unused imports |
+
+## Additional Resources
+
+Language-specific pattern references are available for deeper analysis. When dispatching the simplifier agent, **detect the primary language(s) in scope** and include the relevant reference content in your dispatch prompt:
+
+| Scope Language | Reference File |
+|----------------|----------------|
+| Go | `references/go-patterns.md` |
+| JavaScript / TypeScript | `references/js-ts-patterns.md` |
+| Python | `references/python-patterns.md` |
+
+**Dispatch instruction**: Read the relevant reference file(s) and append their content to the agent prompt under a "## Language-Specific Patterns" heading. If the scope contains multiple languages, include all applicable references. If the language is unknown or mixed, include all three.
