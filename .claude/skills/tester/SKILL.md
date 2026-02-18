@@ -55,7 +55,8 @@ Perform a planned, modular test audit covering every testable area of the reposi
 Task tool with subagent_type="tester"
 prompt: "Perform comprehensive test audit of all repository areas.
 Create a TodoWrite plan with one item per testing aspect, then process sequentially.
-Consult references/comprehensive-mode.md for the full aspect checklist and execution flow."
+Enforce minimum 50% overall project code coverage.
+Consult references/comprehensive-mode.md for the full aspect checklist, coverage requirements, and execution flow."
 ```
 
 For detailed testing aspects checklist and example plan, consult **`references/comprehensive-mode.md`**.
@@ -74,4 +75,4 @@ For detailed testing aspects checklist and example plan, consult **`references/c
 ### Reference Files
 
 For detailed mode execution flows, consult:
-- **`references/comprehensive-mode.md`** - Full audit execution flow, testing aspects checklist, example TodoWrite plan
+- **`references/comprehensive-mode.md`** - Full audit execution flow, testing aspects checklist, 50% coverage requirements, example TodoWrite plan

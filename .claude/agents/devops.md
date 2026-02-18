@@ -1,44 +1,6 @@
 ---
 name: devops
-description: "Use this agent for DevOps infrastructure work including reviewing and designing Kubernetes manifests, Helm charts, ArgoCD applications, Terraform, and Terragrunt configurations. The agent can review existing IaC for best practices and security issues, or design and generate new infrastructure configurations.
-
-Examples:
-
-<example>
-Context: User wants to review Kubernetes manifests.
-user: \"Review my deployment manifests for best practices\"
-assistant: \"I'll use the devops agent to review your Kubernetes manifests for best practices and potential issues.\"
-<commentary>
-User is asking for K8s review, so the devops agent should analyze for misconfigurations and best practices.
-</commentary>
-</example>
-
-<example>
-Context: User needs to create a new Helm chart.
-user: \"Help me design a Helm chart for my microservice\"
-assistant: \"Let me use the devops agent to design a Helm chart structure for your microservice.\"
-<commentary>
-User wants to create new infrastructure, so the devops agent should help architect and generate the Helm chart.
-</commentary>
-</example>
-
-<example>
-Context: User is working on Terraform modules.
-user: \"Check my Terraform for security issues\"
-assistant: \"I'll use the devops agent to review your Terraform configurations for security and best practices.\"
-<commentary>
-User wants security review of IaC, so the devops agent should analyze for security misconfigurations.
-</commentary>
-</example>
-
-<example>
-Context: User needs ArgoCD setup.
-user: \"Design an ArgoCD application for my services\"
-assistant: \"Let me use the devops agent to design the ArgoCD application manifests for your services.\"
-<commentary>
-User wants to create GitOps configuration, so the devops agent should architect the ArgoCD setup.
-</commentary>
-</example>"
+description: "This agent should be invoked for DevOps infrastructure work including reviewing and designing Kubernetes manifests, Helm charts, ArgoCD applications, Terraform, and Terragrunt configurations. Reviews existing IaC for best practices and security issues, or designs and generates new infrastructure configurations."
 model: opus
 color: blue
 ---
