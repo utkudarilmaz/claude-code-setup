@@ -1,28 +1,29 @@
 ---
 name: tester
-description: This skill should be used when the user asks to "write tests", "add test coverage", "check test coverage", "test this function", "run test audit", "add regression tests", or "/tester". Verifies, creates, and updates test coverage.
+description: This skill should be used when the user asks to "write tests", "add test coverage", "check test coverage", "test this function", "run test audit", "add regression tests", "verify tests pass", "run tests", or "/tester". Verifies, creates, and updates test coverage.
 ---
 
-# Tester
+# Tester Skill
 
-## Overview
+## Purpose
 
-Dispatch the tester agent to verify, create, or update test coverage. The agent analyzes code and ensures comprehensive testing.
+Dispatch the tester agent to verify, create, or update test coverage. The agent analyzes code, identifies missing coverage, writes tests following best practices (AAA pattern, table-driven tests), and runs the test suite.
 
-## When to Use
+## When to Invoke
 
-- After implementing new features
-- After fixing bugs (add regression tests)
-- After refactoring existing code
-- When test coverage needs verification
-- With "all" for full project test audit
-- With specific scope for targeted testing
+Invoke this skill after:
+
+- Implementing new features or functions
+- Fixing bugs (to add regression tests)
+- Refactoring existing code (to verify tests still pass)
+- When test coverage needs verification or audit
+- Explicit request to write, run, or review tests
 
 ## Invocation Modes
 
 ### Default: `/tester`
 
-Tests current or recent changes. Agent identifies recently modified files and ensures test coverage.
+Test current or recent changes. The agent identifies recently modified files and ensures test coverage.
 
 ```
 Task tool with subagent_type="tester"
@@ -32,7 +33,7 @@ Identify modified files, verify existing tests, add missing tests."
 
 ### Scoped: `/tester <scope>`
 
-Tests only the specified scope (file, module, feature).
+Test only the specified scope (file, module, feature).
 
 ```
 Task tool with subagent_type="tester"
@@ -41,88 +42,36 @@ Focus only on this area. Verify existing tests, add missing coverage."
 ```
 
 **Scope examples:**
-- `/tester src/auth` - test authentication module
-- `/tester utils/parser.ts` - test specific file
-- `/tester API endpoints` - test all API routes
-- `/tester UserService` - test specific class/service
+- `/tester src/auth` - authentication module
+- `/tester utils/parser.ts` - specific file
+- `/tester API endpoints` - all API routes
+- `/tester UserService` - specific class or service
 
 ### Comprehensive: `/tester all`
 
-**Planned, modular test audit** covering every aspect of the repository.
-
-**CRITICAL: Do not skip any aspect. Continue until ALL areas are reviewed.**
-
-#### Execution Flow
-
-1. **Explore repository structure** - Identify all testable code areas
-2. **Create TodoWrite plan** - One todo item per testing aspect
-3. **Process sequentially** - Complete each aspect before moving to next
-4. **Mark progress** - Update todos as each section completes
-
-#### Testing Aspects to Review
-
-Process each area one-by-one:
-
-| Aspect | What to Test |
-|--------|--------------|
-| Unit tests | Individual functions, methods, utilities |
-| Integration tests | Module interactions, service connections |
-| API tests | Endpoints, request/response, error handling |
-| Component tests | UI components, rendering, user interactions |
-| Model tests | Data models, validation, relationships |
-| Service tests | Business logic, service layer |
-| Middleware tests | Auth, validation, error handling middleware |
-| Utility tests | Helper functions, formatters, parsers |
-| Edge cases | Boundary conditions, null handling, errors |
-| Error handling | Exception paths, error responses |
-| Configuration | Config loading, environment handling |
-| Database | Queries, transactions, migrations |
-
-#### Example: Full Audit
+Perform a planned, modular test audit covering every testable area of the repository.
 
 ```
-/tester all
+Task tool with subagent_type="tester"
+prompt: "Perform comprehensive test audit of all repository areas.
+Create a TodoWrite plan with one item per testing aspect, then process sequentially.
+Consult references/comprehensive-mode.md for the full aspect checklist and execution flow."
 ```
 
-Creates todos like:
-- [ ] Audit and test utility functions
-- [ ] Audit and test data models
-- [ ] Audit and test service layer
-- [ ] Audit and test API endpoints
-- [ ] Audit and test middleware
-- [ ] Audit and test components
-- [ ] Audit and test integration points
-- [ ] Audit and test error handling paths
-- [ ] Audit and test edge cases
-- [ ] Verify overall test coverage
+For detailed testing aspects checklist and example plan, consult **`references/comprehensive-mode.md`**.
 
-Then dispatches tester agent for each aspect sequentially, marking complete as each finishes.
+## Usage Examples
 
-## What the Agent Does
-
-- Analyzes code for testable logic
-- Identifies missing test coverage
-- Creates new test files/cases
-- Updates existing tests after refactoring
-- Runs test suite and reports results
-- Adds regression tests for bug fixes
-
-## Examples
-
-**After adding a feature:**
 ```
-/tester
-→ Reviews recent changes, adds tests for new functionality
+/tester                        # Test recent changes
+/tester src/services/payment   # Test payment service only
+/tester utils/parser.ts        # Test specific file
+/tester all                    # Full project test audit
 ```
 
-**Test specific module:**
-```
-/tester src/services/payment
-→ Focuses only on payment service tests
-```
+## Additional Resources
 
-**Full project audit:**
-```
-/tester all
-→ Creates plan, systematically tests every aspect
-```
+### Reference Files
+
+For detailed mode execution flows, consult:
+- **`references/comprehensive-mode.md`** - Full audit execution flow, testing aspects checklist, example TodoWrite plan
