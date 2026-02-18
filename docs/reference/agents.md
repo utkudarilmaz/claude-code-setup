@@ -28,7 +28,7 @@ Documentation architect that manages README.md, CLAUDE.md, API docs, postman col
 
 ## tester
 
-Test specialist ensuring comprehensive coverage.
+Test specialist ensuring comprehensive coverage across Go, JavaScript/TypeScript, and Python projects.
 
 **Trigger:** After implementing features, fixing bugs, or refactoring
 
@@ -36,14 +36,20 @@ Test specialist ensuring comprehensive coverage.
 - Write new tests (happy path, edge cases, errors)
 - Update existing tests when code changes
 - Run test suites and report results
-- Follow Arrange-Act-Assert pattern
+- Follow Arrange-Act-Assert pattern and table-driven tests where appropriate
 
-**Go Testing Commands:**
+**Language Support:**
+
+Go:
 ```bash
 go test -v ./path/to/package/...           # Run tests
 go test -v ./package -run TestName         # Single test
 go test -coverprofile=coverage.out ./...   # Coverage
 ```
+
+JavaScript/TypeScript: Uses project-configured runner (Jest, Vitest). Follows `*.test.ts` / `*.spec.ts` conventions.
+
+Python: Uses pytest with `test_*.py` / `*_test.py` conventions.
 
 ---
 
@@ -64,6 +70,25 @@ PR quality reviewer that verifies PRs against a quality checklist before merging
 - No obvious code smells or anti-patterns
 
 **Focus Modes:** tests, security, docs, breaking
+
+---
+
+## simplifier
+
+Code quality expert that removes dead code, reduces complexity, and eliminates duplication without changing behavior.
+
+**Trigger:** After feature implementation, refactoring, or when code quality issues are suspected
+
+**Responsibilities:**
+- Detect unused imports, variables, functions, and unreachable code
+- Identify complexity hotspots (deep nesting, long functions, complex booleans)
+- Find duplicated logic and suggest consolidation
+- Classify findings by severity (HIGH/MEDIUM/LOW) and confidence (CERTAIN/LIKELY/POSSIBLE)
+- Report only CERTAIN or LIKELY findings; flag POSSIBLE items separately
+
+**Language Support:** Go, JavaScript/TypeScript, Python (language-specific pattern references applied per scope)
+
+**Output:** Code Simplification Report with before/after code examples and severity summary table
 
 ---
 

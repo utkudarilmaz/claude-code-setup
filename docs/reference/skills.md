@@ -54,7 +54,7 @@ Verify and create test coverage.
 **What it does:**
 - **Default:** Identifies recently modified files and ensures test coverage
 - **Scoped:** Tests only specified area (file, module, or feature)
-- **Comprehensive:** Creates TodoWrite plan covering all testing aspects (unit, integration, API, components, edge cases), processes each sequentially
+- **Comprehensive:** Creates TodoWrite plan covering all testing aspects (unit, integration, API, components, edge cases), processes each sequentially, enforces minimum 50% overall project code coverage
 
 **Examples:**
 ```
@@ -180,8 +180,10 @@ Cleanup dead code and reduce complexity.
 
 **What it does:**
 - **Default:** Reviews recent changes for dead code, unused imports, overly complex functions
-- **Scoped:** Focuses cleanup on specified area
+- **Scoped:** Focuses cleanup on specified area; detects primary language(s) and applies language-specific patterns
 - **Comprehensive:** Creates TodoWrite plan covering all aspects (dead code, complexity, patterns, organization), processes each sequentially
+
+**Language Support:** Go, JavaScript/TypeScript, Python (language-specific pattern references loaded automatically per scope)
 
 **Examples:**
 ```

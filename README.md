@@ -31,7 +31,8 @@ See [Installation Guide](docs/guides/installation.md) for detailed setup instruc
 | docs | `/docs all` | Full documentation audit |
 | docs | `/docs simplifier` | Restructure large docs |
 | tester | `/tester` | Test recent changes |
-| tester | `/tester all` | Full test audit |
+| tester | `/tester <scope>` | Test specific area |
+| tester | `/tester all` | Full test audit (50% coverage minimum) |
 | pr-check | `/pr-check` | Review PR quality |
 | security-review | `/security-review` | Security review |
 | security-review | `/security-review all` | Full security audit |
