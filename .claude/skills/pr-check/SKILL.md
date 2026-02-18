@@ -3,25 +3,26 @@ name: pr-check
 description: This skill should be used when the user asks to "review my PR", "check if PR is ready", "run PR checklist", "verify PR quality", "review pull request", or "/pr-check". Reviews test coverage, secrets, error handling, and documentation against a quality checklist.
 ---
 
-# PR Check
+# PR Check Skill
 
-## Overview
+## Purpose
 
-Dispatch the pr-check agent to review a PR against quality standards. The agent verifies test coverage, checks for secrets, validates error handling, and ensures documentation is updated.
+Dispatch the pr-check agent to review a PR against quality standards. The agent verifies test coverage, checks for secrets, validates error handling, ensures documentation is updated, and produces a pass/fail report with recommendations.
 
-## When to Use
+## When to Invoke
+
+Invoke this skill:
 
 - Before merging a PR
 - After addressing review comments
 - For final verification before merge
-- When you want a second opinion on PR quality
 - With specific focus for targeted review (tests, security, docs)
 
 ## Invocation Modes
 
 ### Default: `/pr-check`
 
-Reviews the current PR against the full quality checklist.
+Review the current PR against the full quality checklist.
 
 ```
 Task tool with subagent_type="pr-check"
@@ -32,7 +33,7 @@ Evaluate: tests, secrets, error handling, breaking changes, commits, docs."
 
 ### Scoped: `/pr-check <focus>`
 
-Reviews the PR with emphasis on a specific aspect.
+Review the PR with emphasis on a specific aspect.
 
 ```
 Task tool with subagent_type="pr-check"
@@ -47,56 +48,11 @@ Prioritize [focus] in your review while still checking other items."
 - `/pr-check docs` - focus on documentation completeness
 - `/pr-check breaking` - focus on breaking changes and migration
 
-## What the Agent Does
+## Usage Examples
 
-- Retrieves PR details via `gh pr view`
-- Analyzes the diff via `gh pr diff`
-- Evaluates each checklist item:
-  - Tests added/updated for changes
-  - No hardcoded secrets or credentials
-  - Error handling is appropriate
-  - Breaking changes are documented
-  - Commit messages follow conventions
-  - Documentation updated if needed
-- Produces pass/fail report with explanations
-
-## Quality Checklist
-
-| Check | Criteria |
-|-------|----------|
-| Tests | New/modified code has corresponding tests |
-| Secrets | No hardcoded passwords, API keys, tokens |
-| Error Handling | Errors caught and handled appropriately |
-| Breaking Changes | API/behavior changes documented |
-| Commits | Follow conventional commit format |
-| Documentation | README/docs updated if needed |
-| Dependencies | New deps justified and secure |
-| Code Quality | No obvious smells or anti-patterns |
-
-## Examples
-
-**Standard PR review:**
 ```
-/pr-check
-→ Runs full checklist, produces pass/fail report
+/pr-check                # Full quality checklist review
+/pr-check tests          # Deep dive on test coverage
+/pr-check security       # Focus on secrets and auth
+/pr-check docs           # Focus on documentation
 ```
-
-**Security-focused review:**
-```
-/pr-check security
-→ Prioritizes secrets, auth, input validation checks
-```
-
-**Test coverage review:**
-```
-/pr-check tests
-→ Deep dive on test coverage, edge cases, test quality
-```
-
-## Output
-
-The agent produces a markdown report with:
-- Checklist results (PASS/FAIL/N/A for each item)
-- Summary of findings
-- Overall verdict (Ready to Merge / Changes Required)
-- Recommendations for improvement

@@ -47,10 +47,32 @@ When `/tester all` is invoked, create todos such as:
 
 Dispatch the tester agent for each aspect sequentially, marking each complete as it finishes.
 
-## Coverage Analysis
+## Coverage Requirements
 
-During the comprehensive audit, for each module:
+The full audit enforces a minimum **50% overall project code coverage** threshold:
 
-1. **Identify untested code paths** - Functions, branches, or error conditions without tests
-2. **Prioritize by risk** - Focus on business-critical logic, security-sensitive code, and frequently-changed modules first
-3. **Report coverage gaps** - Provide a clear list of what remains untested and recommended priority
+1. **Measure coverage** - Run the project's coverage tool after writing tests for each aspect
+2. **Track overall project coverage** - Record the total coverage percentage across the entire codebase
+3. **Flag if below 50%** - Overall project coverage under 50% is a blocking finding
+4. **Prioritize by risk** - Focus on business-critical logic, security-sensitive code, and frequently-changed areas first
+5. **Report coverage gaps** - Provide a clear list of what remains untested with recommended priority
+
+### Coverage Commands by Language
+
+| Language | Command |
+|----------|---------|
+| Go | `go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out` |
+| JavaScript/TypeScript | `npx vitest --coverage` or `npx jest --coverage` |
+| Python | `pytest --cov=. --cov-report=term-missing` |
+
+### Final Coverage Report
+
+Include a project coverage summary in the audit output:
+
+| Metric | Value |
+|--------|-------|
+| Overall project coverage | 62% |
+| Status | PASS (above 50%) |
+| Lines covered | 1,240 / 2,000 |
+
+Mark the audit as **incomplete** if overall project coverage remains below 50% after test additions. Document remaining gaps and recommend follow-up actions.

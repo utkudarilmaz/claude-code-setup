@@ -3,26 +3,28 @@ name: devops
 description: This skill should be used when the user asks to "review infrastructure", "design helm chart", "check kubernetes manifests", "review terraform", "review terragrunt", "create argocd application", "audit infrastructure", or "/devops". Covers Kubernetes, Helm, ArgoCD, Terraform, and Terragrunt review and design.
 ---
 
-# DevOps
+# DevOps Skill
 
-## Overview
+## Purpose
 
-Dispatch the devops agent to review existing infrastructure code or design and generate new configurations. The agent specializes in Kubernetes, Helm, ArgoCD, Terraform, and Terragrunt.
+Dispatch the devops agent to review existing infrastructure code or design and generate new configurations. The agent specializes in Kubernetes, Helm, ArgoCD, Terraform, and Terragrunt, operating in review mode (analyze existing IaC) or design mode (generate new configurations).
 
-## When to Use
+## When to Invoke
+
+Invoke this skill:
 
 - When reviewing Kubernetes manifests or Helm charts
 - When designing new infrastructure configurations
 - When setting up ArgoCD applications or GitOps workflows
 - When reviewing Terraform/Terragrunt modules
 - When migrating or refactoring infrastructure code
-- With "all" for comprehensive infrastructure audit
+- For comprehensive infrastructure audit with "all"
 
 ## Invocation Modes
 
 ### Default: `/devops`
 
-Reviews recent infrastructure changes for best practices and issues.
+Review recent infrastructure changes for best practices and issues.
 
 ```
 Task tool with subagent_type="devops"
@@ -34,7 +36,7 @@ Report findings with severity, location, and recommendations."
 
 ### Scoped: `/devops <context>`
 
-Reviews or designs based on the provided context.
+Review or design based on the provided context.
 
 ```
 Task tool with subagent_type="devops"
@@ -50,142 +52,33 @@ Provide detailed output with code examples."
 - `/devops review terraform/modules/vpc` - review Terraform module
 - `/devops design helm chart for redis` - generate Helm chart
 - `/devops design argocd app for microservices` - generate ArgoCD config
-- `/devops review values.yaml` - review Helm values
 
 ### Comprehensive: `/devops all`
 
-**Full infrastructure audit** of the entire repository.
+Perform a full infrastructure audit of the entire repository.
 
-**CRITICAL: Do not skip any infrastructure files. Continue until ALL are reviewed.**
-
-#### Execution Flow
-
-1. **Discover infrastructure files** - Find all IaC in the repository
-2. **Create TodoWrite plan** - One todo item per infrastructure type/area
-3. **Process sequentially** - Review each area thoroughly
-4. **Mark progress** - Update todos as each section completes
-
-#### Infrastructure Types to Review
-
-| Type | File Patterns | What to Check |
-|------|---------------|---------------|
-| Kubernetes | `*.yaml`, `*.yml` in k8s/, manifests/ | Security, resources, probes, RBAC |
-| Helm | `Chart.yaml`, `values.yaml`, templates/ | Structure, templating, defaults |
-| ArgoCD | `Application`, `ApplicationSet` | Sync policy, health, RBAC |
-| Terraform | `*.tf` | State, modules, security, variables |
-| Terragrunt | `terragrunt.hcl` | DRY, dependencies, remote state |
-| Kustomize | `kustomization.yaml` | Overlays, patches, resources |
-
-## What the Agent Does
-
-### Review Mode
-- Identifies security misconfigurations (privileged containers, missing RBAC)
-- Checks for best practice violations (no resource limits, missing probes)
-- Finds reliability issues (no HPA, missing PDBs)
-- Suggests performance optimizations
-- Rates severity (CRITICAL/HIGH/MEDIUM/LOW)
-- Provides specific fixes with corrected code
-
-### Design Mode
-- Generates production-ready configurations
-- Follows GitOps principles
-- Includes security best practices by default
-- Provides clear documentation
-- Creates modular, reusable patterns
-
-## Severity Levels
-
-| Level | Description |
-|-------|-------------|
-| CRITICAL | Security breach risk, data loss potential |
-| HIGH | Production stability risk |
-| MEDIUM | Operational issues |
-| LOW | Best practice improvements |
-
-## Output Format
-
-### Review Output
-
-```markdown
-## DevOps Review Report
-
-### Executive Summary
-[X critical, Y high, Z medium findings]
-
-### Findings
-
-#### [SEVERITY] Finding Title
-- **Location**: file:line
-- **Category**: Security | Reliability | Performance
-- **Issue**: Description
-- **Fix**: Corrected code
-
-### Summary Table
-| Severity | Count |
-|----------|-------|
-| Critical | X |
-| High | Y |
-| Medium | Z |
-| Low | W |
+```
+Task tool with subagent_type="devops"
+prompt: "Perform comprehensive infrastructure audit of the entire repository.
+Create a TodoWrite plan with one item per infrastructure type, then process sequentially.
+Consult references/comprehensive-mode.md for the infrastructure types checklist and execution flow."
 ```
 
-### Design Output
+For the full infrastructure types checklist and example plan, consult **`references/comprehensive-mode.md`**.
 
-```markdown
-## Infrastructure Design
+## Usage Examples
 
-### Architecture Overview
-[Description of the design]
-
-### File Structure
-[Directory tree]
-
-### Generated Files
-[Code blocks for each file]
-
-### Deployment Instructions
-[Step-by-step guide]
+```
+/devops                                # Review recent IaC changes
+/devops review terraform/              # Review Terraform configurations
+/devops design helm chart for api      # Generate Helm chart
+/devops design argocd applicationset   # Generate ArgoCD config
+/devops all                            # Full infrastructure audit
 ```
 
-## Examples
+## Additional Resources
 
-**Review recent changes:**
-```
-/devops
-→ Reviews recent IaC changes for issues
-```
+### Reference Files
 
-**Review specific directory:**
-```
-/devops review terraform/
-→ Deep review of Terraform configurations
-```
-
-**Design new Helm chart:**
-```
-/devops design helm chart for api gateway
-→ Generates complete Helm chart structure
-```
-
-**Design ArgoCD setup:**
-```
-/devops design argocd applicationset for multi-env
-→ Generates ApplicationSet for multiple environments
-```
-
-**Full infrastructure audit:**
-```
-/devops all
-→ Comprehensive audit with TodoWrite planning
-```
-
-## Technology Coverage
-
-| Technology | Review | Design |
-|------------|--------|--------|
-| Kubernetes | Security, resources, probes, RBAC, NetworkPolicies | Deployments, Services, ConfigMaps |
-| Helm | Chart structure, values, templates | Complete charts with best practices |
-| ArgoCD | Sync policies, health checks, RBAC | Applications, ApplicationSets |
-| Terraform | State, modules, security, variables | Modules with validation |
-| Terragrunt | DRY patterns, dependencies, remote state | Hierarchical configurations |
-| Kustomize | Overlays, patches | Base + overlay structures |
+For detailed mode execution flows, consult:
+- **`references/comprehensive-mode.md`** - Full audit execution flow, infrastructure types checklist, example TodoWrite plan
