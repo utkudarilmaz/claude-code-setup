@@ -33,14 +33,17 @@ claude-code-setup/              # This repository (shareable)
 ### Two-Tier Extension Model
 
 ```
-.claude/skills/       → User-facing invocation layer (slash commands)
-  └── */SKILL.md      → Defines /command interface and dispatch logic
+.claude/skills/                 → User-facing invocation layer (slash commands)
+  └── */SKILL.md                → Defines /command interface and dispatch logic
+  └── */references/             → Reference files for complex mode content
 
-.claude/agents/       → Business logic layer (agent definitions)
-  └── *.md            → Agent persona, workflow, and behavior rules
+.claude/agents/                 → Business logic layer (agent definitions)
+  └── *.md                      → Agent persona, workflow, and behavior rules
 ```
 
 **Skills** provide the `/command` interface and determine how to dispatch to agents. **Agents** contain the specialized knowledge, workflows, and rules for task execution.
+
+Comprehensive mode content is extracted to `references/` subdirectories within each skill to keep SKILL.md lean. Skills reference these files in their dispatch prompts rather than embedding the full content.
 
 ### Hook System
 
@@ -64,7 +67,7 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 | `tester` | agent | Test specialist (coverage, AAA pattern, table-driven) |
 | `pr-check` | agent | PR quality reviewer (tests, secrets, error handling) |
 | `security-reviewer` | agent | Security expert (auth, injection, API security, file uploads, cryptography, business logic, client-side, HTTP headers, dependencies, modern attack vectors, OWASP Top 10) |
-| `simplifier` | agent | Code quality expert (dead code, complexity reduction, Go/JS/TS focus) |
+| `simplifier` | agent | Code quality expert (dead code, complexity reduction, Go/JS/TS/Python focus) |
 | `devops` | agent | DevOps architect (Kubernetes, Helm, ArgoCD, Terraform, Terragrunt review and design) |
 | `release-notes` | agent | Release documentation specialist |
 | `changelog-generator` | agent | CHANGELOG.md generation from git history |
@@ -115,15 +118,19 @@ Key conventions for this repository:
 - **No AI attribution**: Never add Co-Authored-By Claude or AI references
 - **JSON fields**: Always use camelCase
 - **Agent/Skill files**: YAML frontmatter with `name`, `description`, optional `model`, `color`
-- **Never split agent/skill files**: Keep `.claude/agents/*.md` and `.claude/skills/*/SKILL.md` as single files - they are loaded as complete context for AI, not user documentation
+- **Never split agent/skill files**: Keep `.claude/agents/*.md` and `.claude/skills/*/SKILL.md` as single files - they are loaded as complete context for AI, not user documentation. Detailed reference content belongs in `.claude/skills/*/references/` files, not in the main SKILL.md
 
 ### Skill/Agent Patterns
+
+Skills follow **progressive disclosure**: SKILL.md is a lean dispatch layer; detailed content lives in `references/` files that agents consult when needed.
 
 Skills support multiple invocation modes:
 1. **Default** (`/command`): Process recent changes
 2. **Scoped** (`/command <scope>`): Target specific file/module/feature
-3. **Comprehensive** (`/command all`): Full project audit with TodoWrite planning
-4. **Special modes** (skill-specific): Additional modes like `/docs simplifier` for restructuring
+3. **Comprehensive** (`/command all`): Full project audit with TodoWrite planning; detailed checklist in `references/comprehensive-mode.md`
+4. **Special modes** (skill-specific): Additional modes like `/docs simplifier` (references `references/simplifier-mode.md`)
+
+Agent descriptions use concise third-person trigger phrases rather than verbose conversation examples.
 
 Agent frontmatter structure:
 ```yaml
