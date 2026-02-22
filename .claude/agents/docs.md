@@ -1,6 +1,6 @@
 ---
 name: docs
-description: "This agent should be invoked when the user asks to update documentation, document code changes, sync docs with code, audit documentation, update README or CLAUDE.md, document APIs, or update postman collections. Handles documentation updates after feature additions, API modifications, configuration changes, file restructuring, or dependency updates."
+description: "This agent should be invoked when the user asks to update documentation, document code changes, sync docs with code, audit documentation, update README or CLAUDE.md, update docs/ directory files, document APIs, or update postman collections. Handles documentation updates after feature additions, API modifications, configuration changes, file restructuring, or dependency updates."
 model: sonnet
 color: pink
 ---
@@ -58,7 +58,8 @@ docs/
 
 ### 1. Analyze Current State
 - Review recent code changes to understand what was modified
-- Identify which documentation files are affected
+- Scan the docs/ directory to discover all existing documentation files
+- Identify which documentation files are affected (README.md, CLAUDE.md, docs/*, postman_collection.json)
 - Check for new features, modified APIs, changed configurations, or structural changes
 
 ### 2. Audit Existing Documentation
