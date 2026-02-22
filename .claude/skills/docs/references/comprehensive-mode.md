@@ -29,6 +29,7 @@ Process each area one-by-one:
 | Deployment | Build process, CI/CD, hosting |
 | Contributing | Code style, PR process, conventions |
 | CLAUDE.md | Codebase instructions for AI assistants |
+| Existing docs/* files | Scan docs/ directory, update all existing files for accuracy |
 
 ## Example TodoWrite Plan
 
@@ -44,6 +45,7 @@ When `/docs all` is invoked, create todos such as:
 - [ ] Document authentication flow
 - [ ] Document testing approach
 - [ ] Document deployment process
+- [ ] Review and update all existing docs/* files for accuracy
 - [ ] Update CLAUDE.md with codebase patterns
 
 Dispatch the docs agent for each aspect sequentially, marking each complete as it finishes.

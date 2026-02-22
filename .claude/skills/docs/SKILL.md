@@ -1,13 +1,13 @@
 ---
 name: docs
-description: This skill should be used when the user asks to "update documentation", "document this change", "sync docs with code", "audit documentation", "restructure docs", "update README", "update CLAUDE.md", "document API", "update postman collection", or "/docs". Supports scoped, comprehensive ("all"), and restructuring ("simplifier") modes.
+description: This skill should be used when the user asks to "update documentation", "document this change", "sync docs with code", "audit documentation", "restructure docs", "update README", "update CLAUDE.md", "update docs folder", "document API", "update postman collection", or "/docs". Supports scoped, comprehensive ("all"), and restructuring ("simplifier") modes.
 ---
 
 # Docs Skill
 
 ## Purpose
 
-Dispatch the docs agent to synchronize documentation with code changes. The agent updates README.md, CLAUDE.md, API docs, postman collections, and other documentation files to keep them accurate and current.
+Dispatch the docs agent to synchronize documentation with code changes. The agent updates README.md, CLAUDE.md, docs/* directory files, API docs, postman collections, and other documentation files to keep them accurate and current.
 
 ## When to Invoke
 
@@ -30,7 +30,7 @@ Document current or recent changes. The agent identifies recently modified files
 ```
 Task tool with subagent_type="docs"
 prompt: "Review recent code changes and update all affected documentation.
-Identify modified files, update relevant docs."
+Identify modified files, scan the docs/ directory for existing files, and update README.md, CLAUDE.md, docs/* files, and any other relevant documentation."
 ```
 
 ### Scoped: `/docs <scope>`
@@ -40,7 +40,7 @@ Document only the specified scope (file, module, feature).
 ```
 Task tool with subagent_type="docs"
 prompt: "Review and update documentation for: [scope]
-Focus only on this area. Update all relevant documentation files."
+Focus only on this area. Update all relevant documentation files including any matching files in the docs/ directory."
 ```
 
 **Scope examples:**
