@@ -86,6 +86,7 @@ Hooks intercept tool calls for pre/post processing:
 │   │       ├── js-ts-patterns.md
 │   │       └── python-patterns.md
 │   ├── changelog/SKILL.md
+│   ├── release-tag/SKILL.md
 │   └── devops/
 │       ├── SKILL.md
 │       └── references/
