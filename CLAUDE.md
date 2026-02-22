@@ -63,6 +63,7 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 | `/changelog` | skill | Changelog and release notes generation |
 | `/simplifier` | skill | Dead code removal, complexity reduction, code quality improvement |
 | `/devops` | skill | Review and design infrastructure (Kubernetes, Helm, ArgoCD, Terraform, Terragrunt) |
+| `/release-tag` | skill | Semantic version bumping and annotated git tag creation |
 | `docs` | agent | Documentation architect (README, CLAUDE.md, API docs, modular structure, .drawio diagrams) |
 | `tester` | agent | Test specialist (coverage, AAA pattern, table-driven) |
 | `pr-check` | agent | PR quality reviewer (tests, secrets, error handling) |
@@ -106,6 +107,10 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 /devops review <path>    # Review specific IaC directory/file
 /devops design <request> # Design and generate new infrastructure
 /devops all              # Full infrastructure audit
+
+/release-tag major       # Bump major version and tag
+/release-tag minor       # Bump minor version and tag
+/release-tag patch       # Bump patch version and tag
 ```
 
 ## Conventions

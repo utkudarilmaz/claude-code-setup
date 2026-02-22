@@ -229,3 +229,31 @@ Review and design infrastructure configurations.
 /devops review values.yaml           # Review Helm values
 /devops all                          # Full infrastructure audit with planning
 ```
+
+---
+
+## /release-tag
+
+Bump semantic version, update changelog, and create annotated git tag.
+
+| Mode | Command | Description |
+|------|---------|-------------|
+| Patch | `/release-tag patch` | Bump patch version (1.2.3 -> 1.2.4) |
+| Minor | `/release-tag minor` | Bump minor version (1.2.3 -> 1.3.0) |
+| Major | `/release-tag major` | Bump major version (1.2.3 -> 2.0.0) |
+
+**What it does:**
+- Reads the latest git tag (defaults to `0.0.0` if none exist)
+- Calculates new version based on bump type
+- Verifies clean working tree (refuses to tag with uncommitted changes)
+- Invokes `/changelog` to update CHANGELOG.md, then commits the changelog
+- Builds tag message from grouped commit summary (conventional commit types)
+- Creates annotated git tag (no "v" prefix)
+- Reminds user to push manually (never auto-pushes)
+
+**Examples:**
+```
+/release-tag patch       # Bump patch version and tag
+/release-tag minor       # Bump minor version and tag
+/release-tag major       # Bump major version and tag
+```
