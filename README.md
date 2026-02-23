@@ -6,8 +6,8 @@ Personal Claude Code configuration repository containing custom agents, skills, 
 
 This repository provides a modular extension framework for Claude Code with:
 
-- **Agents** - Specialized AI assistants for documentation, testing, security review, code quality, changelog generation, and infrastructure
-- **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`, `/changelog`, `/pr-check`, `/release-tag`) with multiple invocation modes
+- **Agents** - Specialized AI assistants for documentation, testing, security review, code quality, changelog generation, infrastructure, and SEO/GEO/AIO optimization
+- **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`, `/changelog`, `/pr-check`, `/release-tag`, `/seo`) with multiple invocation modes
 - **Hooks** - Tool call interception for automation (context compaction suggestions, sensitive file protection, notifications)
 - **Plugin Management** - Centralized plugin enable/disable configuration
 
@@ -47,6 +47,10 @@ See [Installation Guide](docs/guides/installation.md) for detailed setup instruc
 | release-tag | `/release-tag patch` | Bump patch version and create annotated tag |
 | release-tag | `/release-tag minor` | Bump minor version and create annotated tag |
 | release-tag | `/release-tag major` | Bump major version and create annotated tag |
+| seo | `/seo` | Optimize recent web content changes for SEO/GEO/AIO |
+| seo | `/seo <scope>` | Optimize specific page or directory |
+| seo | `/seo all` | Full project SEO/GEO/AIO optimization |
+| seo | `/seo audit` | Score-only report card (no file edits) |
 
 See [Skills Reference](docs/reference/skills.md) for complete documentation.
 
@@ -77,8 +81,8 @@ claude-code-setup/
 | [Configuration](docs/guides/configuration.md) | settings.json, plugins, hooks |
 | [Contributing](docs/guides/contributing.md) | Adding agents, skills, hooks |
 | [Extension Model](docs/architecture/extension-model.md) | Two-tier architecture |
-| [Agents Reference](docs/reference/agents.md) | All 8 agents |
-| [Skills Reference](docs/reference/skills.md) | All 8 skills with modes |
+| [Agents Reference](docs/reference/agents.md) | All 9 agents |
+| [Skills Reference](docs/reference/skills.md) | All 9 skills with modes |
 | [Makefile Commands](docs/reference/makefile.md) | Sync utilities |
 
 ## License

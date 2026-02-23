@@ -64,6 +64,7 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 | `/simplifier` | skill | Dead code removal, complexity reduction, code quality improvement |
 | `/devops` | skill | Review and design infrastructure (Kubernetes, Helm, ArgoCD, Terraform, Terragrunt) |
 | `/release-tag` | skill | Semantic version bumping and annotated git tag creation |
+| `/seo` | skill | SEO, GEO, and AIO web content optimization with audit mode |
 | `docs` | agent | Documentation architect (README, CLAUDE.md, API docs, modular structure, .drawio diagrams) |
 | `tester` | agent | Test specialist (coverage, AAA pattern, table-driven) |
 | `pr-check` | agent | PR quality reviewer (tests, secrets, error handling) |
@@ -72,6 +73,7 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 | `devops` | agent | DevOps architect (Kubernetes, Helm, ArgoCD, Terraform, Terragrunt review and design) |
 | `release-notes` | agent | Release documentation specialist |
 | `changelog-generator` | agent | CHANGELOG.md generation from git history |
+| `seo-optimizer` | agent | SEO/GEO/AIO expert (meta tags, structured data, Open Graph, entity clarity, AI readability) |
 | `hooks/suggest-compact.sh` | hook | Context compaction suggestions at logical intervals |
 | `sensitive-file-protection` | hook | Blocks writes to protected files (.env, credentials) |
 | `notification` | hook | Audio notification on idle/permission prompts |
@@ -111,6 +113,11 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 /release-tag major       # Bump major version and tag
 /release-tag minor       # Bump minor version and tag
 /release-tag patch       # Bump patch version and tag
+
+/seo                     # Optimize recent web content changes
+/seo <scope>             # Optimize specific page/file
+/seo all                 # Full project SEO/GEO/AIO audit
+/seo audit               # Score-only report card (no edits)
 ```
 
 ## Conventions

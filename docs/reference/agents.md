@@ -157,6 +157,42 @@ Generates CHANGELOG.md from git history using Keep a Changelog format.
 
 ---
 
+## seo-optimizer
+
+SEO/GEO/AIO optimization expert that improves web content discoverability across traditional search engines, generative AI systems, and AI crawlers.
+
+**Trigger:** After creating or modifying HTML pages, web templates, or web-facing content; when improving search rankings or AI citability
+
+**Responsibilities:**
+- Optimize meta tags (title, description, canonical, robots, viewport)
+- Enforce heading hierarchy (single H1, logical H2-H6 nesting)
+- Add and validate JSON-LD structured data (Schema.org types)
+- Add Open Graph and Twitter Card tags
+- Improve image optimization (alt text, width/height, lazy loading)
+- Strengthen internal linking (descriptive anchors, link depth)
+- Improve GEO signals (entity clarity, factual density, FAQ/HowTo schemas)
+- Enhance AIO signals (semantic HTML5, machine-readable structure, context density)
+- Apply changes directly with before/after tracking
+- Produce audit report cards with 0-100 scores per aspect
+
+**Coverage Areas:**
+
+| Area | Focus |
+|------|-------|
+| SEO | Meta tags, headings, Open Graph, Twitter Cards, images, linking, technical |
+| GEO | Entity clarity, factual density, FAQ/HowTo schema, passage optimization |
+| AIO | JSON-LD structured data, semantic HTML5, machine readability, context density |
+
+**Severity Levels:** CRITICAL, HIGH, MEDIUM, LOW
+
+**Model:** opus (complex analysis and editing)
+
+**Modes:**
+- **Edit mode (default):** Applies CRITICAL and HIGH fixes directly; flags LOW items as recommendations
+- **Audit mode:** Scores each aspect 0-100, produces weighted report card, no file modifications
+
+---
+
 ## devops
 
 DevOps architect for infrastructure code review and design.

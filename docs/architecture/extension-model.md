@@ -61,7 +61,8 @@ Hooks intercept tool calls for pre/post processing:
 │   ├── simplifier.md
 │   ├── release-notes.md
 │   ├── changelog-generator.md
-│   └── devops.md
+│   ├── devops.md
+│   └── seo-optimizer.md
 ├── hooks/            # Hook scripts (tool call interception)
 │   └── suggest-compact.sh
 ├── skills/           # Skill commands (user interface)
@@ -87,10 +88,15 @@ Hooks intercept tool calls for pre/post processing:
 │   │       └── python-patterns.md
 │   ├── changelog/SKILL.md
 │   ├── release-tag/SKILL.md
-│   └── devops/
+│   ├── devops/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── comprehensive-mode.md
+│   └── seo/
 │       ├── SKILL.md
 │       └── references/
-│           └── comprehensive-mode.md
+│           ├── comprehensive-mode.md
+│           └── audit-mode.md
 ├── settings.json     # Hooks, plugins, statusLine
 └── CLAUDE.md         # Global conventions
 ```

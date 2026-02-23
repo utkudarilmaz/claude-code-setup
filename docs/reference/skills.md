@@ -232,6 +232,47 @@ Review and design infrastructure configurations.
 
 ---
 
+## /seo
+
+Optimize web content for search engines (SEO), generative AI engines (GEO), and AI crawlers (AIO).
+
+| Mode | Command | Description |
+|------|---------|-------------|
+| Default | `/seo` | Optimize recently changed web files |
+| Scoped | `/seo <scope>` | Optimize specific page, directory, or component |
+| Comprehensive | `/seo all` | Full project SEO/GEO/AIO optimization with TodoWrite planning |
+| Audit | `/seo audit` | Score all web content (no file edits) |
+
+**What it does:**
+- **Default:** Identifies recently modified HTML, templates, and web config files and applies SEO/GEO/AIO improvements
+- **Scoped:** Focuses only on specified area (file, directory, or component)
+- **Comprehensive:** Creates TodoWrite plan covering all 12 optimization aspects (meta, headings, structured data, Open Graph, images, linking, technical SEO, GEO, AIO, sitemap, robots.txt, performance hints), processes each sequentially
+- **Audit:** Scores each aspect 0-100, calculates weighted total, produces report card with letter grade and prioritized recommendations without modifying any files
+
+**12 Optimization Aspects:**
+
+| Pillar | Focus Areas |
+|--------|------------|
+| SEO | Meta tags, heading hierarchy, Open Graph, Twitter Cards, images, internal linking, canonical URLs |
+| GEO | Entity clarity, factual density, FAQ/HowTo schemas, passage-level optimization |
+| AIO | JSON-LD structured data, semantic HTML5, machine-readable structure, context density |
+| Technical | sitemap.xml, robots.txt, resource hints, async/defer scripts |
+
+**Severity Levels:** CRITICAL, HIGH, MEDIUM, LOW
+
+**Examples:**
+```
+/seo                           # Optimize recent web content changes
+/seo src/pages/about.html      # Optimize specific page
+/seo templates/                # Optimize all templates in directory
+/seo all                       # Full project optimization with planning
+/seo audit                     # Score-only report card (no edits)
+```
+
+**Reference Files:** `references/comprehensive-mode.md` (12-aspect checklist), `references/audit-mode.md` (scoring rubric, report card template)
+
+---
+
 ## /release-tag
 
 Bump semantic version, update changelog, and create annotated git tag.
