@@ -37,8 +37,8 @@ External plugin marketplaces are configured via `extraKnownMarketplaces` in sett
 | `claude-hud` | `jarrodwatts/claude-hud` | Status line HUD plugin |
 | `claude-design-skillstack` | `freshtechbro/claudedesignskills` | Design and animation plugins |
 | `ui-ux-pro-max-skill` | `nextlevelbuilder/ui-ux-pro-max-skill` | UI/UX design skills |
-| `claude-mem` | `thedotmack/claude-mem` | Memory and context persistence |
-| `claude-pray` | `utkudarilmaz/claude-pray` | Prayer times and Islamic utilities |
+| `marketingskills` | `coreyhaines31/marketingskills` | Marketing skill plugins |
+| `claude-pray` | `utkudarilmaz/claude-pray` | Prayer times and status line utilities |
 
 The official `claude-plugins-official` marketplace from Anthropic is built-in and doesn't require configuration.
 
@@ -57,15 +57,20 @@ Plugins are toggled via `enabledPlugins` map:
 
 ### Currently Enabled Plugins
 
-| Plugin | Purpose |
-|--------|---------|
-| `claude-hud` | Status line UI |
-| `claude-pray` | Prayer times and Islamic utilities |
-| `commit-commands` | Git commit helpers |
-| `explanatory-output-style` | Output formatting |
-| `context7` | Documentation queries |
-| `claude-mem` | Memory and context persistence |
-| `superpowers` | Advanced skill framework |
+| Plugin | Source | Purpose |
+|--------|--------|---------|
+| `claude-hud` | `claude-hud` | Status line UI |
+| `claude-md-management` | `claude-plugins-official` | CLAUDE.md lifecycle management |
+| `feature-dev` | `claude-plugins-official` | Feature development workflows |
+| `superpowers` | `claude-plugins-official` | Advanced skill framework |
+| `commit-commands` | `claude-plugins-official` | Git commit helpers |
+| `explanatory-output-style` | `claude-plugins-official` | Output formatting |
+| `context7` | `claude-plugins-official` | Documentation queries |
+| `code-review` | `claude-plugins-official` | Code review assistance |
+| `code-simplifier` | `claude-plugins-official` | Code simplification |
+| `security-guidance` | `claude-plugins-official` | Security best practices |
+
+Disabled plugins (set to `false`) remain registered but inactive. Notable disabled plugins include `marketing-skills@marketingskills` and various design/animation skills from `claude-design-skillstack`.
 
 ## Hook Configuration
 
