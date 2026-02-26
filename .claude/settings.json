@@ -76,7 +76,8 @@
     "spline-interactive@claude-design-skillstack": false,
     "substance-3d-texturing@claude-design-skillstack": false,
     "web3d-integration-patterns@claude-design-skillstack": false,
-    "ui-ux-pro-max@ui-ux-pro-max-skill": false
+    "ui-ux-pro-max@ui-ux-pro-max-skill": false,
+    "marketing-skills@marketingskills": false
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
@@ -101,6 +102,18 @@
       "source": {
         "source": "github",
         "repo": "nextlevelbuilder/ui-ux-pro-max-skill"
+      }
+    },
+    "marketingskills": {
+      "source": {
+        "source": "github",
+        "repo": "coreyhaines31/marketingskills"
+      }
+    },
+    "claude-pray": {
+      "source": {
+        "source": "github",
+        "repo": "utkudarilmaz/claude-pray"
       }
     }
   }
