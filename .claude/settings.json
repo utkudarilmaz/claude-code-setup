@@ -42,6 +42,7 @@
     "code-simplifier@claude-plugins-official": true,
     "security-guidance@claude-plugins-official": true,
     "claude-hud@claude-hud": true,
+    "atlassian@claude-plugins-official": false,
     "plugin-dev@claude-plugins-official": false,
     "hookify@claude-plugins-official": false,
     "claude-code-setup@claude-plugins-official": false,
