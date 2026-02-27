@@ -6,10 +6,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/suggest-compact.sh"
-          },
-          {
-            "type": "command",
             "command": "bash -c '[[ \"$TOOL_INPUT\" =~ (\\.env|credentials|secrets|\\.lock|lock\\.json|lock\\.yaml) ]] && echo \"BLOCK: Protected file\" && exit 1 || exit 0'"
           }
         ]
@@ -117,5 +113,6 @@
         "repo": "utkudarilmaz/claude-pray"
       }
     }
-  }
+  },
+  "skipDangerousModePermissionPrompt": true
 }

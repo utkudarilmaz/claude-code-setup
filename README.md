@@ -8,7 +8,7 @@ This repository provides a modular extension framework for Claude Code with:
 
 - **Agents** - Specialized AI assistants for documentation, testing, security review, code quality, changelog generation, infrastructure, and SEO/GEO/AIO optimization
 - **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`, `/changelog`, `/pr-check`, `/release-tag`, `/seo`) with multiple invocation modes
-- **Hooks** - Tool call interception for automation (context compaction suggestions, sensitive file protection, notifications)
+- **Hooks** - Tool call interception for automation (sensitive file protection, notifications)
 - **Plugin Management** - Centralized plugin enable/disable configuration
 
 ## Quick Start

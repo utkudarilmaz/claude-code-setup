@@ -74,7 +74,6 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 | `release-notes` | agent | Release documentation specialist |
 | `changelog-generator` | agent | CHANGELOG.md generation from git history |
 | `seo-optimizer` | agent | SEO/GEO/AIO expert (meta tags, structured data, Open Graph, entity clarity, AI readability) |
-| `hooks/suggest-compact.sh` | hook | Context compaction suggestions at logical intervals |
 | `sensitive-file-protection` | hook | Blocks writes to protected files (.env, credentials) |
 | `notification` | hook | Audio notification on idle/permission prompts |
 
