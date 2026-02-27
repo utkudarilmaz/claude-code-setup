@@ -45,7 +45,6 @@ Hooks intercept tool calls for pre/post processing:
 
 | Hook | Trigger | Purpose |
 |------|---------|---------|
-| `suggest-compact.sh` | Every 50 tool calls | Suggests `/compact` at logical intervals |
 | `sensitive-file-protection` | Edit\|Write | Blocks writes to protected files (.env, credentials, secrets, lock files) |
 | `notification` | Idle/permission | Plays audio notification on idle or permission prompts |
 
@@ -64,7 +63,6 @@ Hooks intercept tool calls for pre/post processing:
 │   ├── devops.md
 │   └── seo-optimizer.md
 ├── hooks/            # Hook scripts (tool call interception)
-│   └── suggest-compact.sh
 ├── skills/           # Skill commands (user interface)
 │   ├── docs/
 │   │   ├── SKILL.md

@@ -91,7 +91,6 @@ Hooks intercept tool calls for automation. See [Extension Model](../architecture
 
 ### Current Hooks
 
-- `suggest-compact.sh` - Suggests `/compact` at logical intervals (every 50 tool calls)
 - `sensitive-file-protection` - Blocks writes to protected files
 - `notification` - Plays audio notification on idle/permission prompts
 
