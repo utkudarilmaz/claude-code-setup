@@ -171,35 +171,39 @@ endif
 .PHONY: update-hooks
 update-hooks:
 	@echo "$(BOLD)Updating hooks...$(NC) $(DRY_RUN_MSG)"
-	$(call ensure_target_dir)
-	@mkdir -p $(TARGET_DIR)/hooks
-ifdef RSYNC
-	@rsync $(RSYNC_OPTS) $(REPO_DIR)/hooks/ $(TARGET_DIR)/hooks/
-else
-	@for f in $(REPO_DIR)/hooks/*; do \
-		filename=$$(basename "$$f"); \
-		target="$(TARGET_DIR)/hooks/$$filename"; \
-		if [ ! -e "$$target" ]; then \
-			if [ "$(DRY_RUN)" = "1" ]; then \
-				echo "Would add: hooks/$$filename"; \
-			else \
-				cp "$$f" "$$target"; \
-				chmod +x "$$target" 2>/dev/null || true; \
-				echo "Added: hooks/$$filename"; \
-			fi \
-		elif ! diff -q "$$f" "$$target" > /dev/null 2>&1; then \
-			if [ "$(DRY_RUN)" = "1" ]; then \
-				echo "Would update: hooks/$$filename"; \
-			else \
-				cp "$$f" "$$target"; \
-				chmod +x "$$target" 2>/dev/null || true; \
-				echo "Updated: hooks/$$filename"; \
-			fi \
+	@if [ ! -d $(REPO_DIR)/hooks ]; then \
+		echo "  No hooks directory in repo, skipping."; \
+	else \
+		$(call ensure_target_dir); \
+		mkdir -p $(TARGET_DIR)/hooks; \
+		if command -v rsync >/dev/null 2>&1; then \
+			rsync $(RSYNC_OPTS) $(REPO_DIR)/hooks/ $(TARGET_DIR)/hooks/; \
 		else \
-			echo "Unchanged: hooks/$$filename"; \
-		fi \
-	done
-endif
+			for f in $(REPO_DIR)/hooks/*; do \
+				filename=$$(basename "$$f"); \
+				target="$(TARGET_DIR)/hooks/$$filename"; \
+				if [ ! -e "$$target" ]; then \
+					if [ "$(DRY_RUN)" = "1" ]; then \
+						echo "Would add: hooks/$$filename"; \
+					else \
+						cp "$$f" "$$target"; \
+						chmod +x "$$target" 2>/dev/null || true; \
+						echo "Added: hooks/$$filename"; \
+					fi; \
+				elif ! diff -q "$$f" "$$target" > /dev/null 2>&1; then \
+					if [ "$(DRY_RUN)" = "1" ]; then \
+						echo "Would update: hooks/$$filename"; \
+					else \
+						cp "$$f" "$$target"; \
+						chmod +x "$$target" 2>/dev/null || true; \
+						echo "Updated: hooks/$$filename"; \
+					fi; \
+				else \
+					echo "Unchanged: hooks/$$filename"; \
+				fi; \
+			done; \
+		fi; \
+	fi
 
 .PHONY: update-config
 update-config:
