@@ -8,8 +8,9 @@ This repository provides a modular extension framework for Claude Code with:
 
 - **Agents** - Specialized AI assistants for documentation, testing, security review, code quality, changelog generation, infrastructure, and SEO/GEO/AIO optimization
 - **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`, `/changelog`, `/pr-check`, `/release-tag`, `/seo`) with multiple invocation modes
-- **Hooks** - Tool call interception for automation (sensitive file protection, notifications)
+- **Hooks** - Tool call interception for automation (sensitive file protection, cross-platform notifications)
 - **Plugin Management** - Centralized plugin enable/disable configuration
+- **Cross-Platform Support** - Works on macOS and Linux with dynamic path resolution
 
 ## Quick Start
 
@@ -20,7 +21,9 @@ cd claude-code-setup
 make update-all
 ```
 
-See [Installation Guide](docs/guides/installation.md) for detailed setup instructions.
+**Platform Support:** macOS and Linux with automatic Node.js path detection and cross-platform audio notifications.
+
+See [Installation Guide](docs/guides/installation.md) for detailed setup instructions and requirements.
 
 ## Skill Commands
 

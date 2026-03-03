@@ -51,6 +51,11 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 - `PreToolUse` hooks run before specified tools execute
 - Configured via `matcher` regex patterns (e.g., `Edit|Write`)
 - Hook scripts live in `.claude/hooks/`
+- Cross-platform compatible (macOS and Linux)
+
+**Platform compatibility:**
+- StatusLine uses `$(command -v node)` for dynamic node path resolution
+- Notification hook supports macOS (`afplay`) and Linux (`paplay`/`aplay`) with fallback chain
 
 ### Current Extensions
 
@@ -75,7 +80,8 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 | `changelog-generator` | agent | CHANGELOG.md generation from git history |
 | `seo-optimizer` | agent | SEO/GEO/AIO expert (meta tags, structured data, Open Graph, entity clarity, AI readability) |
 | `sensitive-file-protection` | hook | Blocks writes to protected files (.env, credentials) |
-| `notification` | hook | Audio notification on idle/permission prompts |
+| `notification` | hook | Cross-platform audio notification on idle/permission prompts (macOS/Linux) |
+| `claude-pray` | plugin | Prayer times and status line utilities (enabled) |
 
 ### Quick Command Reference
 

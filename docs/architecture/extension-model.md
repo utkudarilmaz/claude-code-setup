@@ -43,10 +43,16 @@ Hooks intercept tool calls for pre/post processing:
 
 ### Current Hooks
 
-| Hook | Trigger | Purpose |
-|------|---------|---------|
-| `sensitive-file-protection` | Edit\|Write | Blocks writes to protected files (.env, credentials, secrets, lock files) |
-| `notification` | Idle/permission | Plays audio notification on idle or permission prompts |
+| Hook | Trigger | Purpose | Platform Support |
+|------|---------|---------|------------------|
+| `sensitive-file-protection` | Edit\|Write | Blocks writes to protected files (.env, credentials, secrets, lock files) | All |
+| `notification` | Idle/permission | Plays audio notification on idle or permission prompts | macOS (afplay), Linux (paplay/aplay) |
+
+**Cross-platform notification implementation:**
+- macOS: `afplay /System/Library/Sounds/Glass.aiff`
+- Linux (PulseAudio): `paplay /usr/share/sounds/freedesktop/stereo/complete.oga`
+- Linux (ALSA): `aplay /usr/share/sounds/alsa/Front_Center.wav`
+- Fallback chain ensures compatibility across platforms
 
 ## Directory Structure
 
@@ -95,9 +101,34 @@ Hooks intercept tool calls for pre/post processing:
 │       └── references/
 │           ├── comprehensive-mode.md
 │           └── audit-mode.md
-├── settings.json     # Hooks, plugins, statusLine
+├── settings.json     # Hooks, plugins, statusLine (cross-platform)
 └── CLAUDE.md         # Global conventions
 ```
+
+## Platform Compatibility
+
+### Node.js Path Resolution
+
+The `statusLine` configuration uses dynamic node path resolution for cross-platform compatibility:
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "bash -c '... $(\"$(command -v node)\" ...) ...'"
+  }
+}
+```
+
+This avoids hardcoding `/usr/bin/node` and works on:
+- macOS (Homebrew): `/opt/homebrew/bin/node`
+- macOS (nvm): `~/.nvm/versions/node/*/bin/node`
+- Linux: `/usr/bin/node`
+- Any custom installation location
+
+### Audio Notification Support
+
+The notification hook uses a fallback chain to support multiple platforms and audio systems. See **Current Hooks** section above for details.
 
 ## Flow Example
 
