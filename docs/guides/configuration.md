@@ -60,6 +60,7 @@ Plugins are toggled via `enabledPlugins` map:
 | Plugin | Source | Purpose |
 |--------|--------|---------|
 | `claude-hud` | `claude-hud` | Status line UI |
+| `claude-pray` | `claude-pray` | Prayer times and status line utilities |
 | `claude-md-management` | `claude-plugins-official` | CLAUDE.md lifecycle management |
 | `feature-dev` | `claude-plugins-official` | Feature development workflows |
 | `superpowers` | `claude-plugins-official` | Advanced skill framework |
@@ -91,8 +92,39 @@ Hooks intercept tool calls for automation. See [Extension Model](../architecture
 
 ### Current Hooks
 
-- `sensitive-file-protection` - Blocks writes to protected files
-- `notification` - Plays audio notification on idle/permission prompts
+#### sensitive-file-protection
+Blocks writes to protected files (.env, credentials, secrets, lock files).
+
+**Implementation:**
+```bash
+bash -c '[[ "$TOOL_INPUT" =~ (\.env|credentials|secrets|\.lock|lock\.json|lock\.yaml) ]] && echo "BLOCK: Protected file" && exit 1 || exit 0'
+```
+
+#### notification
+Plays audio notification on idle or permission prompts. Cross-platform support for macOS and Linux.
+
+**Implementation:**
+```bash
+afplay /System/Library/Sounds/Glass.aiff 2>/dev/null || \
+paplay /usr/share/sounds/freedesktop/stereo/complete.oga 2>/dev/null || \
+aplay /usr/share/sounds/alsa/Front_Center.wav 2>/dev/null || \
+true
+```
+
+**Platform support:**
+- macOS: Uses `afplay` with system sound
+- Linux (PulseAudio): Uses `paplay`
+- Linux (ALSA): Falls back to `aplay`
+
+### StatusLine Configuration
+
+The status line uses dynamic node path resolution for cross-platform compatibility:
+
+```bash
+bash -c 'EXISTING=$(\"$(command -v node)\" ...) ...'
+```
+
+This approach works on both macOS (where node may be at `/opt/homebrew/bin/node`) and Linux (typically `/usr/bin/node`), avoiding hardcoded paths.
 
 ## Global Conventions
 

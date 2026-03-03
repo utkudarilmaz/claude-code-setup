@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "paplay /usr/share/sounds/freedesktop/stereo/complete.oga 2>/dev/null || aplay /usr/share/sounds/alsa/Front_Center.wav 2>/dev/null || true"
+            "command": "afplay /System/Library/Sounds/Glass.aiff 2>/dev/null || paplay /usr/share/sounds/freedesktop/stereo/complete.oga 2>/dev/null || aplay /usr/share/sounds/alsa/Front_Center.wav 2>/dev/null || true"
           }
         ]
       }
@@ -25,7 +25,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "bash -c 'EXISTING=$(\"/usr/bin/node\" \"$(ls -td ~/.claude/plugins/cache/claude-hud/claude-hud/*/ 2>/dev/null | head -1)dist/index.js\" 2>/dev/null); PRAY=$(\"/usr/bin/node\" \"$(ls -td ~/.claude/plugins/cache/claude-pray/claude-pray/*/ 2>/dev/null | head -1)dist/index.js\" 2>/dev/null); echo \"${EXISTING} ${PRAY}\"'"
+    "command": "bash -c 'EXISTING=$(\"$(command -v node)\" \"$(ls -td ~/.claude/plugins/cache/claude-hud/claude-hud/*/ 2>/dev/null | head -1)dist/index.js\" 2>/dev/null); PRAY=$(\"$(command -v node)\" \"$(ls -td ~/.claude/plugins/cache/claude-pray/claude-pray/*/ 2>/dev/null | head -1)dist/index.js\" 2>/dev/null); echo \"${EXISTING} ${PRAY}\"'"
   },
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": true,

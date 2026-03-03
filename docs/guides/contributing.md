@@ -48,12 +48,23 @@
    }
    ```
 
+**Cross-platform considerations:**
+- Use bash scripts with `#!/bin/bash` shebang
+- Avoid hardcoded paths (use `$(command -v <tool>)` for executables)
+- For platform-specific features, use fallback chains:
+  ```bash
+  command_mac || command_linux || true
+  ```
+- Test on both macOS and Linux when possible
+
 ## Code Guidelines
 
 1. Follow existing patterns for agents/skills
 2. Use conventional commits
 3. Update CLAUDE.md when adding new extensions
 4. Test skills before committing
+5. Ensure cross-platform compatibility (macOS and Linux)
+6. Avoid hardcoded paths in hooks and statusLine configurations
 
 ## Conventional Commits
 
