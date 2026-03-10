@@ -68,10 +68,8 @@ Plugins are toggled via `enabledPlugins` map:
 | `explanatory-output-style` | `claude-plugins-official` | Output formatting |
 | `context7` | `claude-plugins-official` | Documentation queries |
 | `code-review` | `claude-plugins-official` | Code review assistance |
-| `code-simplifier` | `claude-plugins-official` | Code simplification |
-| `security-guidance` | `claude-plugins-official` | Security best practices |
 
-Disabled plugins (set to `false`) remain registered but inactive. Notable disabled plugins include `marketing-skills@marketingskills` and various design/animation skills from `claude-design-skillstack`.
+Disabled plugins (set to `false`) remain registered but inactive. Notable disabled plugins include `code-simplifier@claude-plugins-official`, `security-guidance@claude-plugins-official`, `marketing-skills@marketingskills`, and various design/animation skills from `claude-design-skillstack`.
 
 ## Hook Configuration
 
