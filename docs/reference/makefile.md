@@ -14,6 +14,25 @@ make update-hooks     # Update .claude/hooks/ only
 make update-config    # Update settings.json and CLAUDE.md
 ```
 
+## Install Commands
+
+Install external tools and skills from a registry of named targets:
+
+```bash
+make install                    # Install all registered targets
+make install all                # Install all registered targets
+make install <target>           # Install a specific target
+```
+
+Registered targets:
+
+| Target | Action |
+|--------|--------|
+| `google-maps-scraper` | `npx skills add gosom/google-maps-scraper` |
+
+To add a new target, append its name to `INSTALL_TARGETS` in the Makefile and
+add a matching `install-<name>` recipe in the INSTALL COMMANDS section.
+
 ## Remove Commands
 
 Remove repo-managed files from `~/.claude`:
