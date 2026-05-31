@@ -52,6 +52,12 @@ help:
 	@echo "  $(GREEN)update-hooks$(NC)     Update .claude/hooks/ only"
 	@echo "  $(GREEN)update-config$(NC)    Update settings.json and CLAUDE.md"
 	@echo ""
+	@echo "$(BOLD)Install Commands$(NC) (install external tools and skills):"
+	@echo "  $(GREEN)install$(NC)          Install all registered targets"
+	@echo "  $(GREEN)install all$(NC)      Install all registered targets"
+	@echo "  $(GREEN)install <target>$(NC) Install a specific target"
+	@echo "  $(BLUE)Targets:$(NC) $(INSTALL_TARGETS)"
+	@echo ""
 	@echo "$(BOLD)Remove Commands$(NC) (remove repo files from ~/.claude):"
 	@echo "  $(RED)rm-agents$(NC)      Remove matching agents"
 	@echo "  $(RED)rm-skills$(NC)      Remove matching skills"
@@ -68,8 +74,19 @@ help:
 	@echo ""
 	@echo "$(BOLD)Examples$(NC):"
 	@echo "  make update-all              # Update files in ~/.claude"
+	@echo "  make install                 # Install all registered targets"
+	@echo "  make install google-maps-scraper  # Install a specific target"
 	@echo "  make DRY_RUN=1 rm-agents     # Preview agent removal"
 	@echo "  make FORCE=1 rm-skills       # Remove skills without confirmation"
+
+# ============================================================================
+# INSTALL TARGETS REGISTRY
+# ============================================================================
+
+# Registry of installable targets. To add a new one:
+#   1. Append its <name> to INSTALL_TARGETS below
+#   2. Add a matching `install-<name>` recipe in the INSTALL COMMANDS section
+INSTALL_TARGETS := google-maps-scraper
 
 # ============================================================================
 # UTILITY FUNCTIONS
@@ -243,6 +260,38 @@ update-config:
 	else \
 		echo "Unchanged: CLAUDE.md"; \
 	fi
+
+# ============================================================================
+# INSTALL COMMANDS (install external tools and skills)
+# ============================================================================
+
+.PHONY: install
+install:
+	@targets="$(filter-out install,$(MAKECMDGOALS))"; \
+	if [ -z "$$targets" ] || [ "$$targets" = "all" ]; then \
+		targets="$(INSTALL_TARGETS)"; \
+	fi; \
+	for t in $$targets; do \
+		if echo " $(INSTALL_TARGETS) " | grep -q " $$t "; then \
+			$(MAKE) --no-print-directory install-$$t; \
+		else \
+			echo "$(RED)Unknown install target: $$t$(NC)"; \
+			echo "Available targets: $(INSTALL_TARGETS)"; \
+			exit 1; \
+		fi \
+	done
+
+.PHONY: install-google-maps-scraper
+install-google-maps-scraper:
+	@echo "$(BOLD)Installing google-maps-scraper...$(NC)"
+	npx skills add gosom/google-maps-scraper
+
+# Absorb install target names passed as extra goals so Make does not error
+# (e.g. `make install all` / `make install google-maps-scraper`). The real
+# work is done by the `install` target above; these are no-ops.
+.PHONY: all $(INSTALL_TARGETS)
+all $(INSTALL_TARGETS):
+	@:
 
 # ============================================================================
 # REMOVE COMMANDS (remove repo files from ~/.claude)
