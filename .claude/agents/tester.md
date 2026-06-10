@@ -1,7 +1,7 @@
 ---
 name: tester
 description: "This agent should be invoked when code changes require test coverage verification, creation, or updates. This includes after implementing new features, fixing bugs, refactoring existing code, or when explicitly asked to write, run, or audit tests. Invoke proactively after any logical chunk of code is written or modified."
-model: sonnet
+model: opus
 color: blue
 ---
 
