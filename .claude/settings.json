@@ -37,6 +37,7 @@
     "code-review@claude-plugins-official": true,
     "claude-hud@claude-hud": true,
     "claude-pray@claude-pray": true,
+    "i-have-adhd@i-have-adhd": true,
     "security-guidance@claude-plugins-official": false,
     "code-simplifier@claude-plugins-official": false,
     "atlassian@claude-plugins-official": false,
@@ -112,6 +113,12 @@
       "source": {
         "source": "github",
         "repo": "utkudarilmaz/claude-pray"
+      }
+    },
+    "i-have-adhd": {
+      "source": {
+        "source": "github",
+        "repo": "ayghri/i-have-adhd"
       }
     }
   },

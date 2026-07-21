@@ -39,6 +39,7 @@ External plugin marketplaces are configured via `extraKnownMarketplaces` in sett
 | `ui-ux-pro-max-skill` | `nextlevelbuilder/ui-ux-pro-max-skill` | UI/UX design skills |
 | `marketingskills` | `coreyhaines31/marketingskills` | Marketing skill plugins |
 | `claude-pray` | `utkudarilmaz/claude-pray` | Prayer times and status line utilities |
+| `i-have-adhd` | `ayghri/i-have-adhd` | ADHD-friendly output shaping |
 
 The official `claude-plugins-official` marketplace from Anthropic is built-in and doesn't require configuration.
 
@@ -61,6 +62,7 @@ Plugins are toggled via `enabledPlugins` map:
 |--------|--------|---------|
 | `claude-hud` | `claude-hud` | Status line UI |
 | `claude-pray` | `claude-pray` | Prayer times and status line utilities |
+| `i-have-adhd` | `i-have-adhd` | Action-first, ADHD-friendly output shaping |
 | `claude-md-management` | `claude-plugins-official` | CLAUDE.md lifecycle management |
 | `feature-dev` | `claude-plugins-official` | Feature development workflows |
 | `superpowers` | `claude-plugins-official` | Advanced skill framework |
