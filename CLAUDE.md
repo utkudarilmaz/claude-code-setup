@@ -82,6 +82,7 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 | `sensitive-file-protection` | hook | Blocks writes to protected files (.env, credentials) |
 | `notification` | hook | Cross-platform audio notification on idle/permission prompts (macOS/Linux) |
 | `claude-pray` | plugin | Prayer times and status line utilities (enabled) |
+| `i-have-adhd` | plugin | Action-first, ADHD-friendly output shaping (enabled) |
 
 ### Quick Command Reference
 
