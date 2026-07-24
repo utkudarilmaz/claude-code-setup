@@ -1,4 +1,5 @@
 - Never add Claude Code references, Co-Authored-By Claude, or any AI attribution to commits
+- Always use plain simple English when documenting or explaining including PR bodies
 - Always commit with conventional commits standards
 - Always tag without "v" prefix
 - Never commit before user manually asks
