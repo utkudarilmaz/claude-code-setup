@@ -58,13 +58,34 @@ make help      # Display all commands
 |--------|-------------|
 | `DRY_RUN=1` | Preview changes without executing |
 | `FORCE=1` | Skip confirmation prompts |
+| `TARGET_DIR=<path>` | Sync to a directory other than `~/.claude` |
 
 Examples:
 ```bash
 make update-all               # Add missing + update changed
 make DRY_RUN=1 rm-agents      # Preview agent removal
 make status                   # Check what needs updating
+make update-all TARGET_DIR=$HOME/.claude-personal   # Sync a second Claude home
 ```
+
+`TARGET_DIR` defaults to `~/.claude` but can be overridden on the command
+line. This is useful if you keep more than one Claude home directory (for
+example a work profile and a personal profile) and want to sync the same
+repo into both.
+
+## Diff Output (`make diff`)
+
+`make diff` compares `TARGET_DIR` against `REPO_DIR` in that order, so the
+colors match what `make update` would do to the target:
+
+- **Green** lines are lines `make update` would add to the target
+- **Red** lines are lines `make update` would remove from the target
+
+A legend line is printed at the top of the output as a reminder. The
+Makefile detects once, via the `DIFF_COLOR` variable, whether the local
+`diff` supports `--color=always`, and reuses that result for every file
+comparison instead of retrying colored diff on each call, which used to
+print the same diff twice when color wasn't supported.
 
 ## Status Legend
 

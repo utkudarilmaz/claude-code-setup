@@ -21,6 +21,13 @@ cd claude-code-setup
 make update-all
 ```
 
+Keep more than one Claude home directory (for example a work and a personal
+profile)? Override `TARGET_DIR` to sync the same repo into either one:
+
+```bash
+make update-all TARGET_DIR=$HOME/.claude-personal
+```
+
 **Platform Support:** macOS and Linux with automatic Node.js path detection and cross-platform audio notifications.
 
 See [Installation Guide](docs/guides/installation.md) for detailed setup instructions and requirements.
