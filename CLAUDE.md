@@ -82,7 +82,6 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 | `sensitive-file-protection` | hook | Blocks writes to protected files (.env, credentials) |
 | `notification` | hook | Cross-platform audio notification on idle/permission prompts (macOS/Linux) |
 | `claude-pray` | plugin | Prayer times and status line utilities (enabled) |
-| `i-have-adhd` | plugin | Action-first, ADHD-friendly output shaping (enabled) |
 
 ### Quick Command Reference
 
@@ -201,7 +200,18 @@ The Makefile provides commands to synchronize this repository's `.claude/` direc
 **Key commands**:
 - `make update-all` - Sync all agents, skills, and config files
 - `make status` - View sync status with color-coded indicators
-- `make diff` - See detailed differences between repo and `~/.claude`
+- `make diff` - See detailed differences between `~/.claude` and the repo
 - `make backup` - Create timestamped backup before making changes
 
-See README.md for complete Makefile documentation.
+**`make diff` output**: compares the target directory against the repo, so
+green lines are what `make update` would add and red lines are what it
+would remove. A legend line at the top of the output states this. Color
+support is detected once via the `DIFF_COLOR` variable rather than retried
+on every file.
+
+**Multiple Claude homes**: override `TARGET_DIR` on the command line to sync
+into a directory other than `~/.claude`, e.g.
+`make update-all TARGET_DIR=$HOME/.claude-personal`. Useful for keeping a
+work profile and a personal profile in sync from the same repo.
+
+See docs/reference/makefile.md for complete Makefile documentation.

@@ -5,11 +5,14 @@
 ```json
 {
   "hooks": {
-    "PreToolUse": [...]           // Tool call interception
+    "PreToolUse": [...]              // Tool call interception
   },
-  "statusLine": {...},             // Status bar configuration
-  "enabledPlugins": {...},         // Plugin enable/disable map
-  "extraKnownMarketplaces": {...}  // External plugin sources
+  "statusLine": {...},                // Status bar configuration
+  "enabledPlugins": {...},            // Plugin enable/disable map
+  "extraKnownMarketplaces": {...},    // External plugin sources
+  "effortLevel": "high",              // Default reasoning effort
+  "skipDangerousModePermissionPrompt": true, // Skip prompt for dangerous mode
+  "skipAutoPermissionPrompt": true    // Skip prompt for auto-approved actions
 }
 ```
 
@@ -39,7 +42,6 @@ External plugin marketplaces are configured via `extraKnownMarketplaces` in sett
 | `ui-ux-pro-max-skill` | `nextlevelbuilder/ui-ux-pro-max-skill` | UI/UX design skills |
 | `marketingskills` | `coreyhaines31/marketingskills` | Marketing skill plugins |
 | `claude-pray` | `utkudarilmaz/claude-pray` | Prayer times and status line utilities |
-| `i-have-adhd` | `ayghri/i-have-adhd` | ADHD-friendly output shaping |
 
 The official `claude-plugins-official` marketplace from Anthropic is built-in and doesn't require configuration.
 
@@ -62,7 +64,6 @@ Plugins are toggled via `enabledPlugins` map:
 |--------|--------|---------|
 | `claude-hud` | `claude-hud` | Status line UI |
 | `claude-pray` | `claude-pray` | Prayer times and status line utilities |
-| `i-have-adhd` | `i-have-adhd` | Action-first, ADHD-friendly output shaping |
 | `claude-md-management` | `claude-plugins-official` | CLAUDE.md lifecycle management |
 | `feature-dev` | `claude-plugins-official` | Feature development workflows |
 | `superpowers` | `claude-plugins-official` | Advanced skill framework |
@@ -133,5 +134,11 @@ The `.claude/CLAUDE.md` file contains conventions applied to all projects:
 - No AI attribution in commits
 - Conventional commits format
 - Tags without `v` prefix
+- Never commit before the user manually asks
+- Never mention task IDs or names on comment lines
+- Never use double dashes
+- Never reply to human comments without asking
+- Plain simple English when documenting or explaining, including PR bodies and PR comments
 - camelCase for JSON field names
-- Check available skills/agents when planning tasks
+- Check available skills/agents/plugins/MCP servers when planning tasks
+- Use tofu instead of terraform
