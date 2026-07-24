@@ -18,6 +18,9 @@ BOLD := \033[1m
 DRY_RUN ?= 0
 FORCE ?= 0
 
+# Use colored diff output when the local diff supports it
+DIFF_COLOR := $(shell diff --color=always /dev/null /dev/null > /dev/null 2>&1 && echo --color=always)
+
 # Check for rsync availability
 RSYNC := $(shell command -v rsync 2>/dev/null)
 
@@ -452,7 +455,8 @@ status:
 
 .PHONY: diff
 diff:
-	@echo "$(BOLD)Differences: $(REPO_DIR) vs $(TARGET_DIR)$(NC)"
+	@echo "$(BOLD)Differences: $(TARGET_DIR) vs $(REPO_DIR)$(NC)"
+	@echo "$(GREEN)green$(NC) = added by update  $(RED)red$(NC) = removed by update"
 	@echo ""
 	@echo "$(BOLD)Agents:$(NC)"
 	@if [ -d $(REPO_DIR)/agents ]; then \
@@ -463,7 +467,7 @@ diff:
 				printf "  $(GREEN)●$(NC) $$filename $(GREEN)(would add - not in ~/.claude)$(NC)\n"; \
 			elif ! diff -q "$$f" "$$target" > /dev/null 2>&1; then \
 				echo "$(YELLOW)--- $$filename ---$(NC)"; \
-				diff --color=always "$$f" "$$target" 2>/dev/null || diff "$$f" "$$target"; \
+				diff $(DIFF_COLOR) "$$target" "$$f"; \
 				echo ""; \
 			fi \
 		done \
@@ -488,7 +492,7 @@ diff:
 			elif [ -d "$$f" ]; then \
 				if ! diff -rq "$$f" "$$target" > /dev/null 2>&1; then \
 					echo "$(YELLOW)--- $$filename ---$(NC)"; \
-					diff -r --color=always "$$f" "$$target" 2>/dev/null || diff -r "$$f" "$$target"; \
+					diff -r $(DIFF_COLOR) "$$target" "$$f"; \
 					echo ""; \
 				fi \
 			fi \
@@ -513,7 +517,7 @@ diff:
 				printf "  $(GREEN)●$(NC) $$filename $(GREEN)(would add - not in ~/.claude)$(NC)\n"; \
 			elif ! diff -q "$$f" "$$target" > /dev/null 2>&1; then \
 				echo "$(YELLOW)--- $$filename ---$(NC)"; \
-				diff --color=always "$$f" "$$target" 2>/dev/null || diff "$$f" "$$target"; \
+				diff $(DIFF_COLOR) "$$target" "$$f"; \
 				echo ""; \
 			fi \
 		done \
@@ -534,7 +538,7 @@ diff:
 			printf "  $(GREEN)●$(NC) $$f $(GREEN)(would add - not in ~/.claude)$(NC)\n"; \
 		elif ! diff -q $(REPO_DIR)/$$f $(TARGET_DIR)/$$f > /dev/null 2>&1; then \
 			echo "$(YELLOW)--- $$f ---$(NC)"; \
-			diff --color=always $(REPO_DIR)/$$f $(TARGET_DIR)/$$f 2>/dev/null || diff $(REPO_DIR)/$$f $(TARGET_DIR)/$$f; \
+			diff $(DIFF_COLOR) $(TARGET_DIR)/$$f $(REPO_DIR)/$$f; \
 			echo ""; \
 		fi \
 	done
