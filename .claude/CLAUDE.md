@@ -1,13 +1,11 @@
 - Never add Claude Code references, Co-Authored-By Claude, or any AI attribution to commits
-- Always use plain simple English when documenting or explaining including PR bodies
+- Always use plain simple English when documenting or explaining including PR bodies and PR comments
 - Always commit with conventional commits standards
 - Always tag without "v" prefix
+- Never reply human comments without asking
 - Never commit before user manually asks
+- Never mention task IDs or names on the comment lines
 - Always use camelCase for JSON field names
 - Always check available skills, agents, plugins, and MCP servers when planning or working on tasks
 - Always use tofu instead of terraform
-
-
-<claude-mem-context>
-
-</claude-mem-context>
+- Never use double dashes
