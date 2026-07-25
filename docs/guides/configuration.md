@@ -5,7 +5,8 @@
 ```json
 {
   "hooks": {
-    "PreToolUse": [...]              // Tool call interception
+    "PreToolUse": [...],             // Tool call interception
+    "Notification": [...]            // Notification events
   },
   "statusLine": {...},                // Status bar configuration
   "enabledPlugins": {...},            // Plugin enable/disable map
@@ -93,24 +94,21 @@ Hooks intercept tool calls for automation. See [Extension Model](../architecture
 
 ### Current Hooks
 
-#### sensitive-file-protection
-Blocks writes to protected files (.env, credentials, secrets, lock files).
+Hook scripts live in `.claude/hooks/` and are referenced from settings.json by their `~/.claude/hooks/` path after sync.
 
-**Implementation:**
-```bash
-bash -c '[[ "$TOOL_INPUT" =~ (\.env|credentials|secrets|\.lock|lock\.json|lock\.yaml) ]] && echo "BLOCK: Protected file" && exit 1 || exit 0'
-```
+#### sensitive-file-protection
+
+Script: `.claude/hooks/sensitive-file-protection.sh`
+
+Blocks Edit and Write calls on protected files (.env, credentials, secrets, lock files). Claude Code sends the tool call as JSON on stdin; the script extracts `tool_input.file_path` (with `jq`, or a `sed` fallback when jq is not installed) and exits with code 2 to block the call. Exit code 2 is required: it is the only exit code that blocks a tool call, and the script's stderr message is fed back to Claude.
+
+Tests: `tests/sensitive-file-protection.test.sh`
 
 #### notification
-Plays audio notification on idle or permission prompts. Cross-platform support for macOS and Linux.
 
-**Implementation:**
-```bash
-afplay /System/Library/Sounds/Glass.aiff 2>/dev/null || \
-paplay /usr/share/sounds/freedesktop/stereo/complete.oga 2>/dev/null || \
-aplay /usr/share/sounds/alsa/Front_Center.wav 2>/dev/null || \
-true
-```
+Script: `.claude/hooks/notification.sh`
+
+Plays a sound whenever Claude Code sends a notification (idle prompts, permission prompts, and other notification events). Cross-platform support for macOS and Linux.
 
 **Platform support:**
 - macOS: Uses `afplay` with system sound

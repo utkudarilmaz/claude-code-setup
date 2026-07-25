@@ -6,18 +6,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c '[[ \"$TOOL_INPUT\" =~ (\\.env|credentials|secrets|\\.lock|lock\\.json|lock\\.yaml) ]] && echo \"BLOCK: Protected file\" && exit 1 || exit 0'"
+            "command": "~/.claude/hooks/sensitive-file-protection.sh"
           }
         ]
       }
     ],
     "Notification": [
       {
-        "matcher": "idle_prompt|permission_prompt",
         "hooks": [
           {
             "type": "command",
-            "command": "afplay /System/Library/Sounds/Glass.aiff 2>/dev/null || paplay /usr/share/sounds/freedesktop/stereo/complete.oga 2>/dev/null || aplay /usr/share/sounds/alsa/Front_Center.wav 2>/dev/null || true"
+            "command": "~/.claude/hooks/notification.sh"
           }
         ]
       }

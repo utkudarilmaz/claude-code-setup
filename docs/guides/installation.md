@@ -22,7 +22,7 @@ Cross-platform features:
 
 ```bash
 # Clone to any location
-git clone https://github.com/yourusername/claude-code-setup
+git clone https://github.com/utkudarilmaz/claude-code-setup
 cd claude-code-setup
 
 # Sync to ~/.claude

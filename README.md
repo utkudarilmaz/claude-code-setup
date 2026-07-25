@@ -16,7 +16,7 @@ This repository provides a modular extension framework for Claude Code with:
 
 ```bash
 # Clone and sync
-git clone https://github.com/yourusername/claude-code-setup
+git clone https://github.com/utkudarilmaz/claude-code-setup
 cd claude-code-setup
 make update-all
 ```
@@ -78,7 +78,9 @@ claude-code-setup/
 │   ├── architecture/           # Extension model, diagrams
 │   ├── guides/                 # Installation, configuration, contributing
 │   └── reference/              # Agents, skills, makefile commands
+├── tests/                      # Tests for hook scripts
 ├── CLAUDE.md                   # Repo guidance for contributors
+├── LICENSE                     # MIT license
 ├── Makefile                    # Sync management
 └── README.md                   # This file
 ```
