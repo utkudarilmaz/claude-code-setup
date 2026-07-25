@@ -16,8 +16,10 @@ claude-code-setup/              # This repository (shareable)
 │   ├── skills/                 # Skill commands
 │   ├── settings.json           # Configuration
 │   └── CLAUDE.md               # Global AI conventions (applied to all projects)
+├── tests/                      # Tests for hook scripts
 ├── Makefile                    # Sync management between repo and ~/.claude
 ├── CLAUDE.md                   # This file (repo-specific guidance)
+├── LICENSE                     # MIT license
 └── README.md                   # Project documentation
 ```
 
@@ -80,7 +82,7 @@ Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
 | `changelog-generator` | agent | CHANGELOG.md generation from git history |
 | `seo-optimizer` | agent | SEO/GEO/AIO expert (meta tags, structured data, Open Graph, entity clarity, AI readability) |
 | `sensitive-file-protection` | hook | Blocks writes to protected files (.env, credentials) |
-| `notification` | hook | Cross-platform audio notification on idle/permission prompts (macOS/Linux) |
+| `notification` | hook | Cross-platform audio notification on Claude Code notifications (macOS/Linux) |
 | `claude-pray` | plugin | Prayer times and status line utilities (enabled) |
 
 ### Quick Command Reference

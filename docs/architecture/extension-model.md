@@ -45,8 +45,8 @@ Hooks intercept tool calls for pre/post processing:
 
 | Hook | Trigger | Purpose | Platform Support |
 |------|---------|---------|------------------|
-| `sensitive-file-protection` | Edit\|Write | Blocks writes to protected files (.env, credentials, secrets, lock files) | All |
-| `notification` | Idle/permission | Plays audio notification on idle or permission prompts | macOS (afplay), Linux (paplay/aplay) |
+| `sensitive-file-protection` | Edit\|Write | Blocks writes to protected files (.env, credentials, secrets, lock files) via exit code 2 | All |
+| `notification` | All notifications | Plays audio notification when Claude Code sends a notification | macOS (afplay), Linux (paplay/aplay) |
 
 **Cross-platform notification implementation:**
 - macOS: `afplay /System/Library/Sounds/Glass.aiff`
@@ -69,6 +69,8 @@ Hooks intercept tool calls for pre/post processing:
 │   ├── devops.md
 │   └── seo-optimizer.md
 ├── hooks/            # Hook scripts (tool call interception)
+│   ├── sensitive-file-protection.sh
+│   └── notification.sh
 ├── skills/           # Skill commands (user interface)
 │   ├── docs/
 │   │   ├── SKILL.md
