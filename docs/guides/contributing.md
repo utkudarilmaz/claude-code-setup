@@ -65,6 +65,7 @@
 4. Test skills before committing
 5. Ensure cross-platform compatibility (macOS and Linux)
 6. Avoid hardcoded paths in hooks and statusLine configurations
+7. Run `make test` before committing; add a `tests/*.test.sh` suite when changing hook scripts or Makefile sync behavior
 
 ## Conventional Commits
 
