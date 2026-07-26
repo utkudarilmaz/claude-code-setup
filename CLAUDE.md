@@ -12,11 +12,12 @@ This repository contains Claude Code configuration files (`.claude/`) designed t
 claude-code-setup/              # This repository (shareable)
 ├── .claude/                    # Claude Code config (becomes ~/.claude)
 │   ├── agents/                 # Agent definitions
-│   ├── hooks/                  # Hook scripts (PreToolUse, PostToolUse, etc.)
+│   ├── hooks/                  # Hook scripts (PreToolUse, Notification)
 │   ├── skills/                 # Skill commands
 │   ├── settings.json           # Configuration
 │   └── CLAUDE.md               # Global AI conventions (applied to all projects)
-├── tests/                      # Tests for hook scripts
+├── docs/                       # Detailed documentation
+├── tests/                      # Tests for hook scripts and Makefile
 ├── Makefile                    # Sync management between repo and ~/.claude
 ├── CLAUDE.md                   # This file (repo-specific guidance)
 ├── LICENSE                     # MIT license
@@ -32,100 +33,11 @@ claude-code-setup/              # This repository (shareable)
 
 ## Architecture
 
-### Two-Tier Extension Model
+**Two-tier extension model**: Skills (`.claude/skills/*/SKILL.md`) are the user-facing invocation layer (slash commands) and dispatch to agents (`.claude/agents/*.md`), which hold the specialized knowledge, workflows, and rules. Detailed mode content lives in `references/` subdirectories within each skill so SKILL.md stays a lean dispatch layer (progressive disclosure).
 
-```
-.claude/skills/                 → User-facing invocation layer (slash commands)
-  └── */SKILL.md                → Defines /command interface and dispatch logic
-  └── */references/             → Reference files for complex mode content
+**Hooks**: scripts in `.claude/hooks/`, wired up in `.claude/settings.json`. PreToolUse hooks receive the tool call as JSON on stdin and must exit with code 2 to block it. Hook scripts must be cross-platform (macOS and Linux).
 
-.claude/agents/                 → Business logic layer (agent definitions)
-  └── *.md                      → Agent persona, workflow, and behavior rules
-```
-
-**Skills** provide the `/command` interface and determine how to dispatch to agents. **Agents** contain the specialized knowledge, workflows, and rules for task execution.
-
-Comprehensive mode content is extracted to `references/` subdirectories within each skill to keep SKILL.md lean. Skills reference these files in their dispatch prompts rather than embedding the full content.
-
-### Hook System
-
-Hooks in `.claude/settings.json` intercept tool calls for pre/post processing:
-- `PreToolUse` hooks run before specified tools execute
-- Configured via `matcher` regex patterns (e.g., `Edit|Write`)
-- Hook scripts live in `.claude/hooks/`
-- Cross-platform compatible (macOS and Linux)
-
-**Platform compatibility:**
-- StatusLine uses `$(command -v node)` for dynamic node path resolution
-- Notification hook supports macOS (`afplay`) and Linux (`paplay`/`aplay`) with fallback chain
-
-### Current Extensions
-
-| Extension | Type | Purpose |
-|-----------|------|---------|
-| `/docs` | skill | Documentation synchronization with modular structure enforcement |
-| `/tester` | skill | Test coverage verification and creation |
-| `/pr-check` | skill | PR quality review against checklist |
-| `/security-review` | skill | Security-focused code review |
-| `/changelog` | skill | Changelog and release notes generation |
-| `/simplifier` | skill | Dead code removal, complexity reduction, code quality improvement |
-| `/devops` | skill | Review and design infrastructure (Kubernetes, Helm, ArgoCD, Terraform, Terragrunt) |
-| `/release-tag` | skill | Semantic version bumping and annotated git tag creation |
-| `/seo` | skill | SEO, GEO, and AIO web content optimization with audit mode |
-| `docs` | agent | Documentation architect (README, CLAUDE.md, API docs, modular structure, .drawio diagrams) |
-| `tester` | agent | Test specialist (coverage, AAA pattern, table-driven) |
-| `pr-check` | agent | PR quality reviewer (tests, secrets, error handling) |
-| `security-reviewer` | agent | Security expert (auth, injection, API security, file uploads, cryptography, business logic, client-side, HTTP headers, dependencies, modern attack vectors, OWASP Top 10) |
-| `simplifier` | agent | Code quality expert (dead code, complexity reduction, Go/JS/TS/Python focus) |
-| `devops` | agent | DevOps architect (Kubernetes, Helm, ArgoCD, Terraform, Terragrunt review and design) |
-| `release-notes` | agent | Release documentation specialist |
-| `changelog-generator` | agent | CHANGELOG.md generation from git history |
-| `seo-optimizer` | agent | SEO/GEO/AIO expert (meta tags, structured data, Open Graph, entity clarity, AI readability) |
-| `sensitive-file-protection` | hook | Blocks writes to protected files (.env, credentials) |
-| `notification` | hook | Cross-platform audio notification on Claude Code notifications (macOS/Linux) |
-| `claude-pray` | plugin | Prayer times and status line utilities (enabled) |
-
-### Quick Command Reference
-
-```
-/docs                    # Document recent changes
-/docs <scope>            # Document specific module/file
-/docs all                # Full documentation audit
-/docs simplifier         # Restructure large documentation into modular files
-
-/tester                  # Test recent changes
-/tester <scope>          # Test specific module/file
-/tester all              # Full test coverage audit
-
-/pr-check                # Review current PR against quality checklist
-/pr-check <focus>        # Review PR with specific focus (tests, security, docs)
-
-/security-review         # Security review of recent changes
-/security-review <path>  # Security review of specific file/module
-/security-review all     # Full security audit
-
-/simplifier              # Cleanup recent changes (dead code, complexity)
-/simplifier <scope>      # Cleanup specific module/file
-/simplifier all          # Full project code quality audit
-
-/changelog               # Update CHANGELOG.md from git history
-/changelog release       # Generate release notes for announcement
-/changelog <version>     # Generate notes for specific version
-
-/devops                  # Review recent infrastructure changes
-/devops review <path>    # Review specific IaC directory/file
-/devops design <request> # Design and generate new infrastructure
-/devops all              # Full infrastructure audit
-
-/release-tag major       # Bump major version and tag
-/release-tag minor       # Bump minor version and tag
-/release-tag patch       # Bump patch version and tag
-
-/seo                     # Optimize recent web content changes
-/seo <scope>             # Optimize specific page/file
-/seo all                 # Full project SEO/GEO/AIO audit
-/seo audit               # Score-only report card (no edits)
-```
+The full extension inventory and command list live in [README.md](README.md), [docs/reference/agents.md](docs/reference/agents.md), and [docs/reference/skills.md](docs/reference/skills.md). The architecture details live in [docs/architecture/extension-model.md](docs/architecture/extension-model.md).
 
 ## Conventions
 
@@ -139,81 +51,21 @@ Key conventions for this repository:
 - **Agent/Skill files**: YAML frontmatter with `name`, `description`, optional `model`, `color`
 - **Never split agent/skill files**: Keep `.claude/agents/*.md` and `.claude/skills/*/SKILL.md` as single files - they are loaded as complete context for AI, not user documentation. Detailed reference content belongs in `.claude/skills/*/references/` files, not in the main SKILL.md
 
-### Skill/Agent Patterns
+Skills support four invocation modes: default (`/command` for recent changes), scoped (`/command <scope>`), comprehensive (`/command all`), and skill-specific special modes. Agent descriptions use concise third-person trigger phrases rather than verbose conversation examples.
 
-Skills follow **progressive disclosure**: SKILL.md is a lean dispatch layer; detailed content lives in `references/` files that agents consult when needed.
+To add a new agent, skill, or hook, follow [docs/guides/contributing.md](docs/guides/contributing.md).
 
-Skills support multiple invocation modes:
-1. **Default** (`/command`): Process recent changes
-2. **Scoped** (`/command <scope>`): Target specific file/module/feature
-3. **Comprehensive** (`/command all`): Full project audit with TodoWrite planning; detailed checklist in `references/comprehensive-mode.md`
-4. **Special modes** (skill-specific): Additional modes like `/docs simplifier` (references `references/simplifier-mode.md`)
+## Testing
 
-Agent descriptions use concise third-person trigger phrases rather than verbose conversation examples.
-
-Agent frontmatter structure:
-```yaml
----
-name: agent-name
-description: "When to invoke this agent..."
-model: sonnet  # optional: sonnet, opus, haiku
-color: blue    # optional: for UI display
----
-```
-
-## Adding New Extensions
-
-### New Agent
-1. Create `.claude/agents/<name>.md` with YAML frontmatter
-2. Define persona, responsibilities, workflow, and output format
-3. Agent is automatically available via Task tool with `subagent_type="<name>"`
-
-### New Skill
-1. Create `.claude/skills/<name>/SKILL.md` with YAML frontmatter
-2. Define invocation modes and dispatch logic
-3. Skill is available as `/<name>` command
-
-### New Hook
-Add to `.claude/settings.json`:
-```json
-{
-  "hooks": {
-    "PreToolUse": [{
-      "matcher": "ToolPattern",
-      "hooks": [{"type": "command", "command": "path/to/script"}]
-    }]
-  }
-}
-```
+Run `make test` to execute every `tests/*.test.sh` suite. Hook scripts and Makefile sync behavior are covered; add tests when changing either.
 
 ## Makefile Sync Management
 
-The Makefile provides commands to synchronize this repository's `.claude/` directory with `~/.claude`:
+The Makefile syncs `.claude/` into `~/.claude` (or any `TARGET_DIR`):
 
-**Update commands** (non-destructive):
-- Add missing files from repo to `~/.claude`
-- Update changed files in `~/.claude` with repo versions
-- Keep extra files in `~/.claude` that aren't in repo
+- `make update-all` - Add missing and update changed files, keep extras; `settings.json` is merged with `jq` so machine-local keys survive (repo values win on conflicts)
+- `make status` / `make diff` - Inspect sync state; in `make diff`, green lines are what update would add, red lines what it would remove
+- `make backup` - Timestamped backup of the target before changes
+- `make update-all TARGET_DIR=$HOME/.claude-personal` - Sync a second Claude home from the same repo
 
-**Remove commands**:
-- Remove files from `~/.claude` that match files in repo
-- Useful for uninstalling repo-managed extensions
-
-**Key commands**:
-- `make update-all` - Sync all agents, skills, and config files
-- `make status` - View sync status with color-coded indicators
-- `make diff` - See detailed differences between `~/.claude` and the repo
-- `make backup` - Create timestamped backup before making changes
-
-**`make diff` output**: compares the target directory against the repo, so
-green lines are what `make update` would add and red lines are what it
-would remove. A legend line at the top of the output states this. Color
-support is detected once via the `DIFF_COLOR` variable rather than retried
-on every file.
-
-**Multiple Claude homes**: override `TARGET_DIR` on the command line to sync
-into a directory other than `~/.claude`, e.g.
-`make update-all TARGET_DIR=$HOME/.claude-personal`. Useful for keeping a
-work profile and a personal profile in sync from the same repo.
-
-See docs/reference/makefile.md for complete Makefile documentation.
+See [docs/reference/makefile.md](docs/reference/makefile.md) for the complete command reference.

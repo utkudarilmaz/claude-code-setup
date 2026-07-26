@@ -11,8 +11,21 @@ make update-all       # Update agents, skills, hooks, and config
 make update-agents    # Update .claude/agents/ only
 make update-skills    # Update .claude/skills/ only
 make update-hooks     # Update .claude/hooks/ only
-make update-config    # Update settings.json and CLAUDE.md
+make update-config    # Update settings.json (merged) and CLAUDE.md
 ```
+
+### settings.json Merge
+
+`update-config` does not overwrite the target `settings.json`. When `jq` is
+available, it deep-merges the repo file into the target file:
+
+- Keys that exist only in the target (machine-local state) are kept
+- Keys present in the repo win on conflicts
+- Keys deleted from the repo file are NOT removed from the target; delete
+  them manually if needed
+
+Without `jq`, the old copy behavior is used and a warning is printed because
+local-only keys are lost. `CLAUDE.md` is always a plain copy.
 
 ## Install Commands
 
@@ -49,6 +62,7 @@ make rm-hooks     # Remove matching hooks
 make status    # Show sync status with colored indicators
 make diff      # Show file differences
 make backup    # Create timestamped backup of ~/.claude
+make test      # Run all tests/*.test.sh suites
 make help      # Display all commands
 ```
 
@@ -59,6 +73,7 @@ make help      # Display all commands
 | `DRY_RUN=1` | Preview changes without executing |
 | `FORCE=1` | Skip confirmation prompts |
 | `TARGET_DIR=<path>` | Sync to a directory other than `~/.claude` |
+| `NO_RSYNC=1` | Force the plain-copy fallback path even when rsync exists |
 
 Examples:
 ```bash
@@ -86,6 +101,15 @@ Makefile detects once, via the `DIFF_COLOR` variable, whether the local
 `diff` supports `--color=always`, and reuses that result for every file
 comparison instead of retrying colored diff on each call, which used to
 print the same diff twice when color wasn't supported.
+
+## Implementation Notes
+
+The update, remove, status, and diff logic for agents, skills, and hooks is
+shared through parameterized `define` blocks in the Makefile (`sync_dir`,
+`rm_dir`, `status_dir`, `diff_dir`), so all three directories behave the
+same way. `make test` runs `tests/makefile-sync.test.sh`, which exercises
+the sync commands against a temporary `TARGET_DIR`, including the
+`NO_RSYNC=1` fallback path and the settings.json merge.
 
 ## Status Legend
 

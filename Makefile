@@ -17,12 +17,11 @@ BOLD := \033[1m
 # Feature flags
 DRY_RUN ?= 0
 FORCE ?= 0
+# Set NO_RSYNC=1 to force the plain-copy fallback path even when rsync exists
+NO_RSYNC ?=
 
 # Use colored diff output when the local diff supports it
 DIFF_COLOR := $(shell diff --color=always /dev/null /dev/null > /dev/null 2>&1 && echo --color=always)
-
-# Check for rsync availability
-RSYNC := $(shell command -v rsync 2>/dev/null)
 
 # Rsync base options (used when rsync is available)
 RSYNC_OPTS := -av --chmod=+x
@@ -53,7 +52,7 @@ help:
 	@echo "  $(GREEN)update-agents$(NC)    Update .claude/agents/ only"
 	@echo "  $(GREEN)update-skills$(NC)    Update .claude/skills/ only"
 	@echo "  $(GREEN)update-hooks$(NC)     Update .claude/hooks/ only"
-	@echo "  $(GREEN)update-config$(NC)    Update settings.json and CLAUDE.md"
+	@echo "  $(GREEN)update-config$(NC)    Update settings.json (merged) and CLAUDE.md"
 	@echo ""
 	@echo "$(BOLD)Install Commands$(NC) (install external tools and skills):"
 	@echo "  $(GREEN)install$(NC)          Install all registered targets"
@@ -70,10 +69,12 @@ help:
 	@echo "  $(BLUE)status$(NC)         Show sync status with colored indicators"
 	@echo "  $(BLUE)diff$(NC)           Show file differences between repo and ~/.claude"
 	@echo "  $(BLUE)backup$(NC)         Create timestamped backup of ~/.claude"
+	@echo "  $(BLUE)test$(NC)           Run the test suite in tests/"
 	@echo ""
 	@echo "$(BOLD)Options$(NC):"
 	@echo "  DRY_RUN=1    Preview changes without executing"
 	@echo "  FORCE=1      Skip confirmation prompts"
+	@echo "  NO_RSYNC=1   Force plain-copy fallback instead of rsync"
 	@echo ""
 	@echo "$(BOLD)Examples$(NC):"
 	@echo "  make update-all              # Update files in ~/.claude"
@@ -114,6 +115,121 @@ define cleanup_empty_dirs
 	@find $(TARGET_DIR) -type d -empty -delete 2>/dev/null || true
 endef
 
+# Sync one directory (agents, skills, hooks) from repo to target.
+# $(1) = directory name under .claude/
+define sync_dir
+	@echo "$(BOLD)Updating $(1)...$(NC) $(DRY_RUN_MSG)"; \
+	if [ ! -d $(REPO_DIR)/$(1) ]; then \
+		echo "  No $(1) directory in repo, skipping."; \
+	else \
+		mkdir -p $(TARGET_DIR)/$(1); \
+		if [ -z "$(NO_RSYNC)" ] && command -v rsync >/dev/null 2>&1; then \
+			rsync $(RSYNC_OPTS) $(REPO_DIR)/$(1)/ $(TARGET_DIR)/$(1)/; \
+		else \
+			for f in $(REPO_DIR)/$(1)/*; do \
+				filename=$$(basename "$$f"); \
+				target="$(TARGET_DIR)/$(1)/$$filename"; \
+				if [ ! -e "$$target" ]; then \
+					if [ "$(DRY_RUN)" = "1" ]; then \
+						echo "Would add: $(1)/$$filename"; \
+					else \
+						cp -r "$$f" "$$target"; \
+						find "$$target" -name "*.sh" -exec chmod +x {} + 2>/dev/null || true; \
+						echo "Added: $(1)/$$filename"; \
+					fi; \
+				elif ! diff -rq "$$f" "$$target" > /dev/null 2>&1; then \
+					if [ "$(DRY_RUN)" = "1" ]; then \
+						echo "Would update: $(1)/$$filename"; \
+					else \
+						rm -rf "$$target"; \
+						cp -r "$$f" "$$target"; \
+						find "$$target" -name "*.sh" -exec chmod +x {} + 2>/dev/null || true; \
+						echo "Updated: $(1)/$$filename"; \
+					fi; \
+				else \
+					echo "Unchanged: $(1)/$$filename"; \
+				fi; \
+			done; \
+		fi; \
+	fi
+endef
+
+# Remove repo-managed files of one directory from the target.
+# $(1) = directory name under .claude/
+define rm_dir
+	@echo "$(BOLD)Removing $(1)...$(NC) $(DRY_RUN_MSG)"; \
+	if [ -d $(REPO_DIR)/$(1) ]; then \
+		for f in $(REPO_DIR)/$(1)/*; do \
+			filename=$$(basename "$$f"); \
+			target="$(TARGET_DIR)/$(1)/$$filename"; \
+			if [ -e "$$target" ]; then \
+				if [ "$(DRY_RUN)" = "1" ]; then \
+					echo "Would remove: $(1)/$$filename"; \
+				else \
+					rm -rf "$$target"; \
+					echo "Removed: $(1)/$$filename"; \
+				fi; \
+			fi; \
+		done; \
+	fi
+endef
+
+# Print sync status for one directory.
+# $(1) = directory name under .claude/, $(2) = display label
+define status_dir
+	@echo "$(BOLD)$(2):$(NC)"; \
+	if [ -d $(REPO_DIR)/$(1) ]; then \
+		for f in $(REPO_DIR)/$(1)/*; do \
+			filename=$$(basename "$$f"); \
+			target="$(TARGET_DIR)/$(1)/$$filename"; \
+			if [ ! -e "$$target" ]; then \
+				printf "  $(RED)●$(NC) $$filename $(RED)(missing)$(NC)\n"; \
+			elif diff -rq "$$f" "$$target" > /dev/null 2>&1; then \
+				printf "  $(GREEN)●$(NC) $$filename $(GREEN)(synced)$(NC)\n"; \
+			else \
+				printf "  $(YELLOW)●$(NC) $$filename $(YELLOW)(differs)$(NC)\n"; \
+			fi; \
+		done; \
+	fi; \
+	if [ -d $(TARGET_DIR)/$(1) ]; then \
+		for f in $(TARGET_DIR)/$(1)/*; do \
+			filename=$$(basename "$$f"); \
+			if [ ! -e "$(REPO_DIR)/$(1)/$$filename" ]; then \
+				printf "  $(BLUE)●$(NC) $$filename $(BLUE)(extra - not in repo)$(NC)\n"; \
+			fi; \
+		done; \
+	fi; \
+	echo ""
+endef
+
+# Print detailed differences for one directory.
+# $(1) = directory name under .claude/, $(2) = display label
+define diff_dir
+	@echo "$(BOLD)$(2):$(NC)"; \
+	if [ -d $(REPO_DIR)/$(1) ]; then \
+		for f in $(REPO_DIR)/$(1)/*; do \
+			filename=$$(basename "$$f"); \
+			target="$(TARGET_DIR)/$(1)/$$filename"; \
+			if [ ! -e "$$target" ]; then \
+				printf "  $(GREEN)●$(NC) $$filename $(GREEN)(would add - not in ~/.claude)$(NC)\n"; \
+			elif ! diff -rq "$$f" "$$target" > /dev/null 2>&1; then \
+				echo "$(YELLOW)--- $$filename ---$(NC)"; \
+				diff -r $(DIFF_COLOR) "$$target" "$$f"; \
+				echo ""; \
+			fi; \
+		done; \
+	fi; \
+	if [ -d $(TARGET_DIR)/$(1) ]; then \
+		for f in $(TARGET_DIR)/$(1)/*; do \
+			filename=$$(basename "$$f"); \
+			if [ ! -e "$(REPO_DIR)/$(1)/$$filename" ]; then \
+				printf "  $(BLUE)●$(NC) $$filename $(BLUE)(extra - not in repo)$(NC)\n"; \
+			fi; \
+		done; \
+	fi; \
+	echo ""
+endef
+
 # ============================================================================
 # UPDATE COMMANDS (add missing + update changed, keep extras)
 # ============================================================================
@@ -125,105 +241,15 @@ update-all: update-agents update-skills update-hooks update-config
 
 .PHONY: update-agents
 update-agents:
-	@echo "$(BOLD)Updating agents...$(NC) $(DRY_RUN_MSG)"
-	$(call ensure_target_dir)
-	@mkdir -p $(TARGET_DIR)/agents
-ifdef RSYNC
-	@rsync $(RSYNC_OPTS) $(REPO_DIR)/agents/ $(TARGET_DIR)/agents/
-else
-	@for f in $(REPO_DIR)/agents/*; do \
-		filename=$$(basename "$$f"); \
-		target="$(TARGET_DIR)/agents/$$filename"; \
-		if [ ! -e "$$target" ]; then \
-			if [ "$(DRY_RUN)" = "1" ]; then \
-				echo "Would add: agents/$$filename"; \
-			else \
-				cp -r "$$f" "$$target"; \
-				echo "Added: agents/$$filename"; \
-			fi \
-		elif ! diff -q "$$f" "$$target" > /dev/null 2>&1; then \
-			if [ "$(DRY_RUN)" = "1" ]; then \
-				echo "Would update: agents/$$filename"; \
-			else \
-				cp -r "$$f" "$$target"; \
-				echo "Updated: agents/$$filename"; \
-			fi \
-		else \
-			echo "Unchanged: agents/$$filename"; \
-		fi \
-	done
-endif
+	$(call sync_dir,agents)
 
 .PHONY: update-skills
 update-skills:
-	@echo "$(BOLD)Updating skills...$(NC) $(DRY_RUN_MSG)"
-	$(call ensure_target_dir)
-	@mkdir -p $(TARGET_DIR)/skills
-ifdef RSYNC
-	@rsync $(RSYNC_OPTS) $(REPO_DIR)/skills/ $(TARGET_DIR)/skills/
-else
-	@for f in $(REPO_DIR)/skills/*; do \
-		filename=$$(basename "$$f"); \
-		target="$(TARGET_DIR)/skills/$$filename"; \
-		if [ ! -e "$$target" ]; then \
-			if [ "$(DRY_RUN)" = "1" ]; then \
-				echo "Would add: skills/$$filename"; \
-			else \
-				cp -r "$$f" "$$target"; \
-				chmod -R +x "$$target"/*.sh 2>/dev/null || true; \
-				echo "Added: skills/$$filename"; \
-			fi \
-		elif ! diff -rq "$$f" "$$target" > /dev/null 2>&1; then \
-			if [ "$(DRY_RUN)" = "1" ]; then \
-				echo "Would update: skills/$$filename"; \
-			else \
-				rm -rf "$$target"; \
-				cp -r "$$f" "$$target"; \
-				chmod -R +x "$$target"/*.sh 2>/dev/null || true; \
-				echo "Updated: skills/$$filename"; \
-			fi \
-		else \
-			echo "Unchanged: skills/$$filename"; \
-		fi \
-	done
-endif
+	$(call sync_dir,skills)
 
 .PHONY: update-hooks
 update-hooks:
-	@echo "$(BOLD)Updating hooks...$(NC) $(DRY_RUN_MSG)"
-	@if [ ! -d $(REPO_DIR)/hooks ]; then \
-		echo "  No hooks directory in repo, skipping."; \
-	else \
-		$(call ensure_target_dir); \
-		mkdir -p $(TARGET_DIR)/hooks; \
-		if command -v rsync >/dev/null 2>&1; then \
-			rsync $(RSYNC_OPTS) $(REPO_DIR)/hooks/ $(TARGET_DIR)/hooks/; \
-		else \
-			for f in $(REPO_DIR)/hooks/*; do \
-				filename=$$(basename "$$f"); \
-				target="$(TARGET_DIR)/hooks/$$filename"; \
-				if [ ! -e "$$target" ]; then \
-					if [ "$(DRY_RUN)" = "1" ]; then \
-						echo "Would add: hooks/$$filename"; \
-					else \
-						cp "$$f" "$$target"; \
-						chmod +x "$$target" 2>/dev/null || true; \
-						echo "Added: hooks/$$filename"; \
-					fi; \
-				elif ! diff -q "$$f" "$$target" > /dev/null 2>&1; then \
-					if [ "$(DRY_RUN)" = "1" ]; then \
-						echo "Would update: hooks/$$filename"; \
-					else \
-						cp "$$f" "$$target"; \
-						chmod +x "$$target" 2>/dev/null || true; \
-						echo "Updated: hooks/$$filename"; \
-					fi; \
-				else \
-					echo "Unchanged: hooks/$$filename"; \
-				fi; \
-			done; \
-		fi; \
-	fi
+	$(call sync_dir,hooks)
 
 .PHONY: update-config
 update-config:
@@ -236,10 +262,21 @@ update-config:
 			cp $(REPO_DIR)/settings.json $(TARGET_DIR)/settings.json; \
 			echo "Added: settings.json"; \
 		fi \
+	elif command -v jq >/dev/null 2>&1; then \
+		merged=$$(jq -s '.[0] * .[1]' $(TARGET_DIR)/settings.json $(REPO_DIR)/settings.json); \
+		if echo "$$merged" | diff -q - $(TARGET_DIR)/settings.json > /dev/null 2>&1; then \
+			echo "Unchanged: settings.json"; \
+		elif [ "$(DRY_RUN)" = "1" ]; then \
+			echo "Would merge: settings.json (repo values win, local-only keys kept)"; \
+		else \
+			echo "$$merged" > $(TARGET_DIR)/settings.json; \
+			echo "Merged: settings.json (repo values win, local-only keys kept)"; \
+		fi \
 	elif ! diff -q $(REPO_DIR)/settings.json $(TARGET_DIR)/settings.json > /dev/null 2>&1; then \
 		if [ "$(DRY_RUN)" = "1" ]; then \
-			echo "Would update: settings.json"; \
+			echo "Would update: settings.json (jq not found, local-only keys will be lost)"; \
 		else \
+			echo "$(YELLOW)Warning: jq not found, overwriting settings.json (local-only keys lost)$(NC)"; \
 			cp $(REPO_DIR)/settings.json $(TARGET_DIR)/settings.json; \
 			echo "Updated: settings.json"; \
 		fi \
@@ -303,61 +340,19 @@ all $(INSTALL_TARGETS):
 .PHONY: rm-agents
 rm-agents:
 	$(call confirm,This will remove matching agents from ~/.claude. Continue?)
-	@echo "$(BOLD)Removing agents...$(NC) $(DRY_RUN_MSG)"
-	@if [ -d $(REPO_DIR)/agents ]; then \
-		for f in $(REPO_DIR)/agents/*; do \
-			filename=$$(basename "$$f"); \
-			target="$(TARGET_DIR)/agents/$$filename"; \
-			if [ -e "$$target" ]; then \
-				if [ "$(DRY_RUN)" = "1" ]; then \
-					echo "Would remove: agents/$$filename"; \
-				else \
-					rm -rf "$$target"; \
-					echo "Removed: agents/$$filename"; \
-				fi \
-			fi \
-		done \
-	fi
+	$(call rm_dir,agents)
 	$(call cleanup_empty_dirs)
 
 .PHONY: rm-skills
 rm-skills:
 	$(call confirm,This will remove matching skills from ~/.claude. Continue?)
-	@echo "$(BOLD)Removing skills...$(NC) $(DRY_RUN_MSG)"
-	@if [ -d $(REPO_DIR)/skills ]; then \
-		for f in $(REPO_DIR)/skills/*; do \
-			filename=$$(basename "$$f"); \
-			target="$(TARGET_DIR)/skills/$$filename"; \
-			if [ -e "$$target" ]; then \
-				if [ "$(DRY_RUN)" = "1" ]; then \
-					echo "Would remove: skills/$$filename"; \
-				else \
-					rm -rf "$$target"; \
-					echo "Removed: skills/$$filename"; \
-				fi \
-			fi \
-		done \
-	fi
+	$(call rm_dir,skills)
 	$(call cleanup_empty_dirs)
 
 .PHONY: rm-hooks
 rm-hooks:
 	$(call confirm,This will remove matching hooks from ~/.claude. Continue?)
-	@echo "$(BOLD)Removing hooks...$(NC) $(DRY_RUN_MSG)"
-	@if [ -d $(REPO_DIR)/hooks ]; then \
-		for f in $(REPO_DIR)/hooks/*; do \
-			filename=$$(basename "$$f"); \
-			target="$(TARGET_DIR)/hooks/$$filename"; \
-			if [ -e "$$target" ]; then \
-				if [ "$(DRY_RUN)" = "1" ]; then \
-					echo "Would remove: hooks/$$filename"; \
-				else \
-					rm -f "$$target"; \
-					echo "Removed: hooks/$$filename"; \
-				fi \
-			fi \
-		done \
-	fi
+	$(call rm_dir,hooks)
 	$(call cleanup_empty_dirs)
 
 # ============================================================================
@@ -368,78 +363,9 @@ rm-hooks:
 status:
 	@echo "$(BOLD)Sync Status: $(REPO_DIR) → $(TARGET_DIR)$(NC)"
 	@echo ""
-	@echo "$(BOLD)Agents:$(NC)"
-	@if [ -d $(REPO_DIR)/agents ]; then \
-		for f in $(REPO_DIR)/agents/*; do \
-			filename=$$(basename "$$f"); \
-			target="$(TARGET_DIR)/agents/$$filename"; \
-			if [ ! -e "$$target" ]; then \
-				printf "  $(RED)●$(NC) $$filename $(RED)(missing)$(NC)\n"; \
-			elif diff -q "$$f" "$$target" > /dev/null 2>&1; then \
-				printf "  $(GREEN)●$(NC) $$filename $(GREEN)(synced)$(NC)\n"; \
-			else \
-				printf "  $(YELLOW)●$(NC) $$filename $(YELLOW)(differs)$(NC)\n"; \
-			fi \
-		done \
-	fi
-	@if [ -d $(TARGET_DIR)/agents ]; then \
-		for f in $(TARGET_DIR)/agents/*; do \
-			filename=$$(basename "$$f"); \
-			source="$(REPO_DIR)/agents/$$filename"; \
-			if [ ! -e "$$source" ]; then \
-				printf "  $(BLUE)●$(NC) $$filename $(BLUE)(extra - not in repo)$(NC)\n"; \
-			fi \
-		done \
-	fi
-	@echo ""
-	@echo "$(BOLD)Skills:$(NC)"
-	@if [ -d $(REPO_DIR)/skills ]; then \
-		for f in $(REPO_DIR)/skills/*; do \
-			filename=$$(basename "$$f"); \
-			target="$(TARGET_DIR)/skills/$$filename"; \
-			if [ ! -e "$$target" ]; then \
-				printf "  $(RED)●$(NC) $$filename $(RED)(missing)$(NC)\n"; \
-			elif diff -rq "$$f" "$$target" > /dev/null 2>&1; then \
-				printf "  $(GREEN)●$(NC) $$filename $(GREEN)(synced)$(NC)\n"; \
-			else \
-				printf "  $(YELLOW)●$(NC) $$filename $(YELLOW)(differs)$(NC)\n"; \
-			fi \
-		done \
-	fi
-	@if [ -d $(TARGET_DIR)/skills ]; then \
-		for f in $(TARGET_DIR)/skills/*; do \
-			filename=$$(basename "$$f"); \
-			source="$(REPO_DIR)/skills/$$filename"; \
-			if [ ! -e "$$source" ]; then \
-				printf "  $(BLUE)●$(NC) $$filename $(BLUE)(extra - not in repo)$(NC)\n"; \
-			fi \
-		done \
-	fi
-	@echo ""
-	@echo "$(BOLD)Hooks:$(NC)"
-	@if [ -d $(REPO_DIR)/hooks ]; then \
-		for f in $(REPO_DIR)/hooks/*; do \
-			filename=$$(basename "$$f"); \
-			target="$(TARGET_DIR)/hooks/$$filename"; \
-			if [ ! -e "$$target" ]; then \
-				printf "  $(RED)●$(NC) $$filename $(RED)(missing)$(NC)\n"; \
-			elif diff -q "$$f" "$$target" > /dev/null 2>&1; then \
-				printf "  $(GREEN)●$(NC) $$filename $(GREEN)(synced)$(NC)\n"; \
-			else \
-				printf "  $(YELLOW)●$(NC) $$filename $(YELLOW)(differs)$(NC)\n"; \
-			fi \
-		done \
-	fi
-	@if [ -d $(TARGET_DIR)/hooks ]; then \
-		for f in $(TARGET_DIR)/hooks/*; do \
-			filename=$$(basename "$$f"); \
-			source="$(REPO_DIR)/hooks/$$filename"; \
-			if [ ! -e "$$source" ]; then \
-				printf "  $(BLUE)●$(NC) $$filename $(BLUE)(extra - not in repo)$(NC)\n"; \
-			fi \
-		done \
-	fi
-	@echo ""
+	$(call status_dir,agents,Agents)
+	$(call status_dir,skills,Skills)
+	$(call status_dir,hooks,Hooks)
 	@echo "$(BOLD)Config Files:$(NC)"
 	@for f in settings.json CLAUDE.md; do \
 		if [ ! -f $(TARGET_DIR)/$$f ]; then \
@@ -458,80 +384,9 @@ diff:
 	@echo "$(BOLD)Differences: $(TARGET_DIR) vs $(REPO_DIR)$(NC)"
 	@echo "$(GREEN)green$(NC) = added by update  $(RED)red$(NC) = removed by update"
 	@echo ""
-	@echo "$(BOLD)Agents:$(NC)"
-	@if [ -d $(REPO_DIR)/agents ]; then \
-		for f in $(REPO_DIR)/agents/*; do \
-			filename=$$(basename "$$f"); \
-			target="$(TARGET_DIR)/agents/$$filename"; \
-			if [ ! -e "$$target" ]; then \
-				printf "  $(GREEN)●$(NC) $$filename $(GREEN)(would add - not in ~/.claude)$(NC)\n"; \
-			elif ! diff -q "$$f" "$$target" > /dev/null 2>&1; then \
-				echo "$(YELLOW)--- $$filename ---$(NC)"; \
-				diff $(DIFF_COLOR) "$$target" "$$f"; \
-				echo ""; \
-			fi \
-		done \
-	fi
-	@if [ -d $(TARGET_DIR)/agents ]; then \
-		for f in $(TARGET_DIR)/agents/*; do \
-			filename=$$(basename "$$f"); \
-			source="$(REPO_DIR)/agents/$$filename"; \
-			if [ ! -e "$$source" ]; then \
-				printf "  $(BLUE)●$(NC) $$filename $(BLUE)(extra - not in repo)$(NC)\n"; \
-			fi \
-		done \
-	fi
-	@echo ""
-	@echo "$(BOLD)Skills:$(NC)"
-	@if [ -d $(REPO_DIR)/skills ]; then \
-		for f in $(REPO_DIR)/skills/*; do \
-			filename=$$(basename "$$f"); \
-			target="$(TARGET_DIR)/skills/$$filename"; \
-			if [ ! -e "$$target" ]; then \
-				printf "  $(GREEN)●$(NC) $$filename $(GREEN)(would add - not in ~/.claude)$(NC)\n"; \
-			elif [ -d "$$f" ]; then \
-				if ! diff -rq "$$f" "$$target" > /dev/null 2>&1; then \
-					echo "$(YELLOW)--- $$filename ---$(NC)"; \
-					diff -r $(DIFF_COLOR) "$$target" "$$f"; \
-					echo ""; \
-				fi \
-			fi \
-		done \
-	fi
-	@if [ -d $(TARGET_DIR)/skills ]; then \
-		for f in $(TARGET_DIR)/skills/*; do \
-			filename=$$(basename "$$f"); \
-			source="$(REPO_DIR)/skills/$$filename"; \
-			if [ ! -e "$$source" ]; then \
-				printf "  $(BLUE)●$(NC) $$filename $(BLUE)(extra - not in repo)$(NC)\n"; \
-			fi \
-		done \
-	fi
-	@echo ""
-	@echo "$(BOLD)Hooks:$(NC)"
-	@if [ -d $(REPO_DIR)/hooks ]; then \
-		for f in $(REPO_DIR)/hooks/*; do \
-			filename=$$(basename "$$f"); \
-			target="$(TARGET_DIR)/hooks/$$filename"; \
-			if [ ! -e "$$target" ]; then \
-				printf "  $(GREEN)●$(NC) $$filename $(GREEN)(would add - not in ~/.claude)$(NC)\n"; \
-			elif ! diff -q "$$f" "$$target" > /dev/null 2>&1; then \
-				echo "$(YELLOW)--- $$filename ---$(NC)"; \
-				diff $(DIFF_COLOR) "$$target" "$$f"; \
-				echo ""; \
-			fi \
-		done \
-	fi
-	@if [ -d $(TARGET_DIR)/hooks ]; then \
-		for f in $(TARGET_DIR)/hooks/*; do \
-			filename=$$(basename "$$f"); \
-			source="$(REPO_DIR)/hooks/$$filename"; \
-			if [ ! -e "$$source" ]; then \
-				printf "  $(BLUE)●$(NC) $$filename $(BLUE)(extra - not in repo)$(NC)\n"; \
-			fi \
-		done \
-	fi
-	@echo ""
+	$(call diff_dir,agents,Agents)
+	$(call diff_dir,skills,Skills)
+	$(call diff_dir,hooks,Hooks)
 	@echo "$(BOLD)Config Files:$(NC)"
 	@for f in settings.json CLAUDE.md; do \
 		if [ ! -f $(TARGET_DIR)/$$f ]; then \
@@ -559,3 +414,11 @@ backup:
 	else \
 		echo "$(YELLOW)No ~/.claude directory to backup$(NC)"; \
 	fi
+
+.PHONY: test
+test:
+	@for t in tests/*.test.sh; do \
+		echo "$(BOLD)Running $$t...$(NC)"; \
+		bash "$$t" || exit 1; \
+		echo ""; \
+	done
