@@ -15,6 +15,7 @@ claude-code-setup/              # This repository (shareable)
 │   ├── hooks/                  # Hook scripts (PreToolUse, Notification)
 │   ├── skills/                 # Skill commands
 │   ├── settings.json           # Configuration
+│   ├── mcp-servers.json        # Shared MCP server definitions
 │   └── CLAUDE.md               # Global AI conventions (applied to all projects)
 ├── docs/                       # Detailed documentation
 ├── tests/                      # Tests for hook scripts and Makefile
@@ -64,6 +65,7 @@ Run `make test` to execute every `tests/*.test.sh` suite. Hook scripts and Makef
 The Makefile syncs `.claude/` into `~/.claude` (or any `TARGET_DIR`):
 
 - `make update-all` - Add missing and update changed files, keep extras; `settings.json` is merged with `jq` so machine-local keys survive (repo values win on conflicts)
+- MCP servers are declared in `.claude/mcp-servers.json` and merged into the target's `.claude.json` (`~/.claude.json` for the default home, `<TARGET_DIR>/.claude.json` otherwise) because Claude Code does not read MCP servers from `settings.json` or files inside `~/.claude/`
 - `make status` / `make diff` - Inspect sync state; in `make diff`, green lines are what update would add, red lines what it would remove
 - `make backup` - Timestamped backup of the target before changes
 - `make update-all TARGET_DIR=$HOME/.claude-personal` - Sync a second Claude home from the same repo

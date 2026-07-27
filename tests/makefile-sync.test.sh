@@ -51,6 +51,27 @@ check "update-config keeps machine-local keys" \
 check "update-config applies repo values over local drift" \
   test "$(jq -r '.effortLevel' "$TMP_TARGET/settings.json")" = "high"
 
+# --- update-config merges MCP servers into the target .claude.json ---
+check "update-all creates .claude.json with repo MCP servers" \
+  test "$(jq -r '.mcpServers["build123d-mcp"].command' "$TMP_TARGET/.claude.json")" = "uv"
+
+jq '.mcpServers["local-server"] = {command: "echo"}
+    | .mcpServers["build123d-mcp"].command = "drifted"
+    | .oauthAccount = "keep-me"
+    | .history = "line1\nline2\ttabbed"' \
+  "$TMP_TARGET/.claude.json" > "$TMP_TARGET/.claude.json.tmp"
+mv "$TMP_TARGET/.claude.json.tmp" "$TMP_TARGET/.claude.json"
+run_make update-config TARGET_DIR="$TMP_TARGET"
+
+check "MCP merge keeps machine-local servers" \
+  test "$(jq -r '.mcpServers["local-server"].command' "$TMP_TARGET/.claude.json")" = "echo"
+check "MCP merge applies repo server config over local drift" \
+  test "$(jq -r '.mcpServers["build123d-mcp"].command' "$TMP_TARGET/.claude.json")" = "uv"
+check "MCP merge keeps unrelated .claude.json keys" \
+  test "$(jq -r '.oauthAccount' "$TMP_TARGET/.claude.json")" = "keep-me"
+check "MCP merge preserves backslash escapes in strings" \
+  test "$(jq -r '.history' "$TMP_TARGET/.claude.json")" = "$(printf 'line1\nline2\ttabbed')"
+
 # --- rm commands remove repo-managed files only ---
 run_make rm-agents TARGET_DIR="$TMP_TARGET"
 

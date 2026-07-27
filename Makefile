@@ -6,6 +6,15 @@ REPO_DIR := $(shell pwd)/.claude
 TARGET_DIR := $(HOME)/.claude
 BACKUP_DIR := $(HOME)/.claude-backups
 
+# Claude Code reads MCP servers from .claude.json, not from settings.json.
+# For the default home it lives next to ~/.claude; for a custom home
+# (CLAUDE_CONFIG_DIR, e.g. ~/.claude-personal) it lives inside the target dir.
+ifeq ($(TARGET_DIR),$(HOME)/.claude)
+CLAUDE_JSON := $(HOME)/.claude.json
+else
+CLAUDE_JSON := $(TARGET_DIR)/.claude.json
+endif
+
 # Colors
 GREEN := \033[0;32m
 YELLOW := \033[0;33m
@@ -52,7 +61,7 @@ help:
 	@echo "  $(GREEN)update-agents$(NC)    Update .claude/agents/ only"
 	@echo "  $(GREEN)update-skills$(NC)    Update .claude/skills/ only"
 	@echo "  $(GREEN)update-hooks$(NC)     Update .claude/hooks/ only"
-	@echo "  $(GREEN)update-config$(NC)    Update settings.json (merged) and CLAUDE.md"
+	@echo "  $(GREEN)update-config$(NC)    Update settings.json (merged), CLAUDE.md, and MCP servers"
 	@echo ""
 	@echo "$(BOLD)Install Commands$(NC) (install external tools and skills):"
 	@echo "  $(GREEN)install$(NC)          Install all registered targets"
@@ -264,12 +273,12 @@ update-config:
 		fi \
 	elif command -v jq >/dev/null 2>&1; then \
 		merged=$$(jq -s '.[0] * .[1]' $(TARGET_DIR)/settings.json $(REPO_DIR)/settings.json); \
-		if echo "$$merged" | diff -q - $(TARGET_DIR)/settings.json > /dev/null 2>&1; then \
+		if printf '%s\n' "$$merged" | diff -q - $(TARGET_DIR)/settings.json > /dev/null 2>&1; then \
 			echo "Unchanged: settings.json"; \
 		elif [ "$(DRY_RUN)" = "1" ]; then \
 			echo "Would merge: settings.json (repo values win, local-only keys kept)"; \
 		else \
-			echo "$$merged" > $(TARGET_DIR)/settings.json; \
+			printf '%s\n' "$$merged" > $(TARGET_DIR)/settings.json; \
 			echo "Merged: settings.json (repo values win, local-only keys kept)"; \
 		fi \
 	elif ! diff -q $(REPO_DIR)/settings.json $(TARGET_DIR)/settings.json > /dev/null 2>&1; then \
@@ -299,6 +308,28 @@ update-config:
 		fi \
 	else \
 		echo "Unchanged: CLAUDE.md"; \
+	fi
+	@if [ -f $(REPO_DIR)/mcp-servers.json ]; then \
+		if ! command -v jq >/dev/null 2>&1; then \
+			echo "$(YELLOW)Warning: jq not found, skipping MCP server sync$(NC)"; \
+		elif [ ! -f $(CLAUDE_JSON) ]; then \
+			if [ "$(DRY_RUN)" = "1" ]; then \
+				echo "Would add: mcpServers to $(CLAUDE_JSON)"; \
+			else \
+				jq '{mcpServers: .mcpServers}' $(REPO_DIR)/mcp-servers.json > $(CLAUDE_JSON); \
+				echo "Added: mcpServers to $(CLAUDE_JSON)"; \
+			fi \
+		else \
+			merged=$$(jq -s '.[0] * {mcpServers: ((.[0].mcpServers // {}) + .[1].mcpServers)}' $(CLAUDE_JSON) $(REPO_DIR)/mcp-servers.json); \
+			if printf '%s\n' "$$merged" | diff -q - $(CLAUDE_JSON) > /dev/null 2>&1; then \
+				echo "Unchanged: mcpServers in $(CLAUDE_JSON)"; \
+			elif [ "$(DRY_RUN)" = "1" ]; then \
+				echo "Would merge: mcpServers into $(CLAUDE_JSON) (repo servers win, local servers kept)"; \
+			else \
+				printf '%s\n' "$$merged" > $(CLAUDE_JSON); \
+				echo "Merged: mcpServers into $(CLAUDE_JSON) (repo servers win, local servers kept)"; \
+			fi \
+		fi \
 	fi
 
 # ============================================================================
@@ -377,6 +408,25 @@ status:
 		fi \
 	done
 	@echo ""
+	@echo "$(BOLD)MCP Servers ($(CLAUDE_JSON)):$(NC)"
+	@if [ ! -f $(REPO_DIR)/mcp-servers.json ]; then \
+		echo "  No mcp-servers.json in repo."; \
+	elif ! command -v jq >/dev/null 2>&1; then \
+		echo "  jq not found, cannot inspect MCP servers."; \
+	else \
+		for s in $$(jq -r '.mcpServers | keys[]' $(REPO_DIR)/mcp-servers.json); do \
+			repo=$$(jq -c ".mcpServers[\"$$s\"]" $(REPO_DIR)/mcp-servers.json); \
+			installed=$$(jq -c ".mcpServers[\"$$s\"] // empty" $(CLAUDE_JSON) 2>/dev/null); \
+			if [ -z "$$installed" ]; then \
+				printf "  $(RED)●$(NC) $$s $(RED)(missing)$(NC)\n"; \
+			elif [ "$$repo" = "$$installed" ]; then \
+				printf "  $(GREEN)●$(NC) $$s $(GREEN)(synced)$(NC)\n"; \
+			else \
+				printf "  $(YELLOW)●$(NC) $$s $(YELLOW)(differs)$(NC)\n"; \
+			fi; \
+		done; \
+	fi
+	@echo ""
 	@echo "$(BOLD)Legend:$(NC) $(GREEN)●$(NC) synced  $(YELLOW)●$(NC) differs  $(RED)●$(NC) missing  $(BLUE)●$(NC) extra"
 
 .PHONY: diff
@@ -397,6 +447,24 @@ diff:
 			echo ""; \
 		fi \
 	done
+	@echo ""
+	@echo "$(BOLD)MCP Servers ($(CLAUDE_JSON)):$(NC)"
+	@if [ -f $(REPO_DIR)/mcp-servers.json ] && command -v jq >/dev/null 2>&1; then \
+		for s in $$(jq -r '.mcpServers | keys[]' $(REPO_DIR)/mcp-servers.json); do \
+			repo=$$(jq ".mcpServers[\"$$s\"]" $(REPO_DIR)/mcp-servers.json); \
+			installed=$$(jq ".mcpServers[\"$$s\"] // empty" $(CLAUDE_JSON) 2>/dev/null); \
+			if [ -z "$$installed" ]; then \
+				printf "  $(GREEN)●$(NC) $$s $(GREEN)(would add - not in $(CLAUDE_JSON))$(NC)\n"; \
+			elif [ "$$repo" != "$$installed" ]; then \
+				echo "$(YELLOW)--- $$s ---$(NC)"; \
+				tmp_local=$$(mktemp); tmp_repo=$$(mktemp); \
+				printf '%s\n' "$$installed" > "$$tmp_local"; printf '%s\n' "$$repo" > "$$tmp_repo"; \
+				diff $(DIFF_COLOR) "$$tmp_local" "$$tmp_repo" || true; \
+				rm -f "$$tmp_local" "$$tmp_repo"; \
+				echo ""; \
+			fi; \
+		done; \
+	fi
 
 .PHONY: backup
 backup:
