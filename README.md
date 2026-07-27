@@ -10,6 +10,7 @@ This repository provides a modular extension framework for Claude Code with:
 - **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`, `/changelog`, `/pr-check`, `/release-tag`, `/seo`) with multiple invocation modes
 - **Hooks** - Tool call interception for automation (sensitive file protection, cross-platform notifications)
 - **Plugin Management** - Centralized plugin enable/disable configuration
+- **MCP Servers** - Shared server definitions in `.claude/mcp-servers.json`, merged into `.claude.json` on sync
 - **Cross-Platform Support** - Works on macOS and Linux with dynamic path resolution
 
 ## Quick Start

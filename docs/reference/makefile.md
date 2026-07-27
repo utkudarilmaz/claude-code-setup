@@ -11,7 +11,7 @@ make update-all       # Update agents, skills, hooks, and config
 make update-agents    # Update .claude/agents/ only
 make update-skills    # Update .claude/skills/ only
 make update-hooks     # Update .claude/hooks/ only
-make update-config    # Update settings.json (merged) and CLAUDE.md
+make update-config    # Update settings.json (merged), CLAUDE.md, and MCP servers
 ```
 
 ### settings.json Merge
@@ -26,6 +26,28 @@ available, it deep-merges the repo file into the target file:
 
 Without `jq`, the old copy behavior is used and a warning is printed because
 local-only keys are lost. `CLAUDE.md` is always a plain copy.
+
+### MCP Server Sync
+
+Claude Code does not read MCP servers from `settings.json` or from any file
+inside `~/.claude/`. User-scoped servers live in `.claude.json`:
+
+- Default home: `~/.claude.json` (next to `~/.claude`)
+- Custom home (`CLAUDE_CONFIG_DIR`, e.g. `TARGET_DIR=$HOME/.claude-personal`):
+  `<target dir>/.claude.json`
+
+`update-config` merges the `mcpServers` block from the repo's
+`.claude/mcp-servers.json` into that file:
+
+- Servers defined in the repo replace the local definition of the same name
+  wholesale (no stale keys survive inside a repo-managed server)
+- Servers that exist only locally are kept
+- Everything else in `.claude.json` (session state, auth, projects) is
+  untouched
+
+The merge requires `jq`; without it the MCP sync is skipped with a warning.
+`make status` and `make diff` report each repo-managed server as synced,
+differing, or missing against the resolved `.claude.json`.
 
 ## Install Commands
 
@@ -109,7 +131,8 @@ shared through parameterized `define` blocks in the Makefile (`sync_dir`,
 `rm_dir`, `status_dir`, `diff_dir`), so all three directories behave the
 same way. `make test` runs `tests/makefile-sync.test.sh`, which exercises
 the sync commands against a temporary `TARGET_DIR`, including the
-`NO_RSYNC=1` fallback path and the settings.json merge.
+`NO_RSYNC=1` fallback path, the settings.json merge, and the MCP server
+merge into `.claude.json`.
 
 ## Status Legend
 
