@@ -53,26 +53,6 @@ Python: Uses pytest with `test_*.py` / `*_test.py` conventions.
 
 ---
 
-## pr-check
-
-PR quality reviewer that verifies PRs against a quality checklist before merging.
-
-**Trigger:** Before merging a PR or after addressing review comments
-
-**Checklist:**
-- Tests added/updated for code changes
-- No hardcoded secrets or credentials
-- Error handling is appropriate
-- Breaking changes documented
-- Commit messages follow conventions
-- Documentation updated if needed
-- Dependencies justified and secure
-- No obvious code smells or anti-patterns
-
-**Focus Modes:** tests, security, docs, breaking
-
----
-
 ## simplifier
 
 Code quality expert that removes dead code, reduces complexity, and eliminates duplication without changing behavior.

@@ -69,15 +69,15 @@ help:
 	@echo "  $(GREEN)install <target>$(NC) Install a specific target"
 	@echo "  $(BLUE)Targets:$(NC) $(INSTALL_TARGETS)"
 	@echo ""
-	@echo "$(BOLD)Remove Commands$(NC) (remove repo files from ~/.claude):"
+	@echo "$(BOLD)Remove Commands$(NC) (remove repo files from $(TARGET_DIR)):"
 	@echo "  $(RED)rm-agents$(NC)      Remove matching agents"
 	@echo "  $(RED)rm-skills$(NC)      Remove matching skills"
 	@echo "  $(RED)rm-hooks$(NC)       Remove matching hooks"
 	@echo ""
 	@echo "$(BOLD)Utility Commands$(NC):"
 	@echo "  $(BLUE)status$(NC)         Show sync status with colored indicators"
-	@echo "  $(BLUE)diff$(NC)           Show file differences between repo and ~/.claude"
-	@echo "  $(BLUE)backup$(NC)         Create timestamped backup of ~/.claude"
+	@echo "  $(BLUE)diff$(NC)           Show file differences between repo and $(TARGET_DIR)"
+	@echo "  $(BLUE)backup$(NC)         Create timestamped backup of $(TARGET_DIR)"
 	@echo "  $(BLUE)test$(NC)           Run the test suite in tests/"
 	@echo ""
 	@echo "$(BOLD)Options$(NC):"
@@ -86,7 +86,7 @@ help:
 	@echo "  NO_RSYNC=1   Force plain-copy fallback instead of rsync"
 	@echo ""
 	@echo "$(BOLD)Examples$(NC):"
-	@echo "  make update-all              # Update files in ~/.claude"
+	@echo "  make update-all              # Update files in $(TARGET_DIR)"
 	@echo "  make install                 # Install all registered targets"
 	@echo "  make install google-maps-scraper  # Install a specific target"
 	@echo "  make DRY_RUN=1 rm-agents     # Preview agent removal"
@@ -220,7 +220,7 @@ define diff_dir
 			filename=$$(basename "$$f"); \
 			target="$(TARGET_DIR)/$(1)/$$filename"; \
 			if [ ! -e "$$target" ]; then \
-				printf "  $(GREEN)●$(NC) $$filename $(GREEN)(would add - not in ~/.claude)$(NC)\n"; \
+				printf "  $(GREEN)●$(NC) $$filename $(GREEN)(would add - not in $(TARGET_DIR))$(NC)\n"; \
 			elif ! diff -rq "$$f" "$$target" > /dev/null 2>&1; then \
 				echo "$(YELLOW)--- $$filename ---$(NC)"; \
 				diff -r $(DIFF_COLOR) "$$target" "$$f"; \
@@ -370,19 +370,19 @@ all $(INSTALL_TARGETS):
 
 .PHONY: rm-agents
 rm-agents:
-	$(call confirm,This will remove matching agents from ~/.claude. Continue?)
+	$(call confirm,This will remove matching agents from $(TARGET_DIR). Continue?)
 	$(call rm_dir,agents)
 	$(call cleanup_empty_dirs)
 
 .PHONY: rm-skills
 rm-skills:
-	$(call confirm,This will remove matching skills from ~/.claude. Continue?)
+	$(call confirm,This will remove matching skills from $(TARGET_DIR). Continue?)
 	$(call rm_dir,skills)
 	$(call cleanup_empty_dirs)
 
 .PHONY: rm-hooks
 rm-hooks:
-	$(call confirm,This will remove matching hooks from ~/.claude. Continue?)
+	$(call confirm,This will remove matching hooks from $(TARGET_DIR). Continue?)
 	$(call rm_dir,hooks)
 	$(call cleanup_empty_dirs)
 
@@ -440,7 +440,7 @@ diff:
 	@echo "$(BOLD)Config Files:$(NC)"
 	@for f in settings.json CLAUDE.md; do \
 		if [ ! -f $(TARGET_DIR)/$$f ]; then \
-			printf "  $(GREEN)●$(NC) $$f $(GREEN)(would add - not in ~/.claude)$(NC)\n"; \
+			printf "  $(GREEN)●$(NC) $$f $(GREEN)(would add - not in $(TARGET_DIR))$(NC)\n"; \
 		elif ! diff -q $(REPO_DIR)/$$f $(TARGET_DIR)/$$f > /dev/null 2>&1; then \
 			echo "$(YELLOW)--- $$f ---$(NC)"; \
 			diff $(DIFF_COLOR) $(TARGET_DIR)/$$f $(REPO_DIR)/$$f; \
@@ -480,7 +480,7 @@ backup:
 			echo "$(GREEN)Backup created:$(NC) $$backup_path"; \
 		fi \
 	else \
-		echo "$(YELLOW)No ~/.claude directory to backup$(NC)"; \
+		echo "$(YELLOW)No $(TARGET_DIR) directory to backup$(NC)"; \
 	fi
 
 .PHONY: test
