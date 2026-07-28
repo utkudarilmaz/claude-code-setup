@@ -51,6 +51,28 @@ check "update-config keeps machine-local keys" \
 check "update-config applies repo values over local drift" \
   test "$(jq -r '.effortLevel' "$TMP_TARGET/settings.json")" = "high"
 
+# --- config paths stay portable across a custom TARGET_DIR ---
+# Hook and statusLine commands must resolve against the active Claude home.
+# A hardcoded ~/.claude makes a second home silently run the first home's
+# scripts, which breaks the moment the first home is removed.
+hook_exit_for_home() {
+  local home="$1" expected="$2" cmd status
+  cmd=$(jq -r '.hooks.PreToolUse[0].hooks[0].command' "$TMP_TARGET/settings.json")
+  printf '{"tool_input":{"file_path":"/tmp/app/.env"}}' \
+    | CLAUDE_CONFIG_DIR="$home" bash -c "$cmd" >/dev/null 2>&1
+  status=$?
+  test "$status" -eq "$expected"
+}
+
+check "repo settings.json has no hardcoded ~/.claude path" \
+  bash -c '! grep -q "~/\.claude" "$0/.claude/settings.json"' "$REPO_ROOT"
+check "synced settings.json has no hardcoded ~/.claude path" \
+  bash -c '! grep -q "~/\.claude" "$0/settings.json"' "$TMP_TARGET"
+check "hook command resolves to the target home's own script" \
+  hook_exit_for_home "$TMP_TARGET" 2
+check "hook command follows CLAUDE_CONFIG_DIR rather than falling back" \
+  hook_exit_for_home "$TMP_TARGET/nonexistent-home" 127
+
 # --- update-config merges MCP servers into the target .claude.json ---
 check "update-all creates .claude.json with repo MCP servers" \
   test "$(jq -r '.mcpServers["build123d-mcp"].command' "$TMP_TARGET/.claude.json")" = "uv"

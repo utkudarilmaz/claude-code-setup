@@ -50,7 +50,6 @@ Once installed, you can use skills in Claude Code:
 ```
 /docs                    # Document recent changes
 /tester                  # Test recent changes
-/pr-check                # Review current PR
 /security-review         # Security review
 /changelog               # Update changelog
 ```

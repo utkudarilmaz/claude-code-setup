@@ -61,7 +61,6 @@ Hooks intercept tool calls for pre/post processing:
 ├── agents/           # Agent definitions (domain expertise)
 │   ├── docs.md
 │   ├── tester.md
-│   ├── pr-check.md
 │   ├── security-reviewer.md
 │   ├── simplifier.md
 │   ├── release-notes.md
@@ -81,7 +80,6 @@ Hooks intercept tool calls for pre/post processing:
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       └── comprehensive-mode.md
-│   ├── pr-check/SKILL.md
 │   ├── security-review/
 │   │   ├── SKILL.md
 │   │   └── references/

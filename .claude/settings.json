@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/sensitive-file-protection.sh"
+            "command": "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/sensitive-file-protection.sh"
           }
         ]
       }
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/notification.sh"
+            "command": "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/notification.sh"
           }
         ]
       }
@@ -24,11 +24,11 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "bash -c 'EXISTING=$(\"$(command -v node)\" \"$(ls -td ~/.claude/plugins/cache/claude-hud/claude-hud/*/ 2>/dev/null | head -1)dist/index.js\" 2>/dev/null); PRAY=$(\"$(command -v node)\" \"$(ls -td ~/.claude/plugins/cache/claude-pray/claude-pray/*/ 2>/dev/null | head -1)dist/index.js\" 2>/dev/null); echo \"${EXISTING} ${PRAY}\"'"
+    "command": "bash -c 'EXISTING=$(\"$(command -v node)\" \"$(ls -td ${CLAUDE_CONFIG_DIR:-$HOME/.claude}/plugins/cache/claude-hud/claude-hud/*/ 2>/dev/null | head -1)dist/index.js\" 2>/dev/null); PRAY=$(\"$(command -v node)\" \"$(ls -td ${CLAUDE_CONFIG_DIR:-$HOME/.claude}/plugins/cache/claude-pray/claude-pray/*/ 2>/dev/null | head -1)dist/index.js\" 2>/dev/null); echo \"${EXISTING} ${PRAY}\"'"
   },
   "enabledPlugins": {
-    "claude-md-management@claude-plugins-official": true,
-    "feature-dev@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": false,
+    "feature-dev@claude-plugins-official": false,
     "superpowers@claude-plugins-official": true,
     "commit-commands@claude-plugins-official": true,
     "explanatory-output-style@claude-plugins-official": true,

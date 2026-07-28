@@ -7,7 +7,7 @@ Personal Claude Code configuration repository containing custom agents, skills, 
 This repository provides a modular extension framework for Claude Code with:
 
 - **Agents** - Specialized AI assistants for documentation, testing, security review, code quality, changelog generation, infrastructure, and SEO/GEO/AIO optimization
-- **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`, `/changelog`, `/pr-check`, `/release-tag`, `/seo`) with multiple invocation modes
+- **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`, `/changelog`, `/release-tag`, `/seo`) with multiple invocation modes
 - **Hooks** - Tool call interception for automation (sensitive file protection, cross-platform notifications)
 - **Plugin Management** - Centralized plugin enable/disable configuration
 - **MCP Servers** - Shared server definitions in `.claude/mcp-servers.json`, merged into `.claude.json` on sync
@@ -44,7 +44,6 @@ See [Installation Guide](docs/guides/installation.md) for detailed setup instruc
 | tester | `/tester` | Test recent changes |
 | tester | `/tester <scope>` | Test specific area |
 | tester | `/tester all` | Full test audit (50% coverage minimum) |
-| pr-check | `/pr-check` | Review PR quality |
 | security-review | `/security-review` | Security review |
 | security-review | `/security-review all` | Full security audit |
 | simplifier | `/simplifier` | Cleanup code quality |

@@ -68,32 +68,6 @@ Verify and create test coverage.
 
 ---
 
-## /pr-check
-
-Review current PR against quality checklist before merging.
-
-| Mode | Command | Description |
-|------|---------|-------------|
-| Default | `/pr-check` | Review current PR against full quality checklist |
-| Focused | `/pr-check <focus>` | Review with emphasis on specific aspect |
-
-**What it does:**
-- Uses `gh pr view` and `gh pr diff` to analyze the current PR
-- Evaluates against quality checklist: tests, secrets, error handling, breaking changes, commits, docs
-- Produces pass/fail report with overall verdict (Ready to Merge / Changes Required)
-- **Focused mode:** Prioritizes specified aspect while still checking other items
-
-**Examples:**
-```
-/pr-check                # Full quality review
-/pr-check tests          # Focus on test coverage and quality
-/pr-check security       # Focus on secrets, auth, input validation
-/pr-check docs           # Focus on documentation completeness
-/pr-check breaking       # Focus on breaking changes and migration
-```
-
----
-
 ## /security-review
 
 Perform security-focused code review.
