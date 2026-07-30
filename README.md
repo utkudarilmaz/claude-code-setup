@@ -7,7 +7,7 @@ Personal Claude Code configuration repository containing custom agents, skills, 
 This repository provides a modular extension framework for Claude Code with:
 
 - **Agents** - Specialized AI assistants for documentation, testing, security review, code quality, changelog generation, infrastructure, and SEO/GEO/AIO optimization
-- **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`, `/changelog`, `/release-tag`, `/seo`) with multiple invocation modes
+- **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`, `/changelog`, `/release-tag`, `/seo`, `/pr-body`) with multiple invocation modes
 - **Hooks** - Tool call interception for automation (sensitive file protection, cross-platform notifications)
 - **Plugin Management** - Centralized plugin enable/disable configuration
 - **MCP Servers** - Shared server definitions in `.claude/mcp-servers.json`, merged into `.claude.json` on sync
@@ -61,6 +61,10 @@ See [Installation Guide](docs/guides/installation.md) for detailed setup instruc
 | seo | `/seo <scope>` | Optimize specific page or directory |
 | seo | `/seo all` | Full project SEO/GEO/AIO optimization |
 | seo | `/seo audit` | Score-only report card (no file edits) |
+| pr-body | `/pr-body` | Write and apply this branch's PR description |
+| pr-body | `/pr-body <number>` | Rewrite a specific PR description |
+| pr-body | `/pr-body draft` | Print a draft description, change nothing |
+| pr-body | `/pr-body refresh` | Update the body, keep hand-written notes |
 
 See [Skills Reference](docs/reference/skills.md) for complete documentation.
 
