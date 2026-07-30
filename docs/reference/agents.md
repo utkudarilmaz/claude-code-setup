@@ -137,6 +137,23 @@ Generates CHANGELOG.md from git history using Keep a Changelog format.
 
 ---
 
+## pr-body
+
+Writes short, plain-English pull request descriptions and applies them with `gh`.
+
+**Trigger:** When writing a new PR description or updating an existing one
+
+**Responsibilities:**
+- Resolve the target PR and its base branch with `gh pr view`
+- Read the branch commits, diff, and any linked issue
+- Write What and Why, plus Scope, Testing, and Next only when there is real content
+- Keep the body under 200 words with no emoji and no AI attribution
+- Apply the body with `gh pr edit`, or print it in draft mode
+
+**Never:** creates a PR, pushes commits, or invents test results
+
+---
+
 ## seo-optimizer
 
 SEO/GEO/AIO optimization expert that improves web content discoverability across traditional search engines, generative AI systems, and AI crawlers.

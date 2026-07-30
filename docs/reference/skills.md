@@ -272,3 +272,47 @@ Bump semantic version, update changelog, and create annotated git tag.
 /release-tag minor       # Bump minor version and tag
 /release-tag major       # Bump major version and tag
 ```
+
+---
+
+## /pr-body
+
+Write a pull request description and apply it with `gh`.
+
+| Mode | Command | Description |
+|------|---------|-------------|
+| Default | `/pr-body` | Write and apply the body for the current branch's PR |
+| Targeted | `/pr-body <number\|url>` | Rewrite the body of a specific PR |
+| Draft | `/pr-body draft` | Print a draft body without touching GitHub |
+| Refresh | `/pr-body refresh` | Update an existing body, keeping hand-written notes |
+
+**What it does:**
+- **Default:** Resolves the current branch's open PR, reads the commits and diff against the base branch plus any linked issue, writes a short body, and applies it with `gh pr edit`
+- **Targeted:** Same, against a PR given by number or URL
+- **Draft:** Prints the body only, makes no GitHub call
+- **Refresh:** Reads the current body first, keeps the author's own writing and heading style, and updates only the parts new commits made stale
+
+**Body shape:**
+
+| Section | Required | Content |
+|---------|----------|---------|
+| What | Yes | What the change does |
+| Why | Yes | The problem or reason behind it |
+| Scope | Optional | Files or areas touched |
+| Testing | Optional | What was actually run or verified |
+| Next | Optional | Follow-up work left out on purpose |
+
+Optional sections are dropped entirely when empty, never filled with "N/A".
+
+**Rules:** Under 200 words, plain simple English, no emoji, no bold-label bullets, no AI attribution, no invented test results.
+
+**Scope:** Writing only. Never creates a PR and never pushes commits; use `/commit-commands:commit-push-pr` for that.
+
+**Examples:**
+```
+/pr-body                                          # Apply body to this branch's PR
+/pr-body 142                                      # Rewrite the body of PR 142
+/pr-body https://github.com/owner/repo/pull/142   # Same, by URL
+/pr-body draft                                    # Print a draft, change nothing
+/pr-body refresh                                  # Update body, keep hand-written notes
+```
