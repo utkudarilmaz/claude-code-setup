@@ -298,13 +298,15 @@ Write a pull request description and apply it with `gh`.
 |---------|----------|---------|
 | What | Yes | What the change does |
 | Why | Yes | The problem or reason behind it |
-| Scope | Optional | Files or areas touched |
+| Files | Yes | Every changed file, grouped Added / Changed / Removed, with a short note each |
 | Testing | Optional | What was actually run or verified |
 | Next | Optional | Follow-up work left out on purpose |
 
 Optional sections are dropped entirely when empty, never filled with "N/A".
 
-**Rules:** Under 200 words, plain simple English, no emoji, no bold-label bullets, no AI attribution, no invented test results.
+**Files section:** Built from `git diff --name-status -M` against the PR's base branch. Every file is listed, with no truncation and no directory rollups. Renames are detected and shown as a single line under Changed rather than as a delete plus an add. In refresh mode this section is always rebuilt from the current diff, since a stale file list is simply wrong; the author's per-file notes carry over for files still in the diff.
+
+**Rules:** Under 200 words of prose, plain simple English, no emoji, no bold-label bullets in prose, no AI attribution, no invented test results. The Files list is exempt from the word budget and is always complete.
 
 **Scope:** Writing only. Never creates a PR and never pushes commits; use `/commit-commands:commit-push-pr` for that.
 

@@ -13,7 +13,7 @@ You are not a technical writer producing a report. You are a colleague leaving a
 
 1. **Read the change**: Understand the branch diff and commits before writing a word
 2. **Explain the why**: The diff shows what changed; only you can say why it was needed
-3. **Keep it short**: Aim for under 200 words. Long bodies do not get read
+3. **Keep it short**: Aim for under 200 words of prose. The Files list does not count toward that budget; it is complete no matter how long it runs
 4. **Sound human**: Plain English, no corporate filler, no AI tells
 5. **Apply it**: Write the body to the PR with `gh`
 
@@ -50,12 +50,27 @@ BASE=$(gh pr view --json baseRefName -q .baseRefName)
 # What the author said they were doing
 git log origin/$BASE..HEAD --pretty=format:"%s%n%b"
 
-# What actually changed
+# Every file with its status, for the Files section
+git diff --name-status -M origin/$BASE..HEAD
+
+# Size of the change per file
 git diff --stat origin/$BASE..HEAD
 
 # The real content of the change, when the stat is not enough
 git diff origin/$BASE..HEAD
 ```
+
+`--name-status -M` prints one line per file, prefixed with its status:
+
+| Prefix | Meaning | Goes under |
+|--------|---------|------------|
+| `A` | Added | **Added** |
+| `M` | Modified | **Changed** |
+| `D` | Deleted | **Removed** |
+| `R###` | Renamed, with similarity score | **Changed**, as `old - renamed to new` |
+| `C###` | Copied | **Added** |
+
+Git detects renames by default, so `-M` is usually redundant. Pass it anyway: it forces detection even when the repository or the user has set `diff.renames=false`, where a rename would otherwise show as a delete plus an add and make the PR look like far more churn than it is.
 
 Also read any issue the branch or commits reference (`gh issue view <n>`), since it usually holds the why.
 
@@ -89,9 +104,16 @@ In `draft` mode, print the body and stop. Do not call `gh pr edit`.
 
 <One or two sentences. The problem, the bug, or the reason this is needed.>
 
-## Scope
+## Files
 
-- `path/to/file` - what changed here
+**Added**
+- `path/to/new` - what it does
+
+**Changed**
+- `path/to/existing` - what changed here
+
+**Removed**
+- `path/to/old` - why it went
 
 ## Testing
 
@@ -102,9 +124,20 @@ In `draft` mode, print the body and stop. Do not call `gh pr edit`.
 <Follow-up work deliberately left out of this PR.>
 ```
 
-**What** and **Why** are required. **Scope**, **Testing**, and **Next** are optional; drop the heading entirely when there is nothing worth writing.
+**What**, **Why**, and **Files** are required. **Testing** and **Next** are optional; drop the heading entirely when there is nothing worth writing. Drop **Testing** when you cannot verify what was run. Never write "N/A", "None", or "See above" under a heading.
 
-Drop **Scope** when the PR touches one or two files and the What section already covers it. Drop **Testing** when you cannot verify what was run. Never write "N/A", "None", or "See above" under a heading.
+### The Files Section
+
+Build it from `git diff --name-status -M`. Rules:
+
+- **List every changed file.** Never truncate, never summarize as "and 12 more", never collapse a directory into a count. A reviewer uses this list to plan their review, so a missing file defeats the point
+- Include only the groups that have files. A PR that adds nothing has no **Added** group
+- Order groups **Added**, **Changed**, **Removed**
+- Within a group, sort by path so the list is stable across reruns
+- Give each file a short note saying what changed there, a few words, not a sentence. Drop the note when the filename already says it (`README.md - docs`, for example, adds nothing)
+- Wrap paths in backticks, and write them relative to the repository root
+- For a rename, one line under **Changed**: `` `old/path` - renamed to `new/path` ``
+- Group generated or vendored files on one line when the tool that made them is obvious: `` `package-lock.json` - lockfile, regenerated ``
 
 ### Worked Example
 
@@ -120,10 +153,17 @@ Stripe retries failed webhooks for three days. We returned 500 on short DB
 timeouts, so Stripe kept resending the same event and customers were charged
 more than once.
 
-## Scope
+## Files
 
-- `webhooks/stripe.go` - retry with backoff, max three attempts
+**Added**
+- `webhooks/retry.go` - backoff helper
+
+**Changed**
+- `webhooks/stripe.go` - wraps the handler in retry
 - `webhooks/stripe_test.go` - covers the timeout path
+
+**Removed**
+- `webhooks/legacy_retry.go` - replaced by the new helper
 
 ## Testing
 
@@ -159,8 +199,8 @@ Write like a person. Rewrite these on sight:
 
 **Never:**
 - Emoji, anywhere
-- Bold-label bullets (`- **Feature**: description`), which read as generated
-- A bullet per commit or per changed file; that is what the Files tab is for
+- Bold-label bullets (`- **Feature**: description`) in the prose sections, which read as generated. The **Added** / **Changed** / **Removed** labels in the Files section are group headings, not bullet labels, and are correct
+- A bullet per commit anywhere in the body. Commits are not the unit a reviewer cares about; files and reasons are
 - Praising the change ("clean solution", "much better approach")
 - Restating the diff line by line
 - Inventing test results or a rationale you did not find in the commits, diff, or issue
@@ -176,12 +216,14 @@ When updating an existing body against new commits:
 1. Read the current body first
 2. Keep anything the author wrote by hand: review notes, screenshots, checklists, deploy steps, links, tables, and any section not in the template
 3. Update only the template sections that the new commits made stale
-4. Preserve the existing heading style if it differs from the template; do not reshape a body the author already shaped
-5. If the current body is empty or is only a template placeholder, ignore all of the above and write a fresh body
+4. **Always rebuild the Files section from scratch** against the current diff. It is mechanical, so a stale entry is simply wrong. Carry over the author's per-file notes for files that are still in the diff, and drop notes for files no longer in it
+5. If the body has no Files section, add one. Put it after the last prose section that explains the change, before Testing if that exists
+6. Preserve the existing heading style if it differs from the template; do not reshape a body the author already shaped. If the author used a different name for the file list (Changes, Scope, Files touched), update that section in place rather than adding a second one
+7. If the current body is empty or is only a template placeholder, ignore all of the above and write a fresh body
 
 ## Guidelines
 
-- Length beats completeness. Cut the weakest sentence when in doubt
+- In prose, length beats completeness. Cut the weakest sentence when in doubt. This does not apply to the Files list, which is always complete
 - Plain simple English throughout, per repository conventions
 - Match the repository's existing PR style when previous PRs show a clear convention (`gh pr list --state merged --limit 5 --json body`)
 - One idea per sentence

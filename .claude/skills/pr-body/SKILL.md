@@ -31,9 +31,11 @@ Task tool with subagent_type="pr-body"
 prompt: "Write the PR body for the current branch's open PR.
 Resolve the PR with gh pr view. Read the commits and diff against the
 base branch, plus any linked issue.
-Write What and Why sections, and Scope, Testing, and Next only when there
+Write What, Why, and Files sections. Add Testing and Next only when there
 is something real to say.
-Keep it under 200 words in plain simple English.
+Build Files from git diff --name-status -M, grouped Added, Changed, and
+Removed, with a short note per file. List every file, never truncate.
+Keep the prose under 200 words in plain simple English.
 Apply it with gh pr edit and print the PR URL.
 Stop with a one-line message if there is no open PR for this branch."
 ```
@@ -47,9 +49,11 @@ Task tool with subagent_type="pr-body"
 prompt: "Write the PR body for PR: [number or url]
 Resolve it with gh pr view [number]. Read the commits and diff against
 that PR's base branch, plus any linked issue.
-Write What and Why sections, and Scope, Testing, and Next only when there
+Write What, Why, and Files sections. Add Testing and Next only when there
 is something real to say.
-Keep it under 200 words in plain simple English.
+Build Files from git diff --name-status -M, grouped Added, Changed, and
+Removed, with a short note per file. List every file, never truncate.
+Keep the prose under 200 words in plain simple English.
 Apply it with gh pr edit and print the PR URL."
 ```
 
@@ -67,7 +71,11 @@ prompt: "Draft the PR body for the current branch. Print it and stop.
 Do not call gh pr edit and do not modify the PR.
 If there is no open PR, diff against the default branch and still print
 a draft.
-Keep it under 200 words in plain simple English."
+Write What, Why, and Files sections. Add Testing and Next only when there
+is something real to say.
+Build Files from git diff --name-status -M, grouped Added, Changed, and
+Removed, with a short note per file. List every file, never truncate.
+Keep the prose under 200 words in plain simple English."
 ```
 
 ### Refresh: `/pr-body refresh`
@@ -81,6 +89,9 @@ Read the current body first. Keep everything the author wrote by hand:
 review notes, screenshots, checklists, deploy steps, and any section not
 in the template. Preserve their heading style.
 Update only the parts the new commits made stale.
+Always rebuild the Files section from the current diff, carrying over the
+author's per-file notes for files still in it. Add a Files section if the
+body has none.
 If the current body is empty or a bare template, write a fresh one.
 Apply it with gh pr edit and print the PR URL."
 ```
@@ -91,16 +102,40 @@ Apply it with gh pr edit and print the PR URL."
 |---------|----------|---------|
 | What | Yes | What the change does, in one to three sentences |
 | Why | Yes | The problem or reason behind it |
-| Scope | Optional | Files or areas touched, one line each |
+| Files | Yes | Every changed file, grouped Added / Changed / Removed |
 | Testing | Optional | What was actually run or verified |
 | Next | Optional | Follow-up work left out on purpose |
 
 Optional sections are dropped entirely when empty. No "N/A" placeholders.
 
+### Files Section
+
+Built from `git diff --name-status -M` against the PR's base branch:
+
+```markdown
+## Files
+
+**Added**
+- `webhooks/retry.go` - backoff helper
+
+**Changed**
+- `webhooks/stripe.go` - wraps the handler in retry
+- `webhooks/stripe_test.go` - covers the timeout path
+
+**Removed**
+- `webhooks/legacy_retry.go` - replaced by the new helper
+```
+
+- Every file is listed. No truncation, no "and 12 more", no directory rollups
+- Only groups with files appear
+- Paths are relative to the repository root, sorted within each group
+- Renames show as one line under **Changed**: `` `old` - renamed to `new` ``
+- Per-file notes are a few words, dropped when the filename already says it
+
 ## Rules
 
-- Plain simple English, under 200 words
-- No emoji, no bold-label bullets, no AI attribution footer
+- Plain simple English, under 200 words of prose; the Files list is exempt and always complete
+- No emoji, no bold-label bullets in prose, no AI attribution footer
 - No invented test results or made-up rationale
 - Default, targeted, and refresh modes apply the body without asking; use `draft` to review first
 
