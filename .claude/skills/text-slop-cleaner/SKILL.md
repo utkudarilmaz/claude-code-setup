@@ -1,0 +1,161 @@
+---
+name: text-slop-cleaner
+description: This skill should be used when the user asks to "clean up this text", "remove the AI slop", "make this sound human", "rewrite this in plain English", "remove unnecessary comments", "strip the comments", "this reads like AI wrote it", or "/text-slop-cleaner". Rewrites machine sounding prose and removes comments that add nothing.
+---
+
+# Text Slop Cleaner Skill
+
+## Purpose
+
+Turns machine sounding text into plain English, and removes comments that do not earn their place. Dispatches to the `text-slop-cleaner` agent, which reads the target, rewrites padded prose, cuts empty comments, and leaves protected content alone.
+
+Applies changes directly. Use `check` mode to see the report without touching anything.
+
+Text only. This skill never changes code behaviour and never edits string literals.
+
+## When to Invoke
+
+Invoke this skill:
+
+- After generating documentation, a README, or a pull request body
+- When a file has picked up comments that only restate the code
+- Before sharing writing that reads as generated
+- When reviewing a change that added more comments than code
+
+## Invocation Modes
+
+### Default: `/text-slop-cleaner`
+
+Clean prose and comments in the uncommitted changes.
+
+```
+Task tool with subagent_type="text-slop-cleaner"
+prompt: "Clean the prose and comments in the uncommitted changes.
+Run git diff to find the changed files and work only on the lines
+those changes touched.
+Rewrite padded prose into plain English. Remove comments that only
+restate the code. Keep comments that explain why.
+Never touch lint directives, build tags, generated file markers,
+licence headers, or doc comments a toolchain requires.
+Never change code behaviour and never edit string literals.
+Apply the changes directly. Report what changed, what was protected,
+and the word count before and after.
+Consult references/slop-patterns.md for the full pattern list."
+```
+
+### Scoped: `/text-slop-cleaner <path>`
+
+Clean a specific file or directory.
+
+```
+Task tool with subagent_type="text-slop-cleaner"
+prompt: "Clean the prose and comments in: [path]
+Read each file fully before cutting anything from it.
+Rewrite padded prose into plain English. Remove comments that only
+restate the code. Keep comments that explain why.
+Never touch lint directives, build tags, generated file markers,
+licence headers, or doc comments a toolchain requires.
+Never change code behaviour and never edit string literals.
+Apply the changes directly. Report what changed, what was protected,
+and the word count before and after.
+Consult references/slop-patterns.md for the full pattern list."
+```
+
+**Scope examples:**
+- `/text-slop-cleaner README.md` - one file
+- `/text-slop-cleaner docs/` - every file in a directory
+- `/text-slop-cleaner src/auth/handler.go` - comments in one source file
+
+### Pull request: `/text-slop-cleaner <number|url>`
+
+Clean a pull request body and your own comments on it.
+
+```
+Task tool with subagent_type="text-slop-cleaner"
+prompt: "Clean the text on pull request: [number or url]
+Read the body and every comment with gh pr view and gh api.
+Separate your own comments from other people's before changing anything.
+Rewrite the body and your own comments into plain English, and apply
+them with gh pr edit and gh api.
+Never edit another person's comment. GitHub does not allow it. List
+what reads as slop in theirs and leave it alone.
+Report what changed and what was reported only."
+```
+
+### All: `/text-slop-cleaner all`
+
+Clean every markdown file in the repository.
+
+```
+Task tool with subagent_type="text-slop-cleaner"
+prompt: "Clean the prose in every markdown file in the repository.
+Skip vendored, generated, and dependency directories.
+Work file by file. Read each one fully before cutting anything.
+Rewrite padded prose into plain English. Keep every code block,
+command, path, and number exactly as written.
+Never add headings, sections, or summaries that were not there.
+Apply the changes directly. Report per file, then a total word count
+before and after.
+Consult references/slop-patterns.md for the full pattern list."
+```
+
+### Check: `/text-slop-cleaner check`
+
+Report what would change, without changing anything.
+
+```
+Task tool with subagent_type="text-slop-cleaner"
+prompt: "Report the slop in the uncommitted changes. Change nothing.
+Do not edit any file and do not call gh.
+For each finding show the current text and the proposed replacement.
+List protected content you would leave alone and why.
+Consult references/slop-patterns.md for the full pattern list."
+```
+
+## What Is Protected
+
+The agent never touches these, even though they can read as noise:
+
+| Kind | Examples |
+|------|----------|
+| Lint and type directives | `//nolint`, `# noqa`, `# type: ignore`, `// eslint-disable` |
+| Build and tooling markers | build tags, `//go:generate`, encoding lines, shebangs |
+| Generated file markers | `Code generated by ... DO NOT EDIT` |
+| Legal | licence headers, copyright notices, SPDX identifiers |
+| Required doc comments | godoc on exported symbols, JSDoc on published APIs |
+| Other people's comments | reported, never edited |
+
+## Rules
+
+- Meaning never changes. A padded sentence that carries information gets rewritten, not deleted
+- Code blocks, commands, paths, and numbers are copied through exactly
+- Only prose and comments change. Never code, never string literals
+- Nothing new is added. No new headings, no new summaries
+- Default, scoped, pull request, and all modes apply without asking. Use `check` to review first
+
+## Agent Dispatch Summary
+
+| Invocation | Agent | Output |
+|------------|-------|--------|
+| `/text-slop-cleaner` | `text-slop-cleaner` | Uncommitted changes cleaned in place |
+| `/text-slop-cleaner <path>` | `text-slop-cleaner` | Named file or directory cleaned in place |
+| `/text-slop-cleaner <number\|url>` | `text-slop-cleaner` | PR body and own comments rewritten |
+| `/text-slop-cleaner all` | `text-slop-cleaner` | Every markdown file cleaned |
+| `/text-slop-cleaner check` | `text-slop-cleaner` | Report only, nothing changed |
+
+## Usage Examples
+
+```
+/text-slop-cleaner              # Clean the uncommitted changes
+/text-slop-cleaner README.md    # Clean one file
+/text-slop-cleaner docs/        # Clean a directory
+/text-slop-cleaner 142          # Clean the body and your comments on PR 142
+/text-slop-cleaner all          # Clean every markdown file
+/text-slop-cleaner check        # Show what would change, change nothing
+```
+
+## Additional Resources
+
+### Reference Files
+
+- **`references/slop-patterns.md`** - the full pattern list for prose and comments, with before and after examples
