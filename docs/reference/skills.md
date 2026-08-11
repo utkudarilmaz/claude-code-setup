@@ -16,8 +16,10 @@ Synchronize documentation with code changes.
 **What it does:**
 - **Default:** Reviews recent changes and updates affected documentation (README.md, CLAUDE.md, API docs)
 - **Scoped:** Focuses only on specified area (e.g., module, API, specific file)
-- **Comprehensive:** Creates TodoWrite plan covering all documentation aspects (overview, installation, API, architecture, etc.), processes each aspect sequentially
+- **Comprehensive:** Creates TodoWrite plan covering all documentation aspects (overview, installation, API, architecture, etc.), processes each aspect sequentially. Every area is covered; none of them gets padded
 - **Simplifier:** Analyzes documentation structure, identifies files >300 lines, proposes and executes modular split with cross-linking
+
+**Writing:** Plain simple English is the default in every mode. The agent says each thing once, leaves out what the code or `--help` already tells the reader, and cuts stale or padded text in the sections it touches while keeping every fact, command, and caveat. `simplifier` is about where text lives, not how it reads.
 
 **File Management:**
 - Enforces 300-line limit per file
@@ -290,23 +292,23 @@ Write a pull request description and apply it with `gh`.
 - **Default:** Resolves the current branch's open PR, reads the commits and diff against the base branch plus any linked issue, writes a short body, and applies it with `gh pr edit`
 - **Targeted:** Same, against a PR given by number or URL
 - **Draft:** Prints the body only, makes no GitHub call
-- **Refresh:** Reads the current body first, keeps the author's own writing and heading style, and updates only the parts new commits made stale
+- **Refresh:** Reads the current body first, keeps the author's own writing and heading style, and rewrites the template sections to the short default shape, whether they went stale or just grew padded
 
 **Body shape:**
 
 | Section | Required | Content |
 |---------|----------|---------|
-| What | Yes | What the change does |
-| Why | Yes | The problem or reason behind it |
-| Files | Yes | Every changed file, grouped Added / Changed / Removed, with a short note each |
+| What | Yes | What the change does, in one or two sentences |
+| Why | Yes | The problem or reason behind it, in one or two sentences |
+| Files | Yes | Every changed file, grouped Added / Changed / Removed |
 | Testing | Optional | What was actually run or verified |
 | Next | Optional | Follow-up work left out on purpose |
 
 Optional sections are dropped entirely when empty, never filled with "N/A".
 
-**Files section:** Built from `git diff --name-status -M` against the PR's base branch. Every file is listed, with no truncation and no directory rollups. Renames are detected and shown as a single line under Changed rather than as a delete plus an add. In refresh mode this section is always rebuilt from the current diff, since a stale file list is simply wrong; the author's per-file notes carry over for files still in the diff.
+**Files section:** Built from `git diff --name-status -M` against the PR's base branch. Every file is listed, with no truncation and no directory rollups. A file gets a note only when its path leaves a reviewer guessing. Renames are detected and shown as a single line under Changed rather than as a delete plus an add. In refresh mode this section is always rebuilt from the current diff, since a stale file list is simply wrong; the author's per-file notes carry over for files still in the diff.
 
-**Rules:** Under 200 words of prose, plain simple English, no emoji, no bold-label bullets in prose, no AI attribution, no invented test results. The Files list is exempt from the word budget and is always complete.
+**Rules:** Under 120 words of prose, plain simple English, no emoji, no bold-label bullets in prose, no AI attribution, no invented test results. The Files list is exempt from the word budget and is always complete. Short is the default in every mode, including refresh; a large change gets the same shape, with the Files list carrying the detail.
 
 **Scope:** Writing only. Never creates a PR and never pushes commits; use `/commit-commands:commit-push-pr` for that.
 
