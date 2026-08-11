@@ -4,6 +4,8 @@ Perform a planned, modular documentation update covering every aspect of the rep
 
 **Do not skip any aspect. Continue until ALL areas are reviewed.**
 
+Comprehensive is about coverage, not length. Every aspect gets an entry; every entry is written plain and short, and padded or stale text in it gets cut. A section with nothing real to say is left out rather than filled.
+
 ## Execution Flow
 
 1. **Explore repository structure** - Identify all code areas requiring documentation

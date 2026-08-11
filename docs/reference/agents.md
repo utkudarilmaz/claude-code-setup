@@ -4,17 +4,20 @@ Agents are specialized AI assistants that contain domain expertise and execution
 
 ## docs
 
-Documentation architect that manages README.md, CLAUDE.md, API docs, postman collections, and architecture diagrams.
+Keeps README.md, CLAUDE.md, API docs, postman collections, and architecture diagrams true and short.
 
 **Trigger:** After code changes affecting documentation
 
 **Responsibilities:**
 - Analyze code changes and identify affected docs
 - Update documentation files for accuracy
+- Write plain simple English by default, one idea per sentence, no marketing adjectives
+- Cut stale, repeated, and padded text in every section it touches, keeping every fact, command, and caveat
 - Enforce modular structure (300-line file limit with docs/ subdirectories)
 - Maintain architecture diagrams (.drawio files with PNG exports)
 - Maintain consistent formatting and style
 - Use camelCase for JSON field names
+- Report what was cut alongside what was written
 
 **Supported Files:**
 - README.md, CLAUDE.md (core documentation)
@@ -148,7 +151,8 @@ Writes short, plain-English pull request descriptions and applies them with `gh`
 - Read the branch commits, diff, and any linked issue
 - Write What, Why, and Files, plus Testing and Next only when there is real content
 - Build the Files list from `git diff --name-status -M`, grouped Added, Changed, and Removed, with renames detected
-- Keep the prose under 200 words with no emoji and no AI attribution
+- Keep the prose under 120 words with no emoji and no AI attribution, and cut anything the Files list already shows
+- Note a file only when its path leaves a reviewer guessing
 - Apply the body with `gh pr edit`, or print it in draft mode
 
 **Never:** creates a PR, pushes commits, or invents test results

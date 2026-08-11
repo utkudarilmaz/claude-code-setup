@@ -4,6 +4,10 @@ Perform a documentation restructuring analysis and execution to transform monoli
 
 **Purpose:** Analyze existing documentation, identify files needing restructuring, propose a modular split plan, and execute with proper cross-linking.
 
+This mode is about where text lives, not how it reads. Plain short writing is already the default in every mode, so reach for this one when files are too big or badly organised, not when prose needs cleaning up.
+
+While splitting, drop text that only existed to pad a large file: repeated introductions, section summaries, and any passage that the new home already covers. Keep every fact, command, and caveat.
+
 ## Execution Flow
 
 1. **Analyze Current Structure**

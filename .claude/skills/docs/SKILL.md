@@ -9,6 +9,8 @@ description: This skill should be used when the user asks to "update documentati
 
 Dispatch the docs agent to synchronize documentation with code changes. The agent updates README.md, CLAUDE.md, docs/* directory files, API docs, postman collections, and other documentation files to keep them accurate and current.
 
+Plain and short is the default in every mode. The agent writes the fewest plain words that stay accurate, and cuts stale or padded text in the sections it touches. `simplifier` mode is about file structure, not writing style; plain writing needs no mode.
+
 ## When to Invoke
 
 Invoke this skill after:
@@ -30,7 +32,10 @@ Document current or recent changes. The agent identifies recently modified files
 ```
 Task tool with subagent_type="docs"
 prompt: "Review recent code changes and update all affected documentation.
-Identify modified files, scan the docs/ directory for existing files, and update README.md, CLAUDE.md, docs/* files, and any other relevant documentation."
+Identify modified files, scan the docs/ directory for existing files, and update README.md, CLAUDE.md, docs/* files, and any other relevant documentation.
+Write in plain simple English, one idea per sentence, and say each thing once.
+In every section you touch, also cut text that is now wrong, repeated elsewhere, or padded. Keep every fact, command, and caveat.
+Report what you cut."
 ```
 
 ### Scoped: `/docs <scope>`
@@ -40,7 +45,10 @@ Document only the specified scope (file, module, feature).
 ```
 Task tool with subagent_type="docs"
 prompt: "Review and update documentation for: [scope]
-Focus only on this area. Update all relevant documentation files including any matching files in the docs/ directory."
+Focus only on this area. Update all relevant documentation files including any matching files in the docs/ directory.
+Write in plain simple English, one idea per sentence, and say each thing once.
+In every section you touch, also cut text that is now wrong, repeated elsewhere, or padded. Keep every fact, command, and caveat.
+Report what you cut."
 ```
 
 **Scope examples:**
@@ -58,6 +66,7 @@ Perform a planned, modular documentation update covering every repository aspect
 Task tool with subagent_type="docs"
 prompt: "Perform comprehensive documentation audit of all repository areas.
 Create a TodoWrite plan with one item per documentation aspect, then process sequentially.
+Comprehensive means every area is covered, not that every area gets long text. Write each one plain and short, and cut what is stale, repeated, or padded as you go.
 Consult references/comprehensive-mode.md for the full aspect checklist and execution flow."
 ```
 
