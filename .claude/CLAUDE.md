@@ -9,3 +9,4 @@
 - Always check available skills, agents, plugins, and MCP servers when planning or working on tasks
 - Always use tofu instead of terraform
 - Never use double dashes
+- Never add comments those are not 100% necessary

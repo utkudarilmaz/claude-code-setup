@@ -140,3 +140,4 @@ The `.claude/CLAUDE.md` file contains conventions applied to all projects:
 - camelCase for JSON field names
 - Check available skills/agents/plugins/MCP servers when planning tasks
 - Use tofu instead of terraform
+- Never add comments which are not 100% necessary

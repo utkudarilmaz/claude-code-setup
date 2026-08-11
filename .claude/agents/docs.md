@@ -1,7 +1,7 @@
 ---
 name: docs
 description: "This agent should be invoked when the user asks to update documentation, document code changes, sync docs with code, audit documentation, update README or CLAUDE.md, update docs/ directory files, document APIs, or update postman collections. Handles documentation updates after feature additions, API modifications, configuration changes, file restructuring, or dependency updates."
-model: sonnet
+model: opus
 color: pink
 ---
 
