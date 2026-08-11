@@ -6,8 +6,8 @@ Personal Claude Code configuration repository containing custom agents, skills, 
 
 This repository provides a modular extension framework for Claude Code with:
 
-- **Agents** - Specialized AI assistants for documentation, testing, security review, code quality, changelog generation, infrastructure, and SEO/GEO/AIO optimization
-- **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`, `/changelog`, `/release-tag`, `/seo`, `/pr-body`) with multiple invocation modes
+- **Agents** - Specialized AI assistants for documentation, testing, security review, code quality, changelog generation, infrastructure, SEO/GEO/AIO optimization, plain-English explanation, and slop cleanup in text and changes
+- **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`, `/changelog`, `/release-tag`, `/seo`, `/pr-body`, `/text-slop-cleaner`, `/code-slop-cleaner`, `/explain`) with multiple invocation modes
 - **Hooks** - Tool call interception for automation (sensitive file protection, cross-platform notifications)
 - **Plugin Management** - Centralized plugin enable/disable configuration
 - **MCP Servers** - Shared server definitions in `.claude/mcp-servers.json`, merged into `.claude.json` on sync
@@ -65,6 +65,18 @@ See [Installation Guide](docs/guides/installation.md) for detailed setup instruc
 | pr-body | `/pr-body <number>` | Rewrite a specific PR description |
 | pr-body | `/pr-body draft` | Print a draft description, change nothing |
 | pr-body | `/pr-body refresh` | Update the body, keep hand-written notes |
+| text-slop-cleaner | `/text-slop-cleaner` | Clean prose and comments in the uncommitted changes |
+| text-slop-cleaner | `/text-slop-cleaner <path>` | Clean a file or directory |
+| text-slop-cleaner | `/text-slop-cleaner <number>` | Clean a PR body and your own comments |
+| text-slop-cleaner | `/text-slop-cleaner all` | Clean every markdown file |
+| text-slop-cleaner | `/text-slop-cleaner check` | Report what would change, change nothing |
+| code-slop-cleaner | `/code-slop-cleaner` | Check whether the uncommitted changes were necessary |
+| code-slop-cleaner | `/code-slop-cleaner <path>` | Check the changes under a path |
+| code-slop-cleaner | `/code-slop-cleaner branch` | Check the whole branch against the default branch |
+| code-slop-cleaner | `/code-slop-cleaner apply` | Remove what is unnecessary, then run the tests |
+| explain | `/explain` | Explain the current changes, or the last commit |
+| explain | `/explain <target>` | Explain a file, PR, symbol, or concept |
+| explain | `/explain <target> deep` | Full walkthrough with anchors and a worked example |
 
 See [Skills Reference](docs/reference/skills.md) for complete documentation.
 
@@ -97,8 +109,8 @@ claude-code-setup/
 | [Configuration](docs/guides/configuration.md) | settings.json, plugins, hooks |
 | [Contributing](docs/guides/contributing.md) | Adding agents, skills, hooks |
 | [Extension Model](docs/architecture/extension-model.md) | Two-tier architecture |
-| [Agents Reference](docs/reference/agents.md) | All 9 agents |
-| [Skills Reference](docs/reference/skills.md) | All 9 skills with modes |
+| [Agents Reference](docs/reference/agents.md) | All 12 agents |
+| [Skills Reference](docs/reference/skills.md) | All 12 skills with modes |
 | [Makefile Commands](docs/reference/makefile.md) | Sync utilities |
 
 ## License

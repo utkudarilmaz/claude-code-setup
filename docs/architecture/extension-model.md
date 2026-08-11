@@ -66,7 +66,11 @@ Hooks intercept tool calls for pre/post processing:
 │   ├── release-notes.md
 │   ├── changelog-generator.md
 │   ├── devops.md
-│   └── seo-optimizer.md
+│   ├── seo-optimizer.md
+│   ├── pr-body.md
+│   ├── text-slop-cleaner.md
+│   ├── code-slop-cleaner.md
+│   └── explain.md
 ├── hooks/            # Hook scripts (tool call interception)
 │   ├── sensitive-file-protection.sh
 │   └── notification.sh
@@ -96,11 +100,24 @@ Hooks intercept tool calls for pre/post processing:
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       └── comprehensive-mode.md
-│   └── seo/
+│   ├── seo/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── comprehensive-mode.md
+│   │       └── audit-mode.md
+│   ├── pr-body/SKILL.md
+│   ├── text-slop-cleaner/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── slop-patterns.md
+│   ├── code-slop-cleaner/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── change-patterns.md
+│   └── explain/
 │       ├── SKILL.md
 │       └── references/
-│           ├── comprehensive-mode.md
-│           └── audit-mode.md
+│           └── deep-mode.md
 ├── settings.json     # Hooks, plugins, statusLine (cross-platform)
 └── CLAUDE.md         # Global conventions
 ```
