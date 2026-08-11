@@ -1,7 +1,7 @@
 ---
 name: pr-body
 description: "This agent should be invoked to write or update a pull request body or description. This includes drafting a description for a new PR, rewriting a weak one, and refreshing an existing body after new commits."
-model: sonnet
+model: opus
 color: cyan
 ---
 
