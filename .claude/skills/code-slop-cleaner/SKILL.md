@@ -1,17 +1,17 @@
 ---
 name: code-slop-cleaner
-description: This skill should be used when the user asks to "check if this change was necessary", "what in this diff is not needed", "did this change do too much", "find the scope creep", "clean up this change", "is all of this required", or "/code-slop-cleaner". Judges a diff against its stated purpose and separates needed work from the rest.
+description: This skill should be used when the user asks to "check if this change was necessary", "does this PR match the ticket", "is anything missing from this change", "did this implement everything", "what in this diff is not needed", "did this change do too much", "find the scope creep", "is all of this required", or "/code-slop-cleaner". Judges a diff against its ticket or stated purpose in both directions and separates needed work, extra work, and missing work.
 ---
 
 # Code Slop Cleaner Skill
 
 ## Purpose
 
-Checks whether a change needed to happen. Dispatches to the `code-slop-cleaner` agent, which reads the purpose behind a change from its issue, pull request body, or commits, then classifies every part of the diff as required, supporting, unnecessary, or belonging to a different change.
+Checks whether a change matches its scope in both directions. Dispatches to the `code-slop-cleaner` agent, which reads the scope from a ticket, pull request body, or commits, extracts a numbered requirement list, then classifies every part of the diff as required, supporting, unnecessary, or belonging to a different change, and gives every requirement a status of covered, partial, or missing.
 
-Reports by default. `apply` removes the unnecessary parts and runs the tests.
+Reports by default. `apply` removes the unnecessary parts and runs the tests. Missing work is never written, only reported.
 
-Different from `/simplifier`. That one asks whether code is well written. This one asks whether it needed to be written.
+Different from `/simplifier`. That one asks whether code is well written. This one asks whether it needed to be written, and whether everything asked for was written.
 
 ## When to Invoke
 
@@ -21,12 +21,17 @@ Invoke this skill:
 - When a diff is much larger than the task it came from
 - After a generated change, where defensive code and abstractions accumulate
 - When a review comment says the change does too much
+- Before closing a ticket, to check every requirement made it into the change
 
-## The Purpose Gate
+## Context Injection
 
-The agent reads the purpose from the linked issue, the pull request body, or the commit messages, in that order. **If it cannot find one, it stops and asks.**
+The agent starts fresh and cannot see this conversation. Before dispatching, copy into the prompt any scope context already present in the session: a ticket URL the user mentioned, pasted requirements or acceptance criteria, or the purpose the user stated when asking for the change. Without this, a bare `/code-slop-cleaner` drops context the user already gave.
 
-This is deliberate. A purpose guessed from the diff makes every line in that diff look necessary, and the review returns nothing. Give it a purpose, or answer its question.
+## The Scope Gate
+
+The agent reads the scope from pasted ticket text, an explicit ticket URL, the linked issue, the pull request body, or the commit messages, in that order. Jira, Linear, and other tracker URLs are fetched with WebFetch; if the tracker needs auth, the agent asks for the ticket text. **If it cannot find any scope, it stops and asks.**
+
+This is deliberate. A scope guessed from the diff makes every line look necessary and every requirement look delivered, and the review returns nothing. Give it a scope, or answer its question.
 
 ## Invocation Modes
 
@@ -36,13 +41,18 @@ Review the uncommitted changes.
 
 ```
 Task tool with subagent_type="code-slop-cleaner"
-prompt: "Review the uncommitted changes for work that does not serve
-the purpose of the change.
-Establish the purpose first from the linked issue, the branch commits,
-or the user's own description. If no purpose can be found, stop and ask.
-Do not infer the purpose from the diff itself.
+prompt: "Review the uncommitted changes against the scope of the change,
+in both directions.
+Establish the scope first: any ticket context included below, then the
+linked issue, the PR body, or the branch commits. If no scope can be
+found, stop and ask. Do not infer the scope from the diff itself.
+Extract a numbered requirement list from the scope.
+[Include here any ticket URL, pasted requirements, or stated purpose
+from the current session.]
 Group the diff into units by concern. Classify each as REQUIRED,
 SUPPORTING, UNNECESSARY, or UNRELATED.
+Give every requirement a status: COVERED, PARTIAL, or MISSING. Before
+calling one missing, search the codebase for an existing implementation.
 Verify every suspicion with a search before reporting it. Name the
 existing helper, the caller, or the guarantee you found.
 Report only. Change nothing.
@@ -56,10 +66,18 @@ Review only the changes under a path.
 ```
 Task tool with subagent_type="code-slop-cleaner"
 prompt: "Review the changes under: [path]
-Establish the purpose first from the linked issue, the branch commits,
-or the user's own description. If no purpose can be found, stop and ask.
+Establish the scope first: any ticket context included below, then the
+linked issue, the PR body, or the branch commits. If no scope can be
+found, stop and ask. Do not infer the scope from the diff itself.
+Extract a numbered requirement list from the scope.
+[Include here any ticket URL, pasted requirements, or stated purpose
+from the current session.]
 Group the diff into units by concern. Classify each as REQUIRED,
 SUPPORTING, UNNECESSARY, or UNRELATED.
+Give every requirement a status: COVERED, PARTIAL, or MISSING. Before
+calling one missing, search the codebase for an existing implementation.
+Judge coverage only for requirements the path can contain; say so when
+a requirement lives outside the reviewed path.
 Verify every suspicion with a search before reporting it.
 Report only. Change nothing.
 Consult references/change-patterns.md for the pattern list."
@@ -77,11 +95,57 @@ Review a pull request's diff.
 Task tool with subagent_type="code-slop-cleaner"
 prompt: "Review the diff of pull request: [number or url]
 Resolve it with gh pr view. Read the body and any linked issue for the
-purpose. Fall back to the commit messages. If no purpose can be found,
-stop and ask.
+scope. Fetch external ticket links with WebFetch. Fall back to the
+commit messages. If no scope can be found, stop and ask.
+Extract a numbered requirement list from the scope.
+[Include here any ticket URL, pasted requirements, or stated purpose
+from the current session.]
 Diff against that PR's base branch.
 Group the diff into units by concern. Classify each as REQUIRED,
 SUPPORTING, UNNECESSARY, or UNRELATED.
+Give every requirement a status: COVERED, PARTIAL, or MISSING. Before
+calling one missing, search the codebase for an existing implementation.
+Verify every suspicion with a search before reporting it.
+Report only. Do not post comments and do not change the PR.
+Consult references/change-patterns.md for the pattern list."
+```
+
+### Ticket: `/code-slop-cleaner <ticket-url>`
+
+Review the current changes against an explicit ticket. A github.com URL or bare number is treated as a pull request; any other URL is a ticket.
+
+```
+Task tool with subagent_type="code-slop-cleaner"
+prompt: "Review the uncommitted changes (or the branch if there are
+none) against this ticket: [url]
+Fetch the ticket with WebFetch. If the tracker needs auth and the fetch
+fails, stop and ask the user to paste the ticket text.
+Extract a numbered requirement list from the ticket.
+Group the diff into units by concern. Classify each as REQUIRED,
+SUPPORTING, UNNECESSARY, or UNRELATED.
+Give every requirement a status: COVERED, PARTIAL, or MISSING. Before
+calling one missing, search the codebase for an existing implementation.
+Verify every suspicion with a search before reporting it.
+Report only. Change nothing.
+Consult references/change-patterns.md for the pattern list."
+```
+
+### Pull request with ticket: `/code-slop-cleaner <pr> <ticket-url>`
+
+Review a pull request against an explicit ticket instead of its linked issue.
+
+```
+Task tool with subagent_type="code-slop-cleaner"
+prompt: "Review the diff of pull request [number or url] against this
+ticket: [ticket url]
+Resolve the PR with gh pr view and diff against its base branch.
+Fetch the ticket with WebFetch. If the tracker needs auth and the fetch
+fails, stop and ask the user to paste the ticket text.
+Extract a numbered requirement list from the ticket.
+Group the diff into units by concern. Classify each as REQUIRED,
+SUPPORTING, UNNECESSARY, or UNRELATED.
+Give every requirement a status: COVERED, PARTIAL, or MISSING. Before
+calling one missing, search the codebase for an existing implementation.
 Verify every suspicion with a search before reporting it.
 Report only. Do not post comments and do not change the PR.
 Consult references/change-patterns.md for the pattern list."
@@ -94,11 +158,17 @@ Review the whole branch against the default branch.
 ```
 Task tool with subagent_type="code-slop-cleaner"
 prompt: "Review the whole current branch against the default branch.
-Establish the purpose from the linked issue, the open PR body, or the
-branch commits. If no purpose can be found, stop and ask.
+Establish the scope first: any ticket context included below, then the
+linked issue, the open PR body, or the branch commits. If no scope can
+be found, stop and ask. Do not infer the scope from the diff itself.
+Extract a numbered requirement list from the scope.
+[Include here any ticket URL, pasted requirements, or stated purpose
+from the current session.]
 Group the diff into units by concern. Classify each as REQUIRED,
 SUPPORTING, UNNECESSARY, or UNRELATED.
-Pay attention to work added in later commits that the original purpose
+Give every requirement a status: COVERED, PARTIAL, or MISSING. Before
+calling one missing, search the codebase for an existing implementation.
+Pay attention to work added in later commits that the original scope
 does not cover. Prefer UNRELATED over UNNECESSARY when the work is
 useful but belongs elsewhere.
 Report only. Change nothing.
@@ -112,9 +182,18 @@ Remove the unnecessary parts and verify.
 ```
 Task tool with subagent_type="code-slop-cleaner"
 prompt: "Review the uncommitted changes, then remove what is unnecessary.
-Establish the purpose first. If no purpose can be found, stop and ask.
-Classify every unit. Remove only the UNNECESSARY ones, smallest blast
-radius first. Never remove UNRELATED work.
+Establish the scope first: any ticket context included below, then the
+linked issue, the PR body, or the branch commits. If no scope can be
+found, stop and ask.
+Extract a numbered requirement list from the scope.
+[Include here any ticket URL, pasted requirements, or stated purpose
+from the current session.]
+Classify every unit. Give every requirement a status: COVERED, PARTIAL,
+or MISSING. Before calling one missing, search the codebase for an
+existing implementation.
+Remove only the UNNECESSARY ones, smallest blast radius first. Never
+remove UNRELATED work. Never write missing features. Report MISSING
+and PARTIAL requirements only.
 Then find the project's test command from its build files or docs and
 run it.
 If the tests pass, report what was removed and the lines saved.
@@ -133,10 +212,20 @@ that most likely caused it. Never claim a test run you did not perform."
 
 UNRELATED is not criticism. The work is fine and belongs in its own commit.
 
+Requirements get their own status:
+
+| Status | Meaning |
+|--------|---------|
+| COVERED | A unit implements it |
+| PARTIAL | Partly implemented; the report says what is missing |
+| MISSING | Nothing in the diff addresses it, verified by a search |
+
 ## Rules
 
-- The purpose comes first. No purpose means the agent asks rather than guesses
+- The scope comes first. No scope means the agent asks rather than guesses
 - Every finding is verified by a search before it is reported
+- A requirement is only MISSING after a codebase search comes up empty
+- Missing work is reported, never written, in every mode including apply
 - Tests for new behaviour are never flagged
 - Error handling at real input and output boundaries is never flagged
 - Unrelated work is never removed, only named
@@ -150,6 +239,8 @@ UNRELATED is not criticism. The work is fine and belongs in its own commit.
 | `/code-slop-cleaner` | `code-slop-cleaner` | Report on the uncommitted changes |
 | `/code-slop-cleaner <path>` | `code-slop-cleaner` | Report scoped to a path |
 | `/code-slop-cleaner <number\|url>` | `code-slop-cleaner` | Report on a pull request diff |
+| `/code-slop-cleaner <ticket-url>` | `code-slop-cleaner` | Report on the current changes against a ticket |
+| `/code-slop-cleaner <pr> <ticket-url>` | `code-slop-cleaner` | Report on a pull request against a ticket |
 | `/code-slop-cleaner branch` | `code-slop-cleaner` | Report on the whole branch |
 | `/code-slop-cleaner apply` | `code-slop-cleaner` | Unnecessary units removed, tests run |
 
@@ -159,6 +250,8 @@ UNRELATED is not criticism. The work is fine and belongs in its own commit.
 /code-slop-cleaner            # Report on the uncommitted changes
 /code-slop-cleaner src/auth   # Report on the auth changes only
 /code-slop-cleaner 142        # Report on PR 142
+/code-slop-cleaner https://acme.atlassian.net/browse/APP-42   # Current changes vs ticket
+/code-slop-cleaner 142 https://linear.app/acme/issue/APP-42   # PR 142 vs ticket
 /code-slop-cleaner branch     # Report on the whole branch
 /code-slop-cleaner apply      # Remove what is unnecessary, then test
 ```

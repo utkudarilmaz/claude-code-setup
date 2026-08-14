@@ -373,26 +373,30 @@ Default, scoped, pull request, and all modes apply changes directly without aski
 
 ## /code-slop-cleaner
 
-Judge a diff against its stated purpose and separate the needed work from the rest.
+Judge a diff against its ticket or stated purpose in both directions: needed work, extra work, and missing work.
 
 | Mode | Command | Description |
 |------|---------|-------------|
 | Default | `/code-slop-cleaner` | Review the uncommitted changes |
 | Scoped | `/code-slop-cleaner <path>` | Review only the changes under a path |
 | Pull request | `/code-slop-cleaner <number\|url>` | Review a pull request's diff against its base branch |
+| Ticket | `/code-slop-cleaner <ticket-url>` | Review the current changes against an explicit ticket |
+| PR with ticket | `/code-slop-cleaner <pr> <ticket-url>` | Review a pull request against an explicit ticket |
 | Branch | `/code-slop-cleaner branch` | Review the whole branch against the default branch |
 | Apply | `/code-slop-cleaner apply` | Remove the unnecessary parts, then run the tests |
 
 **What it does:**
 - **Default:** Establishes the purpose, groups the uncommitted changes into units by concern, classifies each one, and reports
 - **Scoped:** Same review, limited to the changes under the given path
-- **Pull request:** Resolves the PR with `gh pr view`, reads the body and any linked issue for the purpose, and diffs against that PR's base branch; posts no comments and changes nothing on the PR
+- **Pull request:** Resolves the PR with `gh pr view`, reads the body and any linked issue for the scope, and diffs against that PR's base branch; posts no comments and changes nothing on the PR
+- **Ticket:** Fetches the ticket with WebFetch (asks for pasted text if the tracker needs auth), extracts a requirement list, and checks the current changes against it
+- **PR with ticket:** Same, but for a pull request's diff against its base branch
 - **Branch:** Reviews every commit on the branch against the default branch, paying attention to work added in later commits that the original purpose does not cover
 - **Apply:** Removes the UNNECESSARY units smallest blast radius first, then finds and runs the project test command and reports the result, including the failure output when it fails
 
 Only `apply` changes files. Every other mode reports.
 
-**The purpose gate:** The agent reads the purpose from the linked issue, the pull request body, or the commit messages, in that order. If it cannot find one, it stops and asks. This is deliberate: a purpose guessed from the diff makes every line in that diff look necessary, and the review then returns nothing. Give it a purpose, or answer its question.
+**The scope gate:** The agent reads the scope from pasted ticket text, an explicit ticket URL, the linked issue, the pull request body, or the commit messages, in that order. External tracker URLs are fetched with WebFetch. If it cannot find any scope, it stops and asks. This is deliberate: a scope guessed from the diff makes every line look necessary and every requirement look delivered, and the review then returns nothing.
 
 **Classification:**
 
@@ -405,20 +409,23 @@ Only `apply` changes files. Every other mode reports.
 
 UNRELATED is not criticism. The work is fine and belongs in its own commit, so it is named and never removed.
 
+Requirements get their own status: COVERED, PARTIAL, or MISSING (verified by a codebase search). The report opens with a verdict: IN SCOPE, INCOMPLETE, SCOPE CREEP, or BOTH.
+
 **How it differs from `/simplifier`:**
 
 | Skill | Question it answers | Use it for |
 |-------|--------------------|------------|
 | `/simplifier` | Is this code well written? | Dead code, complexity, duplication, style, and naming, anywhere in the codebase |
-| `/code-slop-cleaner` | Did this change need to happen? | Work that crept into a diff, judged against the purpose behind it |
+| `/code-slop-cleaner` | Did this change need to happen, and did it deliver everything asked? | Work that crept into a diff and requirements that never made it in, judged against the scope behind it |
 
-**Rules:** Every finding is verified by a search before it is reported. Tests for new behavior and error handling at real input and output boundaries are never flagged. Style, naming, and formatting are out of scope; use `/simplifier` for those.
+**Rules:** Every finding is verified by a search before it is reported. Tests for new behavior and error handling at real input and output boundaries are never flagged. Style, naming, and formatting are out of scope; use `/simplifier` for those. A requirement is only MISSING after a codebase search comes up empty, and missing work is reported, never written.
 
 **Examples:**
 ```
 /code-slop-cleaner            # Report on the uncommitted changes
 /code-slop-cleaner src/auth   # Report on the auth changes only
 /code-slop-cleaner 142        # Report on PR 142
+/code-slop-cleaner https://acme.atlassian.net/browse/APP-42   # Current changes vs ticket
 /code-slop-cleaner branch     # Report on the whole branch
 /code-slop-cleaner apply      # Remove what is unnecessary, then test
 ```

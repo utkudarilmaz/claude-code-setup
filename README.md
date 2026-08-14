@@ -70,8 +70,9 @@ See [Installation Guide](docs/guides/installation.md) for detailed setup instruc
 | text-slop-cleaner | `/text-slop-cleaner <number>` | Clean a PR body and your own comments |
 | text-slop-cleaner | `/text-slop-cleaner all` | Clean every markdown file |
 | text-slop-cleaner | `/text-slop-cleaner check` | Report what would change, change nothing |
-| code-slop-cleaner | `/code-slop-cleaner` | Check whether the uncommitted changes were necessary |
+| code-slop-cleaner | `/code-slop-cleaner` | Check the uncommitted changes against their ticket or purpose, both directions |
 | code-slop-cleaner | `/code-slop-cleaner <path>` | Check the changes under a path |
+| code-slop-cleaner | `/code-slop-cleaner <ticket-url>` | Check the current changes against an explicit ticket |
 | code-slop-cleaner | `/code-slop-cleaner branch` | Check the whole branch against the default branch |
 | code-slop-cleaner | `/code-slop-cleaner apply` | Remove what is unnecessary, then run the tests |
 | explain | `/explain` | Explain the current changes, or the last commit |

@@ -252,18 +252,20 @@ Editor that rewrites machine sounding prose into plain English and removes comme
 
 ## code-slop-cleaner
 
-Reviewer that judges a change against the purpose it was made for, and separates the work that serves that purpose from the work that does not.
+Reviewer that judges a change against its scope in both directions: it separates the work that serves the scope from the work that does not, and finds requirements the change was supposed to deliver but did not.
 
-**Trigger:** Before opening a pull request, when a diff is much larger than the task it came from, or when a review says the change does too much
+**Trigger:** Before opening a pull request, when a diff is much larger than the task it came from, when a review says the change does too much, or before closing a ticket to check every requirement made it in
 
 **Not the same as `simplifier`:** `simplifier` asks whether code is well written and looks anywhere in the codebase. `code-slop-cleaner` asks whether a change needed to happen at all, judged against its stated purpose. Use `simplifier` for dead code, complexity, duplication, style, and naming. Use `code-slop-cleaner` for work that crept into a diff.
 
 **Responsibilities:**
-- Establish the purpose from the linked issue, PR body, or commit messages before reading a line of the diff
-- Stop and ask the user when no purpose can be found, rather than inferring one from the diff
+- Establish the scope from pasted ticket text, a ticket URL (fetched with WebFetch), the linked issue, PR body, or commit messages before reading a line of the diff
+- Stop and ask the user when no scope can be found, rather than inferring one from the diff
+- Extract a numbered requirement list from the scope and report it, so a misread ticket is visible
 - Group the diff into units by concern, not by file
 - Verify every suspicion with a search before reporting it, naming the existing helper, caller, or guarantee found
 - Classify each unit as REQUIRED, SUPPORTING, UNNECESSARY, or UNRELATED
+- Give every requirement a status of COVERED, PARTIAL, or MISSING, searching the codebase before calling one missing
 - Report by default; remove only in apply mode, then run the project test command
 
 **Classification:**
@@ -276,6 +278,8 @@ Reviewer that judges a change against the purpose it was made for, and separates
 | UNRELATED | Real work, but a different change | Split out |
 
 UNRELATED is not a criticism. The work is fine and belongs in its own commit.
+
+Requirements get their own status: COVERED (a unit implements it), PARTIAL (partly implemented), or MISSING (nothing addresses it, verified by a search). The report opens with a verdict: IN SCOPE, INCOMPLETE, SCOPE CREEP, or BOTH. Missing work is reported, never written.
 
 **Modes:**
 - **Report (default):** Classifies every unit and changes nothing
