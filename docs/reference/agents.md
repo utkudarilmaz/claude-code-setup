@@ -323,3 +323,45 @@ Explains code, changes, pull requests, and concepts in words anyone can follow.
 - **Deep:** Adds a walkthrough in execution order anchored with `file:line`, a worked example traced from a concrete input to its output, and the edge cases the code handles
 
 **Anti bluff rule:** Never invents a rationale. An honest gap beats a plausible guess, since the reader acts on what they are told. Never uses `simply`, `just`, `obviously`, `of course`, or `as you know`.
+
+---
+
+## review-analyzer
+
+Checks a code review someone else wrote against the actual code, judges the proposed fixes, and explains everything in plain language.
+
+**Trigger:** After receiving review comments and before acting on them, before pushing back on a review comment, or when a reviewer's suggested fix looks wrong or incomplete
+
+**Responsibilities:**
+- Take the review from pasted text or a file, and stop and ask when neither is given
+- Parse the review into a numbered issue list and state it first, so a misread review is visible
+- Verify each issue by reading the actual code, its callers, and tests, never from the review text alone
+- Judge each proposed fix on a confirmed issue by tracing what it would change
+- Propose a better fix in words when the proposed one is partial or invalid, or when a confirmed issue has none
+- Explain every issue and fix in plain language for a reader who does not know the codebase
+
+**Verdicts:**
+
+Issues:
+
+| Verdict | Meaning |
+|---------|---------|
+| CONFIRMED | The problem exists, proven by named file and lines |
+| NOT A BUG | The code is fine, backed by a named guarantee, caller, or test |
+| CANNOT VERIFY | Not checkable from the code alone; the report says what would settle it |
+
+Proposed fixes:
+
+| Verdict | Meaning |
+|---------|---------|
+| VALID | Fixes the root cause without breaking anything else |
+| PARTIAL | Helps but incomplete; the report says exactly what is missing |
+| INVALID | Does not fix it, fixes the wrong thing, or breaks something else |
+
+**Scope:** Terminal output only. Never edits code, never writes files, and never fetches pull requests or review comments with gh. Given a PR number or URL, it asks for the text or a file instead.
+
+**Modes:**
+- **Default:** Analyze the review pasted in the conversation
+- **File:** Analyze a review saved to a file
+
+**Not the same as `code-slop-cleaner`:** That one judges a diff against its ticket. **Not the same as `explain`:** That one describes code without judging. **Not the same as `/code-review` or `security-reviewer`:** Those find issues; this one verifies issues already found.

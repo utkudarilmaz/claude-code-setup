@@ -6,8 +6,8 @@ Personal Claude Code configuration repository containing custom agents, skills, 
 
 This repository provides a modular extension framework for Claude Code with:
 
-- **Agents** - Specialized AI assistants for documentation, testing, security review, code quality, changelog generation, infrastructure, SEO/GEO/AIO optimization, plain-English explanation, and slop cleanup in text and changes
-- **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`, `/changelog`, `/release-tag`, `/seo`, `/pr-body`, `/text-slop-cleaner`, `/code-slop-cleaner`, `/explain`) with multiple invocation modes
+- **Agents** - Specialized AI assistants for documentation, testing, security review, code quality, changelog generation, infrastructure, SEO/GEO/AIO optimization, plain-English explanation, slop cleanup in text and changes, and review analysis
+- **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`, `/changelog`, `/release-tag`, `/seo`, `/pr-body`, `/text-slop-cleaner`, `/code-slop-cleaner`, `/explain`, `/review-analyzer`) with multiple invocation modes
 - **Hooks** - Tool call interception for automation (sensitive file protection, cross-platform notifications)
 - **Plugin Management** - Centralized plugin enable/disable configuration
 - **MCP Servers** - Shared server definitions in `.claude/mcp-servers.json`, merged into `.claude.json` on sync
@@ -78,6 +78,8 @@ See [Installation Guide](docs/guides/installation.md) for detailed setup instruc
 | explain | `/explain` | Explain the current changes, or the last commit |
 | explain | `/explain <target>` | Explain a file, PR, symbol, or concept |
 | explain | `/explain <target> deep` | Full walkthrough with anchors and a worked example |
+| review-analyzer | `/review-analyzer` | Check a pasted code review against the actual code |
+| review-analyzer | `/review-analyzer <file>` | Check a review stored in a file |
 
 See [Skills Reference](docs/reference/skills.md) for complete documentation.
 
@@ -110,8 +112,8 @@ claude-code-setup/
 | [Configuration](docs/guides/configuration.md) | settings.json, plugins, hooks |
 | [Contributing](docs/guides/contributing.md) | Adding agents, skills, hooks |
 | [Extension Model](docs/architecture/extension-model.md) | Two-tier architecture |
-| [Agents Reference](docs/reference/agents.md) | All 12 agents |
-| [Skills Reference](docs/reference/skills.md) | All 12 skills with modes |
+| [Agents Reference](docs/reference/agents.md) | All 13 agents |
+| [Skills Reference](docs/reference/skills.md) | All 13 skills with modes |
 | [Makefile Commands](docs/reference/makefile.md) | Sync utilities |
 
 ## License

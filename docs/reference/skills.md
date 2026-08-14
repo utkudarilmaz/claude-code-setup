@@ -490,3 +490,33 @@ Empty sections are dropped, not padded. Length follows the target, so a small fu
 ```
 
 **Reference Files:** `references/deep-mode.md` (walkthrough structure, worked example format, and how to handle code you cannot fully explain)
+
+---
+
+## /review-analyzer
+
+Check each issue in a code review against the actual code, judge the proposed fixes, and explain everything in plain language.
+
+| Mode | Command | Description |
+|------|---------|-------------|
+| Default | `/review-analyzer` | Analyze the review pasted in the conversation |
+| File | `/review-analyzer <file>` | Analyze a review saved to a file |
+
+**What it does:**
+- Parses the review into a numbered issue list and states it first, so a misread review is visible
+- Verifies each issue in the code: CONFIRMED, NOT A BUG, or CANNOT VERIFY, with the file and lines that prove it
+- Judges each proposed fix on a confirmed issue: VALID, PARTIAL, or INVALID, naming what it misses or breaks
+- Proposes a better fix in words when the proposed one falls short, or when a confirmed issue has no fix
+- Explains every issue, the reviewer's fix, and the suggested fix in plain language for a reader who does not know the codebase
+
+**Scope:** Report only. Terminal output, no code edits, no files written. Never fetches pull requests or review comments with gh; given a PR number or URL, it asks for the text or a file. If no review is given at all, it stops and asks.
+
+**Rules:** Every verdict names its evidence in the code, and nothing is judged from the review text alone. Better fixes are proposed in words, never applied. A review that is entirely right is reported as such. Never `simply`, `just`, `obviously`, `of course`, or `as you know`.
+
+**Examples:**
+```
+/review-analyzer                      # The review pasted above in the chat
+/review-analyzer reviews/pr-142.md    # A review saved to a file
+```
+
+**Reference Files:** `references/fix-validity-patterns.md` (what makes a proposed fix invalid or partial, what makes an issue not a bug, and what a better fix must state)
