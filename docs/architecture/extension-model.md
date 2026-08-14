@@ -70,7 +70,8 @@ Hooks intercept tool calls for pre/post processing:
 │   ├── pr-body.md
 │   ├── text-slop-cleaner.md
 │   ├── code-slop-cleaner.md
-│   └── explain.md
+│   ├── explain.md
+│   └── review-analyzer.md
 ├── hooks/            # Hook scripts (tool call interception)
 │   ├── sensitive-file-protection.sh
 │   └── notification.sh
@@ -114,10 +115,14 @@ Hooks intercept tool calls for pre/post processing:
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       └── change-patterns.md
-│   └── explain/
+│   ├── explain/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── deep-mode.md
+│   └── review-analyzer/
 │       ├── SKILL.md
 │       └── references/
-│           └── deep-mode.md
+│           └── fix-validity-patterns.md
 ├── settings.json     # Hooks, plugins, statusLine (cross-platform)
 └── CLAUDE.md         # Global conventions
 ```
