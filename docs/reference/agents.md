@@ -365,3 +365,38 @@ Proposed fixes:
 - **File:** Analyze a review saved to a file
 
 **Not the same as `code-slop-cleaner`:** That one judges a diff against its ticket. **Not the same as `explain`:** That one describes code without judging. **Not the same as `/code-review` or `security-reviewer`:** Those find issues; this one verifies issues already found.
+
+---
+
+## pr-comment-cleaner
+
+Removes code comments in a pull request's changed files that are not 100% necessary, and rewrites stale or padded comments that must stay.
+
+**Trigger:** Before asking for review on a PR, after a session that generated code with narrating comments, when a reviewer flags comment noise, or before committing a branch built with an agent
+
+**Not the same as `text-slop-cleaner`:** That one rewrites prose in markdown files, PR bodies, and GitHub comments, and keeps a comment when in doubt. `pr-comment-cleaner` judges only code comments, only inside a PR's diff, and removes a comment once its redundancy is verified. **Not the same as `simplifier`:** That one judges code quality; this one never touches code.
+
+**Responsibilities:**
+- Resolve the target PR with `gh pr view`, falling back to the branch diff against the merge base with the default branch
+- Build the allowed file list from the PR's diff and treat it as a hard boundary
+- Read each file fully and inventory every comment, marking which ones the PR introduced
+- Classify each comment as REMOVE, REWRITE, KEEP, or PROTECTED, verifying every removal and rewrite against the code first
+- Apply the edits in place, then review its own `git diff` to confirm only comment lines in scoped files changed, and revert anything else
+- Run the project test command when one is discoverable, since a comment edit can still break syntax
+
+**Classification:**
+
+| Class | Meaning | Action |
+|-------|---------|--------|
+| REMOVE | Adds nothing the code does not already say | Delete |
+| REWRITE | Carries real information but is stale, wrong, or padded | Rewrite plainly |
+| KEEP | Deleting it loses information not recoverable from the code | Leave as is |
+| PROTECTED | Lint directives, build markers, licence headers, required doc comments, pragma comments, sole statement docstrings | Leave untouched |
+
+**Modes:**
+- **Applied (default):** Edits comment lines in place and leaves them uncommitted
+- **Check:** Reports every finding with its verification and changes nothing, checking out no branch
+
+**Never:** touches a file outside the PR's diff, changes code or string literals, commits, pushes, stashes, edits the PR on GitHub, edits review or discussion comments, or removes a comment without having read the code it describes
+
+**Output:** PR Comment Report listing removed, rewritten, kept, and protected comments, with the diff self-review result and the test run outcome
