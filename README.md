@@ -1,16 +1,14 @@
 # Claude Code Configuration
 
-Personal Claude Code configuration repository containing custom agents, skills, hooks, and plugin settings for extending Claude Code functionality.
+Personal Claude Code configuration: custom agents, skills, hooks, MCP servers, and plugin settings.
 
 ## Overview
-
-This repository provides a modular extension framework for Claude Code with:
 
 - **Agents** - Specialized AI assistants for documentation, testing, security review, code quality, changelog generation, infrastructure, SEO/GEO/AIO optimization, plain-English explanation, slop cleanup in text and changes, review analysis, and PR code comment cleanup
 - **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`, `/changelog`, `/release-tag`, `/seo`, `/pr-body`, `/text-slop-cleaner`, `/code-slop-cleaner`, `/explain`, `/review-analyzer`, `/pr-comment-cleaner`) with multiple invocation modes
 - **Hooks** - Tool call interception for automation (sensitive file protection, cross-platform notifications)
 - **Plugin Management** - Centralized plugin enable/disable configuration
-- **MCP Servers** - Shared server definitions in `.claude/mcp-servers.json`, merged into `.claude.json` on sync
+- **MCP Servers** - build123d and terraform servers in `.claude/mcp-servers.json`, merged into `.claude.json` on sync
 - **Cross-Platform Support** - Works on macOS and Linux with dynamic path resolution
 
 ## Quick Start
@@ -96,11 +94,12 @@ claude-code-setup/
 │   ├── hooks/                  # Hook scripts (PreToolUse, PostToolUse, etc.)
 │   ├── skills/                 # Skill commands
 │   ├── settings.json           # Hooks, plugins, statusLine
+│   ├── mcp-servers.json        # Shared MCP server definitions
 │   └── CLAUDE.md               # Global conventions
 ├── docs/                       # Documentation
 │   ├── architecture/           # Extension model, diagrams
 │   ├── guides/                 # Installation, configuration, contributing
-│   └── reference/              # Agents, skills, makefile commands
+│   └── reference/              # Agents, skills, MCP servers, makefile
 ├── tests/                      # Tests for hook scripts and Makefile
 ├── CLAUDE.md                   # Repo guidance for contributors
 ├── LICENSE                     # MIT license
@@ -118,6 +117,7 @@ claude-code-setup/
 | [Extension Model](docs/architecture/extension-model.md) | Two-tier architecture |
 | [Agents Reference](docs/reference/agents.md) | All 14 agents |
 | [Skills Reference](docs/reference/skills.md) | All 14 skills with modes |
+| [MCP Servers](docs/reference/mcp-servers.md) | Shipped servers and the environment each needs |
 | [Makefile Commands](docs/reference/makefile.md) | Sync utilities |
 
 ## License

@@ -125,19 +125,14 @@ bash -c 'EXISTING=$(\"$(command -v node)\" ...) ...'
 
 This approach works on both macOS (where node may be at `/opt/homebrew/bin/node`) and Linux (typically `/usr/bin/node`), avoiding hardcoded paths.
 
+## MCP Servers
+
+MCP servers are not part of `settings.json`. They live in
+`.claude/mcp-servers.json` and are merged into `.claude.json` on sync. See
+[MCP Servers](../reference/mcp-servers.md) for the shipped servers and the
+environment each one needs.
+
 ## Global Conventions
 
-The `.claude/CLAUDE.md` file contains conventions applied to all projects:
-
-- No AI attribution in commits
-- Conventional commits format
-- Tags without `v` prefix
-- Never commit before the user manually asks
-- Never mention task IDs or names on comment lines
-- Never use double dashes
-- Never reply to human comments without asking
-- Plain simple English when documenting or explaining, including PR bodies and PR comments
-- camelCase for JSON field names
-- Check available skills/agents/plugins/MCP servers when planning tasks
-- Use tofu instead of terraform
-- Never add comments which are not 100% necessary
+`.claude/CLAUDE.md` holds the conventions applied to all projects. Read that
+file for the current list.
