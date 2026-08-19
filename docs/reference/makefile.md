@@ -12,6 +12,7 @@ make update-agents    # Update .claude/agents/ only
 make update-skills    # Update .claude/skills/ only
 make update-hooks     # Update .claude/hooks/ only
 make update-config    # Update settings.json (merged), CLAUDE.md, and MCP servers
+make update-mcp       # Update MCP servers in .claude.json only
 ```
 
 ### settings.json Merge
@@ -37,7 +38,8 @@ inside `~/.claude/`. User-scoped servers live in `.claude.json`:
   `<target dir>/.claude.json`
 
 `update-config` merges the `mcpServers` block from the repo's
-`.claude/mcp-servers.json` into that file:
+`.claude/mcp-servers.json` into that file. `update-mcp` runs that same merge on
+its own, without touching `settings.json` or `CLAUDE.md`:
 
 - Servers defined in the repo replace the local definition of the same name
   wholesale (no stale keys survive inside a repo-managed server)
@@ -46,6 +48,7 @@ inside `~/.claude/`. User-scoped servers live in `.claude.json`:
   untouched
 
 The merge requires `jq`; without it the MCP sync is skipped with a warning.
+The servers themselves are documented in [MCP Servers](mcp-servers.md).
 `make status` and `make diff` report each repo-managed server as synced,
 differing, or missing against the resolved `.claude.json`.
 
@@ -132,7 +135,7 @@ shared through parameterized `define` blocks in the Makefile (`sync_dir`,
 same way. `make test` runs `tests/makefile-sync.test.sh`, which exercises
 the sync commands against a temporary `TARGET_DIR`, including the
 `NO_RSYNC=1` fallback path, the settings.json merge, and the MCP server
-merge into `.claude.json`.
+merge into `.claude.json` from both `update-config` and `update-mcp`.
 
 ## Status Legend
 

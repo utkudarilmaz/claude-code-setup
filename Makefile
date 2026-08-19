@@ -62,6 +62,7 @@ help:
 	@echo "  $(GREEN)update-skills$(NC)    Update .claude/skills/ only"
 	@echo "  $(GREEN)update-hooks$(NC)     Update .claude/hooks/ only"
 	@echo "  $(GREEN)update-config$(NC)    Update settings.json (merged), CLAUDE.md, and MCP servers"
+	@echo "  $(GREEN)update-mcp$(NC)       Update MCP servers in $(CLAUDE_JSON) only"
 	@echo ""
 	@echo "$(BOLD)Install Commands$(NC) (install external tools and skills):"
 	@echo "  $(GREEN)install$(NC)          Install all registered targets"
@@ -122,6 +123,33 @@ endef
 
 define cleanup_empty_dirs
 	@find $(TARGET_DIR) -type d -empty -delete 2>/dev/null || true
+endef
+
+# Merge the repo's mcp-servers.json into the target .claude.json.
+define sync_mcp_servers
+	@echo "$(BOLD)Updating MCP servers...$(NC) $(DRY_RUN_MSG)"
+	@if [ -f $(REPO_DIR)/mcp-servers.json ]; then \
+		if ! command -v jq >/dev/null 2>&1; then \
+			echo "$(YELLOW)Warning: jq not found, skipping MCP server sync$(NC)"; \
+		elif [ ! -f $(CLAUDE_JSON) ]; then \
+			if [ "$(DRY_RUN)" = "1" ]; then \
+				echo "Would add: mcpServers to $(CLAUDE_JSON)"; \
+			else \
+				jq '{mcpServers: .mcpServers}' $(REPO_DIR)/mcp-servers.json > $(CLAUDE_JSON); \
+				echo "Added: mcpServers to $(CLAUDE_JSON)"; \
+			fi \
+		else \
+			merged=$$(jq -s '.[0] * {mcpServers: ((.[0].mcpServers // {}) + .[1].mcpServers)}' $(CLAUDE_JSON) $(REPO_DIR)/mcp-servers.json); \
+			if printf '%s\n' "$$merged" | diff -q - $(CLAUDE_JSON) > /dev/null 2>&1; then \
+				echo "Unchanged: mcpServers in $(CLAUDE_JSON)"; \
+			elif [ "$(DRY_RUN)" = "1" ]; then \
+				echo "Would merge: mcpServers into $(CLAUDE_JSON) (repo servers win, local servers kept)"; \
+			else \
+				printf '%s\n' "$$merged" > $(CLAUDE_JSON); \
+				echo "Merged: mcpServers into $(CLAUDE_JSON) (repo servers win, local servers kept)"; \
+			fi \
+		fi \
+	fi
 endef
 
 # Sync one directory (agents, skills, hooks) from repo to target.
@@ -309,28 +337,12 @@ update-config:
 	else \
 		echo "Unchanged: CLAUDE.md"; \
 	fi
-	@if [ -f $(REPO_DIR)/mcp-servers.json ]; then \
-		if ! command -v jq >/dev/null 2>&1; then \
-			echo "$(YELLOW)Warning: jq not found, skipping MCP server sync$(NC)"; \
-		elif [ ! -f $(CLAUDE_JSON) ]; then \
-			if [ "$(DRY_RUN)" = "1" ]; then \
-				echo "Would add: mcpServers to $(CLAUDE_JSON)"; \
-			else \
-				jq '{mcpServers: .mcpServers}' $(REPO_DIR)/mcp-servers.json > $(CLAUDE_JSON); \
-				echo "Added: mcpServers to $(CLAUDE_JSON)"; \
-			fi \
-		else \
-			merged=$$(jq -s '.[0] * {mcpServers: ((.[0].mcpServers // {}) + .[1].mcpServers)}' $(CLAUDE_JSON) $(REPO_DIR)/mcp-servers.json); \
-			if printf '%s\n' "$$merged" | diff -q - $(CLAUDE_JSON) > /dev/null 2>&1; then \
-				echo "Unchanged: mcpServers in $(CLAUDE_JSON)"; \
-			elif [ "$(DRY_RUN)" = "1" ]; then \
-				echo "Would merge: mcpServers into $(CLAUDE_JSON) (repo servers win, local servers kept)"; \
-			else \
-				printf '%s\n' "$$merged" > $(CLAUDE_JSON); \
-				echo "Merged: mcpServers into $(CLAUDE_JSON) (repo servers win, local servers kept)"; \
-			fi \
-		fi \
-	fi
+	$(call sync_mcp_servers)
+
+.PHONY: update-mcp
+update-mcp:
+	$(call ensure_target_dir)
+	$(call sync_mcp_servers)
 
 # ============================================================================
 # INSTALL COMMANDS (install external tools and skills)

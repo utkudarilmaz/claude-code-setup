@@ -6,7 +6,8 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 FAILURES=0
 TMP_TARGET=$(mktemp -d)
 TMP_TARGET_NORSYNC=$(mktemp -d)
-trap 'rm -rf "$TMP_TARGET" "$TMP_TARGET_NORSYNC"' EXIT
+TMP_TARGET_MCP=$(mktemp -d)
+trap 'rm -rf "$TMP_TARGET" "$TMP_TARGET_NORSYNC" "$TMP_TARGET_MCP"' EXIT
 
 run_make() {
   make -C "$REPO_ROOT" --no-print-directory FORCE=1 "$@" >/dev/null 2>&1
@@ -93,6 +94,22 @@ check "MCP merge keeps unrelated .claude.json keys" \
   test "$(jq -r '.oauthAccount' "$TMP_TARGET/.claude.json")" = "keep-me"
 check "MCP merge preserves backslash escapes in strings" \
   test "$(jq -r '.history' "$TMP_TARGET/.claude.json")" = "$(printf 'line1\nline2\ttabbed')"
+
+# --- update-mcp syncs MCP servers without touching the other config files ---
+run_make update-mcp TARGET_DIR="$TMP_TARGET_MCP"
+
+check "update-mcp creates .claude.json with repo MCP servers" \
+  test "$(jq -r '.mcpServers["build123d-mcp"].command' "$TMP_TARGET_MCP/.claude.json")" = "uv"
+check "update-mcp leaves settings.json alone" test ! -e "$TMP_TARGET_MCP/settings.json"
+check "update-mcp leaves CLAUDE.md alone" test ! -e "$TMP_TARGET_MCP/CLAUDE.md"
+
+jq '.mcpServers["local-server"] = {command: "echo"}' \
+  "$TMP_TARGET_MCP/.claude.json" > "$TMP_TARGET_MCP/.claude.json.tmp"
+mv "$TMP_TARGET_MCP/.claude.json.tmp" "$TMP_TARGET_MCP/.claude.json"
+run_make update-mcp TARGET_DIR="$TMP_TARGET_MCP" DRY_RUN=1
+
+check "update-mcp DRY_RUN=1 writes nothing" \
+  test "$(jq -r '.mcpServers | keys | length' "$TMP_TARGET_MCP/.claude.json")" = "3"
 
 # --- rm commands remove repo-managed files only ---
 run_make rm-agents TARGET_DIR="$TMP_TARGET"
