@@ -67,7 +67,7 @@ Hooks intercept tool calls for pre/post processing:
 │   ├── changelog-generator.md
 │   ├── devops.md
 │   ├── seo-optimizer.md
-│   ├── pr-body.md
+│   ├── create-pr.md
 │   ├── text-slop-cleaner.md
 │   ├── code-slop-cleaner.md
 │   ├── explain.md
@@ -107,7 +107,10 @@ Hooks intercept tool calls for pre/post processing:
 │   │   └── references/
 │   │       ├── comprehensive-mode.md
 │   │       └── audit-mode.md
-│   ├── pr-body/SKILL.md
+│   ├── create-pr/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── pr-creation.md
 │   ├── text-slop-cleaner/
 │   │   ├── SKILL.md
 │   │   └── references/

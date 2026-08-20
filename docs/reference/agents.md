@@ -140,22 +140,27 @@ Generates CHANGELOG.md from git history using Keep a Changelog format.
 
 ---
 
-## pr-body
+## create-pr
 
-Writes short, plain-English pull request descriptions and applies them with `gh`.
+Opens a pull request end to end: commits the work, pushes the branch, writes the title and body, and creates the PR with `gh`.
 
-**Trigger:** When writing a new PR description or updating an existing one
+**Trigger:** When opening a pull request, or updating an existing one
 
 **Responsibilities:**
-- Resolve the target PR and its base branch with `gh pr view`
+- Run the preflight checks on `gh`, authentication, the repository, and the remote
+- Read the branch, the working tree, the default branch, and any existing PR, then take the create path or the update path
+- Branch off the default branch with a `type/short-slug` name when the user is sitting on it
+- Commit a dirty tree with one conventional commit message, staged from explicit paths, after printing what it will stage
+- Push with `git push -u origin <branch>`
 - Read the branch commits, diff, and any linked issue
+- Write a conventional commit style title under 70 characters, matched against the repository's own convention
 - Write What, Why, and Files, plus Testing and Next only when there is real content
 - Build the Files list from `git diff --name-status -M`, grouped Added, Changed, and Removed, with renames detected
 - Keep the prose under 120 words with no emoji and no AI attribution, and cut anything the Files list already shows
-- Note a file only when its path leaves a reviewer guessing
-- Apply the body with `gh pr edit`, or print it in draft mode
+- Set the base and assignee, plus reviewers, labels, and a milestone when the field rules fire
+- Create the PR with `gh pr create`, or apply the update with `gh pr edit`, then print the URL
 
-**Never:** creates a PR, pushes commits, or invents test results
+**Never:** force pushes, commits on the default branch, amends or rebases existing commits, creates labels, requests a reviewer nobody named, merges the PR, or invents test results
 
 ---
 

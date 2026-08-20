@@ -4,8 +4,8 @@ Personal Claude Code configuration: custom agents, skills, hooks, MCP servers, a
 
 ## Overview
 
-- **Agents** - Specialized AI assistants for documentation, testing, security review, code quality, changelog generation, infrastructure, SEO/GEO/AIO optimization, plain-English explanation, slop cleanup in text and changes, review analysis, and PR code comment cleanup
-- **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`, `/changelog`, `/release-tag`, `/seo`, `/pr-body`, `/text-slop-cleaner`, `/code-slop-cleaner`, `/explain`, `/review-analyzer`, `/pr-comment-cleaner`) with multiple invocation modes
+- **Agents** - Specialized AI assistants for documentation, testing, security review, code quality, changelog generation, infrastructure, SEO/GEO/AIO optimization, plain-English explanation, pull request creation, slop cleanup in text and changes, review analysis, and PR code comment cleanup
+- **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`, `/changelog`, `/release-tag`, `/seo`, `/create-pr`, `/text-slop-cleaner`, `/code-slop-cleaner`, `/explain`, `/review-analyzer`, `/pr-comment-cleaner`) with multiple invocation modes
 - **Hooks** - Tool call interception for automation (sensitive file protection, cross-platform notifications)
 - **Plugin Management** - Centralized plugin enable/disable configuration
 - **MCP Servers** - build123d and terraform servers in `.claude/mcp-servers.json`, merged into `.claude.json` on sync
@@ -59,10 +59,11 @@ See [Installation Guide](docs/guides/installation.md) for detailed setup instruc
 | seo | `/seo <scope>` | Optimize specific page or directory |
 | seo | `/seo all` | Full project SEO/GEO/AIO optimization |
 | seo | `/seo audit` | Score-only report card (no file edits) |
-| pr-body | `/pr-body` | Write and apply this branch's PR description |
-| pr-body | `/pr-body <number>` | Rewrite a specific PR description |
-| pr-body | `/pr-body draft` | Print a draft description, change nothing |
-| pr-body | `/pr-body refresh` | Update the body, keep hand-written notes |
+| create-pr | `/create-pr` | Commit, push, and open the PR for this branch |
+| create-pr | `/create-pr draft` | Same, opened as a draft PR |
+| create-pr | `/create-pr show` | Print the title and body, change nothing |
+| create-pr | `/create-pr refresh` | Update the existing PR, keep hand-written notes |
+| create-pr | `/create-pr <number>` | Update the title and body of a specific PR |
 | text-slop-cleaner | `/text-slop-cleaner` | Clean prose and comments in the uncommitted changes |
 | text-slop-cleaner | `/text-slop-cleaner <path>` | Clean a file or directory |
 | text-slop-cleaner | `/text-slop-cleaner <number>` | Clean a PR body and your own comments |

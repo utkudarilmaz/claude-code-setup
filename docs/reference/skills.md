@@ -277,22 +277,30 @@ Bump semantic version, update changelog, and create annotated git tag.
 
 ---
 
-## /pr-body
+## /create-pr
 
-Write a pull request description and apply it with `gh`.
+Commit, push, and open a pull request with a real title and body.
 
 | Mode | Command | Description |
 |------|---------|-------------|
-| Default | `/pr-body` | Write and apply the body for the current branch's PR |
-| Targeted | `/pr-body <number\|url>` | Rewrite the body of a specific PR |
-| Draft | `/pr-body draft` | Print a draft body without touching GitHub |
-| Refresh | `/pr-body refresh` | Update an existing body, keeping hand-written notes |
+| Default | `/create-pr` | Commit, push, write the title and body, open the PR |
+| Draft | `/create-pr draft` | Same, opened as a GitHub draft PR |
+| Show | `/create-pr show` | Print the title and body, touch neither git nor GitHub |
+| Refresh | `/create-pr refresh` | Update this branch's existing PR, keeping hand-written notes |
+| Targeted | `/create-pr <number\|url>` | Update the title and body of a specific PR |
 
 **What it does:**
-- **Default:** Resolves the current branch's open PR, reads the commits and diff against the base branch plus any linked issue, writes a short body, and applies it with `gh pr edit`
-- **Targeted:** Same, against a PR given by number or URL
-- **Draft:** Prints the body only, makes no GitHub call
+- **Default:** Runs the preflight checks, branches off the default branch when needed, commits a dirty tree with a conventional commit message, pushes with upstream tracking, reads the commits and diff plus any linked issue, writes the title and body, sets the fields, and opens the PR with `gh pr create`
+- **Draft:** The same flow, with `--draft`
+- **Show:** Prints the title, body, and the fields it would set, and makes no git or GitHub call
 - **Refresh:** Reads the current body first, keeps the author's own writing and heading style, and rewrites the template sections to the short default shape, whether they went stale or just grew padded
+- **Targeted:** Updates the body of a PR given by number or URL, and the title only when it no longer fits
+
+A branch that already has an open PR routes to the update path in every mode, so the default mode never fails with "PR already exists".
+
+Anything typed after the mode is passed through as plain text: `/create-pr base develop`, `/create-pr draft reviewer alice`, `/create-pr label bug`.
+
+**Title:** Conventional commit form, under 70 characters, lower case after the type, no ticket ID. The repository's own convention wins when recent merged PRs show one.
 
 **Body shape:**
 
@@ -308,18 +316,35 @@ Optional sections are dropped entirely when empty, never filled with "N/A".
 
 **Files section:** Built from `git diff --name-status -M` against the PR's base branch. Every file is listed, with no truncation and no directory rollups. A file gets a note only when its path leaves a reviewer guessing. Renames are detected and shown as a single line under Changed rather than as a delete plus an add. In refresh mode this section is always rebuilt from the current diff, since a stale file list is simply wrong; the author's per-file notes carry over for files still in the diff.
 
+**PR fields:**
+
+| Field | Set when |
+|-------|----------|
+| Base | Always. The repository default branch, or the branch you named |
+| Draft | Draft mode, or the work is unfinished |
+| Assignee | Always, set to you |
+| Reviewer | You name one, or a CODEOWNERS entry matches a changed file |
+| Label | An existing label fits the change. Labels are never created |
+| Milestone | You name one, or the linked issue carries one |
+
+**Commit and push:** One commit per run with a conventional commit message, staged from explicit paths. Files the sensitive file hook blocks are left out and reported. The push uses `git push -u origin <branch>`. Never a force push, never a commit on the default branch, never a rebase or amend of commits that already exist.
+
 **Rules:** Under 120 words of prose, plain simple English, no emoji, no bold-label bullets in prose, no AI attribution, no invented test results. The Files list is exempt from the word budget and is always complete. Short is the default in every mode, including refresh; a large change gets the same shape, with the Files list carrying the detail.
 
-**Scope:** Writing only. Never creates a PR and never pushes commits; use `/commit-commands:commit-push-pr` for that.
+**Scope:** The whole path from a dirty tree to a PR URL. Use this instead of `/commit-commands:commit-push-pr`, which opens a PR without writing a real description.
 
 **Examples:**
 ```
-/pr-body                                          # Apply body to this branch's PR
-/pr-body 142                                      # Rewrite the body of PR 142
-/pr-body https://github.com/owner/repo/pull/142   # Same, by URL
-/pr-body draft                                    # Print a draft, change nothing
-/pr-body refresh                                  # Update body, keep hand-written notes
+/create-pr                                          # Commit, push, and open the PR
+/create-pr draft                                    # Same, opened as a draft
+/create-pr show                                     # Print the title and body, change nothing
+/create-pr refresh                                  # Update the existing PR, keep hand-written notes
+/create-pr 142                                      # Update the title and body of PR 142
+/create-pr https://github.com/owner/repo/pull/142   # Same, by URL
+/create-pr base develop reviewer alice              # Open against develop, request alice
 ```
+
+**Reference Files:** `references/pr-creation.md` (preflight, branch naming, commit and push rules, title rules, field selection, gh commands)
 
 ---
 
