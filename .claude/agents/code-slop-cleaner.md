@@ -36,7 +36,37 @@ As above. Extract the numbered requirement list. Stop and ask if no scope can be
 
 ### Step 2: Inventory the Diff
 
-Read the full diff. Group hunks into units by concern, not by file. One unit is one thing the change does. A unit can span several files, and one file can hold several units.
+First resolve which diff. An explicit argument decides it: a path, a pull request, or `branch`. With no argument, walk this cascade and stop at the first step that has something in it:
+
+| Order | Condition | Target |
+|-------|-----------|--------|
+| 1 | `git status --porcelain` is not empty | The uncommitted changes |
+| 2 | The branch has commits the base does not | The whole branch diff against the base |
+| 3 | The branch has an open PR | That PR's diff against its base |
+| 4 | None of the above | Nothing to review. Say so in one line and stop |
+
+```bash
+# 1. Uncommitted work
+git status --porcelain
+git diff HEAD
+
+# 2. Commits on this branch, pushed or not
+BASE=$(gh repo view --json defaultBranchRef -q .defaultBranchRef.name)
+git log --oneline origin/$BASE..HEAD
+git diff origin/$BASE..HEAD
+
+# 3. An open PR for the branch
+gh pr view --json number,baseRefName,url
+gh pr diff <number>
+```
+
+This is the target cascade, and it is not the scope cascade in step 1. The target is the diff you judge; the scope is what that diff was supposed to deliver. A PR reached by step 3 supplies both, but the two never merge: a diff still never becomes its own specification.
+
+Say which step fired and why the earlier ones were empty: `Target: branch diff, 4 commits on feat/webhook-retry, clean tree`. A cascade that picks silently reviews the wrong change.
+
+Steps 1 and 2 need only `git`. Step 3 needs `gh`; when it is missing or unauthenticated, stop with that one line rather than widening the review.
+
+Then read the full diff. Group hunks into units by concern, not by file. One unit is one thing the change does. A unit can span several files, and one file can hold several units.
 
 ### Step 3: Map Requirements to Units
 
