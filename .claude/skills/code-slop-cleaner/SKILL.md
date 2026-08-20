@@ -9,6 +9,8 @@ description: This skill should be used when the user asks to "check if this chan
 
 Checks whether a change matches its scope in both directions. Dispatches to the `code-slop-cleaner` agent, which reads the scope from a ticket, pull request body, or commits, extracts a numbered requirement list, then classifies every part of the diff as required, supporting, unnecessary, or belonging to a different change, and gives every requirement a status of covered, partial, or missing.
 
+With no argument it works out its own target: the uncommitted changes, or the whole branch diff, or the branch's open PR, whichever it finds first.
+
 Reports by default. `apply` removes the unnecessary parts and runs the tests. Missing work is never written, only reported.
 
 Different from `/simplifier`. That one asks whether code is well written. This one asks whether it needed to be written, and whether everything asked for was written.
@@ -37,15 +39,26 @@ This is deliberate. A scope guessed from the diff makes every line look necessar
 
 ### Default: `/code-slop-cleaner`
 
-Review the uncommitted changes.
+Review whatever this branch has in flight. The agent resolves the target itself.
 
 ```
 Task tool with subagent_type="code-slop-cleaner"
-prompt: "Review the uncommitted changes against the scope of the change,
-in both directions.
-Establish the scope first: any ticket context included below, then the
-linked issue, the PR body, or the branch commits. If no scope can be
-found, stop and ask. Do not infer the scope from the diff itself.
+prompt: "Review whatever this branch has in flight against the scope of
+the change, in both directions.
+Resolve the target diff with this cascade and stop at the first step
+that has something in it:
+1. Uncommitted changes, found with git status --porcelain.
+2. Commits this branch has that the base branch does not, pushed or not.
+   Diff the whole branch against the base.
+3. An open PR for the branch, found with gh pr view. Use gh pr diff
+   against that PR's base.
+4. Nothing in any of those. Say so in one line and stop.
+State which step fired in the first line of the report, and say why the
+earlier steps were empty.
+Establish the scope separately from the target: any ticket context
+included below, then the linked issue, the PR body, or the branch
+commits. If no scope can be found, stop and ask. Do not infer the scope
+from the diff itself, even when step 3 found the diff through the PR.
 Extract a numbered requirement list from the scope.
 [Include here any ticket URL, pasted requirements, or stated purpose
 from the current session.]
@@ -58,6 +71,17 @@ existing helper, the caller, or the guarantee you found.
 Report only. Change nothing.
 Consult references/change-patterns.md for the pattern list."
 ```
+
+**What the cascade picks:**
+
+| Order | When | Target |
+|-------|------|--------|
+| 1 | The working tree is dirty | The uncommitted changes |
+| 2 | The tree is clean but the branch is ahead of the base | The whole branch diff |
+| 3 | Nothing local, but the branch has an open PR | That PR's diff |
+| 4 | Nothing anywhere | One line saying so, no review |
+
+Two separate resolutions, and the report names both. The **target** is the diff being judged, picked by the cascade above. The **scope** is what that diff owed, read from the ticket, issue, PR body, or commits. Step 3 supplies both, and the diff still never becomes its own scope.
 
 ### Scoped: `/code-slop-cleaner <path>`
 
@@ -116,8 +140,10 @@ Review the current changes against an explicit ticket. A github.com URL or bare 
 
 ```
 Task tool with subagent_type="code-slop-cleaner"
-prompt: "Review the uncommitted changes (or the branch if there are
-none) against this ticket: [url]
+prompt: "Review whatever this branch has in flight against this ticket:
+[url]
+Resolve the target with the default cascade: uncommitted changes, then
+the branch diff, then the branch's open PR. State which step fired.
 Fetch the ticket with WebFetch. If the tracker needs auth and the fetch
 fails, stop and ask the user to paste the ticket text.
 Extract a numbered requirement list from the ticket.
@@ -181,7 +207,13 @@ Remove the unnecessary parts and verify.
 
 ```
 Task tool with subagent_type="code-slop-cleaner"
-prompt: "Review the uncommitted changes, then remove what is unnecessary.
+prompt: "Review whatever this branch has in flight, then remove what is
+unnecessary. Resolve the target with the default cascade, but only as far
+as step 2: the uncommitted changes, or the whole branch diff when the
+tree is clean. State which step fired.
+If neither has anything and only an open PR does, stop and say the branch
+must be checked out first. Never edit files for a PR you did not check
+out.
 Establish the scope first: any ticket context included below, then the
 linked issue, the PR body, or the branch commits. If no scope can be
 found, stop and ask.
@@ -236,7 +268,7 @@ Requirements get their own status:
 
 | Invocation | Agent | Output |
 |------------|-------|--------|
-| `/code-slop-cleaner` | `code-slop-cleaner` | Report on the uncommitted changes |
+| `/code-slop-cleaner` | `code-slop-cleaner` | Uncommitted changes, branch diff, or the open PR, whichever comes first |
 | `/code-slop-cleaner <path>` | `code-slop-cleaner` | Report scoped to a path |
 | `/code-slop-cleaner <number\|url>` | `code-slop-cleaner` | Report on a pull request diff |
 | `/code-slop-cleaner <ticket-url>` | `code-slop-cleaner` | Report on the current changes against a ticket |
@@ -247,7 +279,7 @@ Requirements get their own status:
 ## Usage Examples
 
 ```
-/code-slop-cleaner            # Report on the uncommitted changes
+/code-slop-cleaner            # Report on whatever is in flight: changes, branch, or PR
 /code-slop-cleaner src/auth   # Report on the auth changes only
 /code-slop-cleaner 142        # Report on PR 142
 /code-slop-cleaner https://acme.atlassian.net/browse/APP-42   # Current changes vs ticket

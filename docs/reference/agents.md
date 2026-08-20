@@ -225,16 +225,19 @@ DevOps architect for infrastructure code review and design.
 
 ## text-slop-cleaner
 
-Editor that rewrites machine sounding prose into plain English and removes comments that do not earn their place.
+Editor that rewrites machine sounding prose into plain English and removes every comment that is not 100% necessary.
 
-**Trigger:** After generating documentation, a README, or a PR body; when a file has picked up comments that only restate the code
+**Trigger:** After generating documentation, a README, or a PR body; when a file has picked up comments that only restate the code; on a branch whose work is already committed
 
 **Responsibilities:**
+- Resolve the target with no argument given: uncommitted changes, then the branch's own commits, then its open PR, naming the step that fired
 - Rewrite padded, hedged, or inflated prose into plain English
-- Remove comments that restate the code, keep comments that explain why
+- Remove every comment that is not 100% necessary, after reading the code it describes; keep only what the code cannot say
+- Rewrite a stale or padded comment rather than deleting it when part of the information is real
 - Preserve meaning: every fact, number, caveat, path, command, and warning survives the cut
-- Classify each sentence, bullet, and comment as KEEP, REWRITE, CUT, or PROTECTED
+- Classify each sentence, bullet, and comment as KEEP, REWRITE, CUT, or PROTECTED, holding prose to a preserve-meaning bar and comments to the 100% necessary bar
 - Leave protected content alone
+- Review the working tree with `git diff` and run the project's tests when a source file was touched
 - Report the word count before and after
 
 **Protected Content:**
@@ -244,6 +247,8 @@ Editor that rewrites machine sounding prose into plain English and removes comme
 - Legal (license headers, copyright notices, SPDX identifiers)
 - Required doc comments (godoc on exported symbols, JSDoc on published APIs, docstrings a doc generator consumes)
 - Structural markers (region markers a tool reads, template placeholders, front matter keys)
+- Pragma comments that are really code (`# frozen_string_literal: true`, webpack magic comments, `/** @type {...} */`)
+- Sole statement docstrings, where removal breaks the syntax of the block
 
 **Scope:** Prose and comments only. Never changes code behavior and never edits string literals. Never edits another person's pull request comment, because GitHub does not allow it; reports it instead.
 
@@ -264,6 +269,7 @@ Reviewer that judges a change against its scope in both directions: it separates
 **Not the same as `simplifier`:** `simplifier` asks whether code is well written and looks anywhere in the codebase. `code-slop-cleaner` asks whether a change needed to happen at all, judged against its stated purpose. Use `simplifier` for dead code, complexity, duplication, style, and naming. Use `code-slop-cleaner` for work that crept into a diff.
 
 **Responsibilities:**
+- Resolve the target diff with no argument given: uncommitted changes, then the whole branch diff, then the branch's open PR, naming the step that fired
 - Establish the scope from pasted ticket text, a ticket URL (fetched with WebFetch), the linked issue, PR body, or commit messages before reading a line of the diff
 - Stop and ask the user when no scope can be found, rather than inferring one from the diff
 - Extract a numbered requirement list from the scope and report it, so a misread ticket is visible

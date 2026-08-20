@@ -141,6 +141,8 @@ An overview, then a summary, then a conclusion, all saying the same thing. Keep 
 
 ## Comments
 
+A comment that is not 100% necessary does not stay. Accuracy is not the test: a comment can be perfectly true and still add nothing. Read the code the comment describes before cutting it, and cut it when that code already says the same thing.
+
 ### Remove: restating the code
 
 ```go
@@ -187,6 +189,27 @@ Git holds this. A `TODO` with no owner, no date, and no issue is noise.
 ### Remove: commented out code
 
 Delete it. Git has the old version.
+
+### Remove: section and edit narration
+
+```go
+// handle errors
+if err != nil {
+
+// updated to use the new client
+client := api.NewV2Client()
+```
+
+The first narrates what the reader can see. The second narrates the commit, which git already holds.
+
+### Rewrite: stale, padded, or half useful
+
+```go
+// Retries three times.        ->  // Retries five times; the gateway
+for i := 0; i < 5; i++ {       //     drops the first four under load.
+```
+
+A comment carrying real information that is stale, padded, or mixed with narration gets rewritten down to the part the code cannot say. Reach for rewrite before delete when any of the information is real.
 
 ### Keep: why, not what
 
@@ -236,4 +259,19 @@ Never remove, never rewrite:
 
 Also protected: godoc comments on exported Go symbols, JSDoc on published package APIs, and any docstring a documentation generator consumes.
 
-When unsure whether a comment is protected, keep it.
+Two more that are easy to miss, and both break the code when removed:
+
+```ruby
+# frozen_string_literal: true
+```
+
+```python
+def handler():
+    """The only statement in this block."""
+```
+
+The first is a pragma the interpreter reads. The second is the whole body of the function, so deleting it is a syntax error.
+
+Also beware of lines that match a comment marker and are not comments: `//` and `#` inside string literals, URLs, YAML values, JSX. Parse by language, not by grep.
+
+When unsure whether a comment is protected, keep it. The 100% necessary rule decides whether a comment earns its place; it never overrides this list.

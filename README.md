@@ -64,12 +64,12 @@ See [Installation Guide](docs/guides/installation.md) for detailed setup instruc
 | create-pr | `/create-pr show` | Print the title and body, change nothing |
 | create-pr | `/create-pr refresh` | Update the existing PR, keep hand-written notes |
 | create-pr | `/create-pr <number>` | Update the title and body of a specific PR |
-| text-slop-cleaner | `/text-slop-cleaner` | Clean prose and comments in the uncommitted changes |
+| text-slop-cleaner | `/text-slop-cleaner` | Clean the uncommitted changes, branch commits, or open PR, whichever comes first |
 | text-slop-cleaner | `/text-slop-cleaner <path>` | Clean a file or directory |
 | text-slop-cleaner | `/text-slop-cleaner <number>` | Clean a PR body and your own comments |
 | text-slop-cleaner | `/text-slop-cleaner all` | Clean every markdown file |
 | text-slop-cleaner | `/text-slop-cleaner check` | Report what would change, change nothing |
-| code-slop-cleaner | `/code-slop-cleaner` | Check the uncommitted changes against their ticket or purpose, both directions |
+| code-slop-cleaner | `/code-slop-cleaner` | Check whatever is in flight against its ticket or purpose, both directions |
 | code-slop-cleaner | `/code-slop-cleaner <path>` | Check the changes under a path |
 | code-slop-cleaner | `/code-slop-cleaner <ticket-url>` | Check the current changes against an explicit ticket |
 | code-slop-cleaner | `/code-slop-cleaner branch` | Check the whole branch against the default branch |
