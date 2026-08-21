@@ -558,11 +558,12 @@ Check each issue in a code review against the actual code, judge the proposed fi
 - Verifies each issue in the code: CONFIRMED, NOT A BUG, or CANNOT VERIFY, with the file and lines that prove it
 - Judges each proposed fix on a confirmed issue: VALID, PARTIAL, or INVALID, naming what it misses or breaks
 - Proposes a better fix in words when the proposed one falls short, or when a confirmed issue has no fix
+- Reports every parsed issue as its own numbered section answering six questions: what the reviewer found, what the issue is, why it is an issue and whether it is valid, what fix the review suggests, whether that fix is right, and what to do to close it
 - Explains every issue, the reviewer's fix, and the suggested fix in plain language for a reader who does not know the codebase
 
 **Scope:** Report only. Terminal output, no code edits, no files written. Never fetches pull requests or review comments with gh; given a PR number or URL, it asks for the text or a file. If no review is given at all, it stops and asks.
 
-**Rules:** Every verdict names its evidence in the code, and nothing is judged from the review text alone. Better fixes are proposed in words, never applied. A review that is entirely right is reported as such. Never `simply`, `just`, `obviously`, `of course`, or `as you know`.
+**Rules:** Every parsed issue gets its own section with all six questions answered; no item is skipped or merged, and every item ends with one concrete closing recommendation. Every verdict names its evidence in the code, and nothing is judged from the review text alone. Better fixes are proposed in words, never applied. A review that is entirely right is reported as such. Never `simply`, `just`, `obviously`, `of course`, or `as you know`.
 
 **Examples:**
 ```
