@@ -9,6 +9,8 @@ description: This skill should be used when the user asks to "analyze this revie
 
 Checks a code review someone else wrote against the actual code. Dispatches to the `review-analyzer` agent, which parses the review into numbered issues, verifies each issue in the code, judges every proposed fix as valid, partial, or invalid, proposes a better fix when the proposed one falls short, and explains all of it in plain language for a reader who does not know the codebase.
 
+The report gives every parsed issue its own numbered section answering six questions: what the reviewer found, what the issue is, why it is an issue and whether it is valid, what fix the review suggests, whether that fix is right, and what the agent suggests to close it. No item is skipped or merged, and every item ends with one concrete closing recommendation.
+
 Report only. Nothing is edited, nothing is written to disk, and nothing is fetched from GitHub.
 
 Different from `/code-review`, which finds issues in code. This skill judges issues someone else already found. Different from `/explain`, which describes code without judging. This skill judges a review of the code.
@@ -56,6 +58,17 @@ say in one sentence why.
 When a fix is PARTIAL or INVALID, or a confirmed issue has no fix,
 propose a better fix in words: which file, what changes, and why that
 addresses the cause. Search for an existing helper it should reuse.
+Report every parsed issue as its own numbered section, in the parsed
+order, answering six questions: what the reviewer found, what the
+issue is, why it is an issue and whether it is valid, what fix the
+review suggests, whether that fix is right, and what you suggest to
+close it. Answer all six in every section; write No fix proposed or
+No fix to judge instead of leaving a line out. Never skip, merge, or
+shorten an item, not even a minor or entirely correct one. State the
+item count in the header and make the sections match it. End every
+item with one concrete closing recommendation: apply the reviewer's
+fix, apply the better fix, reply with the evidence and close without
+a change, or run the check that would settle the verdict.
 Explain every issue, the reviewer's fix, and your suggested fix in
 plain language for a reader who has never seen this codebase. Never
 write simply, just, obviously, of course, or as you know.
@@ -87,6 +100,17 @@ say in one sentence why.
 When a fix is PARTIAL or INVALID, or a confirmed issue has no fix,
 propose a better fix in words: which file, what changes, and why that
 addresses the cause. Search for an existing helper it should reuse.
+Report every parsed issue as its own numbered section, in the parsed
+order, answering six questions: what the reviewer found, what the
+issue is, why it is an issue and whether it is valid, what fix the
+review suggests, whether that fix is right, and what you suggest to
+close it. Answer all six in every section; write No fix proposed or
+No fix to judge instead of leaving a line out. Never skip, merge, or
+shorten an item, not even a minor or entirely correct one. State the
+item count in the header and make the sections match it. End every
+item with one concrete closing recommendation: apply the reviewer's
+fix, apply the better fix, reply with the evidence and close without
+a change, or run the check that would settle the verdict.
 Explain every issue, the reviewer's fix, and your suggested fix in
 plain language for a reader who has never seen this codebase. Never
 write simply, just, obviously, of course, or as you know.
@@ -116,6 +140,8 @@ Proposed fixes:
 ## Rules
 
 - The review comes from pasted text or a file, never from gh
+- Every parsed issue gets its own numbered section answering all six questions; the item count in the header matches the sections
+- Every item ends with one concrete closing recommendation
 - Every verdict names its evidence in the code
 - Better fixes are proposed in words, never applied
 - Plain language throughout; a reader outside the team can follow it

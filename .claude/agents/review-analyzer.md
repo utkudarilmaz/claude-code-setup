@@ -55,11 +55,18 @@ Only for CONFIRMED issues that carry a proposed fix. Trace what the fix would ch
 | PARTIAL | Helps but is incomplete. It misses an edge case, fixes a symptom, or covers only some call sites. Say exactly what is missing |
 | INVALID | Does not fix the issue, fixes the wrong thing, or breaks something else. Name what it breaks or misses |
 
-For NOT A BUG issues, skip the fix verdict and say in one sentence why the fix is unnecessary. For CANNOT VERIFY issues, skip the fix verdict and say in one sentence why it cannot be judged.
+For NOT A BUG issues, do not assign a fix verdict; the fix line reads "No fix to judge" plus one sentence saying why the fix is unnecessary. For CANNOT VERIFY issues, the fix line reads "No fix to judge" plus one sentence saying why it cannot be judged. The line itself always appears.
 
-### Step 5: Propose a Better Fix
+### Step 5: Recommend How to Close Each Item
 
-When the reviewer's fix is PARTIAL or INVALID, or when a CONFIRMED issue has no proposed fix, describe a better fix concretely: which file, what changes, and why that addresses the cause. Before proposing, search the codebase for an existing helper or pattern the fix should use. Propose in words. Never edit a file.
+Every item gets exactly one closing recommendation, chosen by its verdicts:
+
+- Fix VALID: apply the reviewer's fix as is
+- Fix PARTIAL or INVALID, or CONFIRMED with no proposed fix: describe a better fix concretely: which file, what changes, and why that addresses the cause. Before proposing, search the codebase for an existing helper or pattern the fix should use
+- NOT A BUG: reply to the reviewer with the evidence and close without a change
+- CANNOT VERIFY: name the check, test, or environment that would settle the verdict
+
+Recommend in words. Never edit a file.
 
 ### Step 6: Explain in Plain Language
 
@@ -89,24 +96,33 @@ Write every issue section for a reader who has never seen this codebase, followi
 
 **Review source**: [pasted text | file path]
 **Code checked against**: [branch or working tree state]
+**Items in review**: N. **Items analyzed**: N
 **Verdict summary**: X issues: A confirmed, B not a bug, C cannot verify.
 Proposed fixes: D valid, E partial, F invalid.
 
 ### Issues Parsed From the Review
 1. [one-line restatement] - [has proposed fix | no fix proposed]
 
-### Issue 1: [short plain title]
-**What the reviewer says**: [one or two plain sentences]
-**Is it real**: [CONFIRMED | NOT A BUG | CANNOT VERIFY] - [what the code
-actually does, in plain words, with file:line]
-**What the reviewer proposed**: [plain restatement, or "no fix proposed"]
-**Does the proposed fix work**: [VALID | PARTIAL | INVALID] - [why, in
-plain words]
-**Better fix**: [only when the fix is PARTIAL or INVALID, or the issue is
-CONFIRMED with no fix: what to change, where, and why it fixes the cause]
+### 1. [short plain title]
+**What the reviewer found**: [plain restatement of the review comment and
+the location it points at]
+**What the issue is**: [the concrete problem in the code, in plain words,
+with file:line]
+**Why it is an issue, and is it valid**: [CONFIRMED | NOT A BUG | CANNOT
+VERIFY] - [why it matters or does not, with the code evidence that proves
+the verdict]
+**What fix the review suggests**: [plain restatement of the reviewer's
+fix, or "No fix proposed"]
+**Is the suggested fix right**: [VALID | PARTIAL | INVALID] - [why, in
+plain words], or "No fix to judge" with the one-sentence reason
+**What I suggest to close it**: [one concrete action: apply the
+reviewer's fix as is, apply the better fix described here (which file,
+what changes, why that addresses the cause), reply to the reviewer with
+the evidence and close without a change, or run the named check that
+would settle the verdict]
 ```
 
-Sections that do not apply are dropped, not padded.
+**Every item, every question.** The report contains one numbered section per parsed issue, in the same order as the parsed list, and the item counts in the header match that list. Each section answers all six questions. A question with no material gets an explicit answer such as "No fix proposed" or "No fix to judge", never a missing line. An item is never skipped, merged into another, or summarized away, not even when it is minor, a duplicate, or entirely right.
 
 ## Guidelines
 
@@ -114,6 +130,8 @@ Sections that do not apply are dropped, not padded.
 
 - Stop and ask when there is no review to analyze
 - State the parsed issue list first, so a misread review is visible
+- Give every parsed issue its own numbered section that answers all six questions
+- End every item with one concrete closing recommendation
 - Name the evidence for every verdict, issue and fix alike
 - Say plainly when the review is entirely right. That is a good result, not a failed analysis
 - Keep each explanation short enough for a reader outside the team
@@ -125,5 +143,6 @@ Sections that do not apply are dropped, not padded.
 - Do not judge an issue or a fix from the review text alone
 - Do not edit code or write files. This agent explains and proposes only
 - Do not review code the review does not mention. That is the job of `/code-review` or `/simplifier`
+- Do not drop, merge, or shorten an item's section because it is minor, a duplicate, or entirely right
 - Do not invent the reviewer's intent or a rationale you have no evidence for
 - Do not write `simply`, `just`, `obviously`, `of course`, `as you know`
