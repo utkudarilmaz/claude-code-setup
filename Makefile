@@ -70,6 +70,11 @@ help:
 	@echo "  $(GREEN)install <target>$(NC) Install a specific target"
 	@echo "  $(BLUE)Targets:$(NC) $(INSTALL_TARGETS)"
 	@echo ""
+	@echo "$(BOLD)Dependency Commands$(NC) (install tool requirements with brew):"
+	@echo "  $(GREEN)dependency$(NC)       Install requirements for all registered targets"
+	@echo "  $(GREEN)dependency <target>$(NC) Install requirements for a specific target"
+	@echo "  $(BLUE)Targets:$(NC) $(DEPENDENCY_TARGETS)"
+	@echo ""
 	@echo "$(BOLD)Remove Commands$(NC) (remove repo files from $(TARGET_DIR)):"
 	@echo "  $(RED)rm-agents$(NC)      Remove matching agents"
 	@echo "  $(RED)rm-skills$(NC)      Remove matching skills"
@@ -101,6 +106,12 @@ help:
 #   1. Append its <name> to INSTALL_TARGETS below
 #   2. Add a matching `install-<name>` recipe in the INSTALL COMMANDS section
 INSTALL_TARGETS := google-maps-scraper
+
+# Registry of dependency targets that prepare tool requirements (installations).
+# To add a new one (e.g. mcp server requirements):
+#   1. Append its <name> to DEPENDENCY_TARGETS below
+#   2. Add a matching `dependency-<name>` recipe in the DEPENDENCY COMMANDS section
+DEPENDENCY_TARGETS := claudish
 
 # ============================================================================
 # UTILITY FUNCTIONS
@@ -369,11 +380,77 @@ install-google-maps-scraper:
 	@echo "$(BOLD)Installing google-maps-scraper...$(NC)"
 	npx skills add gosom/google-maps-scraper
 
-# Absorb install target names passed as extra goals so Make does not error
-# (e.g. `make install all` / `make install google-maps-scraper`). The real
-# work is done by the `install` target above; these are no-ops.
-.PHONY: all $(INSTALL_TARGETS)
-all $(INSTALL_TARGETS):
+# ============================================================================
+# DEPENDENCY COMMANDS (install tool requirements)
+# ============================================================================
+
+.PHONY: dependency
+dependency:
+	@targets="$(filter-out dependency,$(MAKECMDGOALS))"; \
+	if [ -z "$$targets" ] || [ "$$targets" = "all" ]; then \
+		targets="$(DEPENDENCY_TARGETS)"; \
+	fi; \
+	for t in $$targets; do \
+		if echo " $(DEPENDENCY_TARGETS) " | grep -q " $$t "; then \
+			$(MAKE) --no-print-directory dependency-$$t; \
+		else \
+			echo "$(RED)Unknown dependency target: $$t$(NC)"; \
+			echo "Available targets: $(DEPENDENCY_TARGETS)"; \
+			exit 1; \
+		fi \
+	done
+
+.PHONY: dependency-claudish
+dependency-claudish:
+	@echo "$(BOLD)Installing claudish requirements...$(NC) $(DRY_RUN_MSG)"
+	@if ! command -v brew >/dev/null 2>&1; then \
+		echo "$(RED)Homebrew not found. Install it from https://brew.sh first.$(NC)"; \
+		exit 1; \
+	fi
+	@for pkg in ollama jq; do \
+		if command -v $$pkg >/dev/null 2>&1; then \
+			echo "Present: $$pkg"; \
+		elif [ "$(DRY_RUN)" = "1" ]; then \
+			echo "Would install: $$pkg"; \
+		else \
+			brew install $$pkg; \
+		fi \
+	done
+	@model=$$(jq -r '.env.CLAUDISH_MODEL // empty' $(REPO_DIR)/settings.json 2>/dev/null); \
+	if [ -z "$$model" ]; then \
+		echo "$(YELLOW)No CLAUDISH_MODEL in $(REPO_DIR)/settings.json, skipping model pull$(NC)"; \
+	elif [ "$(DRY_RUN)" = "1" ]; then \
+		echo "Would ask, then start ollama and pull model: $$model"; \
+	else \
+		if [ "$(FORCE)" != "1" ]; then \
+			printf "$(YELLOW)Pull ollama model $$model (multi-GB download)? [y/N]: $(NC)"; \
+			read -r answer; \
+			if [ "$$answer" != "y" ] && [ "$$answer" != "Y" ]; then \
+				echo "Skipped model pull. Run later with: ollama pull $$model"; \
+				exit 0; \
+			fi; \
+		fi; \
+		if ! curl -sf http://localhost:11434/api/version >/dev/null 2>&1; then \
+			brew services start ollama; \
+			sleep 3; \
+		fi; \
+		if curl -sf http://localhost:11434/api/version >/dev/null 2>&1; then \
+			if ollama list 2>/dev/null | awk 'NR>1 {print $$1}' | grep -qx "$$model"; then \
+				echo "Present: model $$model"; \
+			else \
+				ollama pull "$$model"; \
+			fi \
+		else \
+			echo "$(YELLOW)ollama server not reachable. Start it, then run: ollama pull $$model$(NC)"; \
+		fi \
+	fi
+
+# Absorb install and dependency target names passed as extra goals so Make
+# does not error (e.g. `make install all` / `make dependency claudish`). The
+# real work is done by the `install` and `dependency` targets above; these
+# are no-ops.
+.PHONY: all $(INSTALL_TARGETS) $(DEPENDENCY_TARGETS)
+all $(INSTALL_TARGETS) $(DEPENDENCY_TARGETS):
 	@:
 
 # ============================================================================
