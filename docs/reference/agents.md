@@ -200,29 +200,6 @@ SEO/GEO/AIO optimization expert that improves web content discoverability across
 
 ---
 
-## devops
-
-DevOps architect for infrastructure code review and design.
-
-**Trigger:** When working with Kubernetes, Helm, ArgoCD, Terraform, or Terragrunt
-
-**Responsibilities:**
-- Review infrastructure code for security, best practices, reliability
-- Design and generate production-ready configurations
-- Identify misconfigurations (privileged containers, missing RBAC, no resource limits)
-- Check Terraform state management, modules, and security
-- Verify ArgoCD sync policies and health checks
-- Rate severity: CRITICAL/HIGH/MEDIUM/LOW
-
-**Infrastructure Types:**
-- Kubernetes: Deployments, Services, ConfigMaps, Secrets, RBAC, NetworkPolicies
-- Helm: Chart structure, values management, templates, hooks
-- ArgoCD: Applications, ApplicationSets, sync policies, progressive delivery
-- Terraform: Modules, state management, providers, security
-- Terragrunt: DRY configurations, dependency management, remote state
-
----
-
 ## text-slop-cleaner
 
 Editor that rewrites machine sounding prose into plain English and removes every comment that is not 100% necessary.

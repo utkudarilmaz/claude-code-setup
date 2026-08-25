@@ -4,8 +4,8 @@ Personal Claude Code configuration: custom agents, skills, hooks, MCP servers, a
 
 ## Overview
 
-- **Agents** - Specialized AI assistants for documentation, testing, security review, code quality, changelog generation, infrastructure, SEO/GEO/AIO optimization, plain-English explanation, pull request creation, slop cleanup in text and changes, review analysis, and PR code comment cleanup
-- **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/devops`, `/changelog`, `/release-tag`, `/seo`, `/create-pr`, `/text-slop-cleaner`, `/code-slop-cleaner`, `/explain`, `/review-analyzer`, `/pr-comment-cleaner`) with multiple invocation modes
+- **Agents** - Specialized AI assistants for documentation, testing, security review, code quality, changelog generation, SEO/GEO/AIO optimization, plain-English explanation, pull request creation, slop cleanup in text and changes, review analysis, and PR code comment cleanup
+- **Skills** - User-facing slash commands (`/docs`, `/tester`, `/security-review`, `/simplifier`, `/changelog`, `/release-tag`, `/seo`, `/create-pr`, `/text-slop-cleaner`, `/code-slop-cleaner`, `/explain`, `/review-analyzer`, `/pr-comment-cleaner`) with multiple invocation modes
 - **Hooks** - Tool call interception for automation (sensitive file protection, cross-platform notifications)
 - **Plugin Management** - Centralized plugin enable/disable configuration
 - **MCP Servers** - build123d and terraform servers in `.claude/mcp-servers.json`, merged into `.claude.json` on sync
@@ -49,9 +49,6 @@ See [Installation Guide](docs/guides/installation.md) for detailed setup instruc
 | simplifier | `/simplifier all` | Full code quality audit |
 | changelog | `/changelog` | Update CHANGELOG.md |
 | changelog | `/changelog release` | Generate release notes |
-| devops | `/devops` | Review infrastructure changes |
-| devops | `/devops <context>` | Review/design IaC |
-| devops | `/devops all` | Full infrastructure audit |
 | release-tag | `/release-tag patch` | Bump patch version and create annotated tag |
 | release-tag | `/release-tag minor` | Bump minor version and create annotated tag |
 | release-tag | `/release-tag major` | Bump major version and create annotated tag |
@@ -116,8 +113,8 @@ claude-code-setup/
 | [Configuration](docs/guides/configuration.md) | settings.json, plugins, hooks |
 | [Contributing](docs/guides/contributing.md) | Adding agents, skills, hooks |
 | [Extension Model](docs/architecture/extension-model.md) | Two-tier architecture |
-| [Agents Reference](docs/reference/agents.md) | All 14 agents |
-| [Skills Reference](docs/reference/skills.md) | All 14 skills with modes |
+| [Agents Reference](docs/reference/agents.md) | All 13 agents |
+| [Skills Reference](docs/reference/skills.md) | All 13 skills with modes |
 | [MCP Servers](docs/reference/mcp-servers.md) | Shipped servers and the environment each needs |
 | [Makefile Commands](docs/reference/makefile.md) | Sync utilities |
 
