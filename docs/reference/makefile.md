@@ -71,6 +71,29 @@ Registered targets:
 To add a new target, append its name to `INSTALL_TARGETS` in the Makefile and
 add a matching `install-<name>` recipe in the INSTALL COMMANDS section.
 
+## Dependency Commands
+
+Install the requirements a tool needs to run, using Homebrew:
+
+```bash
+make dependency                 # Install requirements for all registered targets
+make dependency <target>        # Install requirements for a specific target
+make DRY_RUN=1 dependency claudish  # Preview without installing
+```
+
+Registered targets:
+
+| Target | Requirements |
+|--------|--------------|
+| `claudish` | `ollama` and `jq` via brew, then asks before starting the ollama service and pulling the `CLAUDISH_MODEL` named in `.claude/settings.json` |
+
+Each step is skipped when the requirement is already present. The model pull
+asks for confirmation because it is a multi-GB download; `FORCE=1` skips the
+prompt and pulls directly. To add a new
+target (for example MCP server requirements), append its name to
+`DEPENDENCY_TARGETS` in the Makefile and add a matching `dependency-<name>`
+recipe in the DEPENDENCY COMMANDS section.
+
 ## Remove Commands
 
 Remove repo-managed files from `~/.claude`:

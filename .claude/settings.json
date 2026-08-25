@@ -1,4 +1,9 @@
 {
+  "env": {
+    "CLAUDISH_MODEL": "qwen3.5:35b-a3b",
+    "CLAUDISH_MODE": "append",
+    "CLAUDISH_TIMEOUT": "300"
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -75,7 +80,8 @@
     "ui-ux-pro-max@ui-ux-pro-max-skill": false,
     "marketing-skills@marketingskills": false,
     "chrome-devtools-mcp@claude-plugins-official": false,
-    "skill-creator@claude-plugins-official": false
+    "skill-creator@claude-plugins-official": false,
+    "claudish-to-english@gvzdv-plugins": true
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
@@ -112,6 +118,12 @@
       "source": {
         "source": "github",
         "repo": "utkudarilmaz/claude-pray"
+      }
+    },
+    "gvzdv-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "gvzdv/claudish-to-english"
       }
     }
   },
