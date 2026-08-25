@@ -65,7 +65,6 @@ Hooks intercept tool calls for pre/post processing:
 │   ├── simplifier.md
 │   ├── release-notes.md
 │   ├── changelog-generator.md
-│   ├── devops.md
 │   ├── seo-optimizer.md
 │   ├── create-pr.md
 │   ├── text-slop-cleaner.md
@@ -98,10 +97,6 @@ Hooks intercept tool calls for pre/post processing:
 │   │       └── python-patterns.md
 │   ├── changelog/SKILL.md
 │   ├── release-tag/SKILL.md
-│   ├── devops/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       └── comprehensive-mode.md
 │   ├── seo/
 │   │   ├── SKILL.md
 │   │   └── references/
