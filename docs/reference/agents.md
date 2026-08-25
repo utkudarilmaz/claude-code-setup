@@ -326,7 +326,7 @@ Checks a code review someone else wrote against the actual code, judges the prop
 - Verify each issue by reading the actual code, its callers, and tests, never from the review text alone
 - Judge each proposed fix on a confirmed issue by tracing what it would change
 - Propose a better fix in words when the proposed one is partial or invalid, or when a confirmed issue has none
-- Give every parsed issue its own numbered section answering six questions: what the reviewer found, what the issue is, why it is an issue and whether it is valid, what fix the review suggests, whether that fix is right, and what to do to close it; no item is skipped or merged
+- Give every parsed issue its own numbered section answering five questions: what the issue is, whether it is valid, what fix the review suggests, whether that fix is the right fix, and what the agent suggests; no item is skipped or merged
 - End every item with one concrete closing recommendation
 - Explain every issue and fix in plain language for a reader who does not know the codebase
 
