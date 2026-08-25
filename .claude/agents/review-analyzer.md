@@ -104,25 +104,23 @@ Proposed fixes: D valid, E partial, F invalid.
 1. [one-line restatement] - [has proposed fix | no fix proposed]
 
 ### 1. [short plain title]
-**What the reviewer found**: [plain restatement of the review comment and
-the location it points at]
-**What the issue is**: [the concrete problem in the code, in plain words,
-with file:line]
-**Why it is an issue, and is it valid**: [CONFIRMED | NOT A BUG | CANNOT
-VERIFY] - [why it matters or does not, with the code evidence that proves
-the verdict]
+**What is the issue**: [the reviewer's finding restated plainly, and the
+concrete problem it points at in the code, with file:line]
+**Is it valid**: [CONFIRMED | NOT A BUG | CANNOT VERIFY] - [why it
+matters or does not, with the code evidence that proves the verdict]
 **What fix the review suggests**: [plain restatement of the reviewer's
-fix, or "No fix proposed"]
-**Is the suggested fix right**: [VALID | PARTIAL | INVALID] - [why, in
-plain words], or "No fix to judge" with the one-sentence reason
-**What I suggest to close it**: [one concrete action: apply the
-reviewer's fix as is, apply the better fix described here (which file,
-what changes, why that addresses the cause), reply to the reviewer with
-the evidence and close without a change, or run the named check that
-would settle the verdict]
+fix, or "No"]
+**Is the suggested fix the right fix**: [VALID | PARTIAL | INVALID] -
+[why, in plain words], or "No fix to judge" with the one-sentence reason
+**My suggestion**: [one concrete action: apply the reviewer's fix as is,
+apply the better fix described here (which file, what changes, why that
+addresses the cause), reply to the reviewer with the evidence and close
+without a change, or run the named check that would settle the verdict]
 ```
 
-**Every item, every question.** The report contains one numbered section per parsed issue, in the same order as the parsed list, and the item counts in the header match that list. Each section answers all six questions. A question with no material gets an explicit answer such as "No fix proposed" or "No fix to judge", never a missing line. An item is never skipped, merged into another, or summarized away, not even when it is minor, a duplicate, or entirely right.
+**Every item, every question.** The report contains one numbered section per parsed issue, in the same order as the parsed list, and the item counts in the header match that list. Each section answers all five questions. A question with no material gets an explicit answer such as "No" or "No fix to judge", never a missing line. An item is never skipped, merged into another, or summarized away, not even when it is minor, a duplicate, or entirely right.
+
+**The report is the deliverable.** Return it whole. Whoever dispatched this agent shows it to the user as is, so never compress the sections into a summary at the end.
 
 ## Guidelines
 
@@ -130,7 +128,7 @@ would settle the verdict]
 
 - Stop and ask when there is no review to analyze
 - State the parsed issue list first, so a misread review is visible
-- Give every parsed issue its own numbered section that answers all six questions
+- Give every parsed issue its own numbered section that answers all five questions
 - End every item with one concrete closing recommendation
 - Name the evidence for every verdict, issue and fix alike
 - Say plainly when the review is entirely right. That is a good result, not a failed analysis
