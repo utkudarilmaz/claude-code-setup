@@ -54,50 +54,47 @@ differing, or missing against the resolved `.claude.json`.
 
 ## Install Commands
 
-Install external tools and skills from a registry of named targets:
+Install external tools and the requirements they need to run, from a registry
+of named targets split into groups:
 
 ```bash
-make install                    # Install all registered targets
-make install all                # Install all registered targets
-make install <target>           # Install a specific target
+make install                    # Install every registered target
+make install skills             # Skill installs only
+make install plugins            # Plugin requirements only
+make install mcps               # MCP server requirements only
+make install <target>           # Install a single target
+make DRY_RUN=1 install claudish # Preview without installing
 ```
 
 Registered targets:
 
-| Target | Action |
-|--------|--------|
-| `google-maps-scraper` | `npx skills add gosom/google-maps-scraper` |
+| Group | Target | Action |
+|-------|--------|--------|
+| skills | `google-maps-scraper` | `npx skills add gosom/google-maps-scraper` |
+| plugins | `claudish` | `ollama` and `jq` via brew, the ollama service started and enabled at login, and the `CLAUDISH_MODEL` named in `.claude/settings.json` pulled |
+| plugins | `claude-hud` | `node` via brew, needed by the statusline |
+| plugins | `claude-pray` | `node` via brew, needed by the statusline |
+| mcps | `build123d-mcp` | `uv` via brew |
+| mcps | `terraform-mcp` | Docker Desktop via brew cask, the `hashicorp/terraform-mcp-server` image pulled, and a warning when `TFE_TOKEN` is not exported |
 
-To add a new target, append its name to `INSTALL_TARGETS` in the Makefile and
-add a matching `install-<name>` recipe in the INSTALL COMMANDS section.
-
-## Dependency Commands
-
-Install the requirements a tool needs to run, using Homebrew:
-
-```bash
-make dependency                 # Install requirements for all registered targets
-make dependency <target>        # Install requirements for a specific target
-make DRY_RUN=1 dependency claudish  # Preview without installing
-```
-
-Registered targets:
-
-| Target | Requirements |
-|--------|--------------|
-| `claudish` | `ollama` and `jq` via brew, the ollama service started and enabled at login, and the `CLAUDISH_MODEL` named in `.claude/settings.json` pulled |
+The remaining enabled plugins need no local installs: superpowers,
+commit-commands, explanatory-output-style, and code-review are skills and
+commands only, and context7 is a remote HTTP MCP server (set
+`CONTEXT7_API_KEY` in the environment if you have one; it works without it).
 
 Each step is skipped when the requirement is already present, and each asks
-for approval first, only when actually needed: installing the missing brew
+for approval first, only when actually needed: installing missing brew
 packages, starting the ollama server now, enabling autostart at login for the
 ollama service (asked even when the server is already running some other way),
-and pulling the model (a multi-GB download). Answering no to autostart when
-starting the server uses `brew services run` instead of `brew services start`,
-so the server runs now without a login item. Declining a step skips it and the
-run continues. `FORCE=1` skips all prompts. To add a new
-target (for example MCP server requirements), append its name to
-`DEPENDENCY_TARGETS` in the Makefile and add a matching `dependency-<name>`
-recipe in the DEPENDENCY COMMANDS section.
+pulling the claudish model (a multi-GB download), and pulling the terraform
+server image. Answering no to autostart when starting the ollama server uses
+`brew services run` instead of `brew services start`, so the server runs now
+without a login item. Declining a step skips it and the run continues.
+`FORCE=1` skips all prompts.
+
+To add a new target, append its name to the matching group variable in the
+Makefile (`INSTALL_SKILLS`, `INSTALL_PLUGINS`, or `INSTALL_MCPS`) and add a
+matching `install-<name>` recipe in the INSTALL COMMANDS section.
 
 ## Remove Commands
 
