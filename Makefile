@@ -64,16 +64,12 @@ help:
 	@echo "  $(GREEN)update-config$(NC)    Update settings.json (merged), CLAUDE.md, and MCP servers"
 	@echo "  $(GREEN)update-mcp$(NC)       Update MCP servers in $(CLAUDE_JSON) only"
 	@echo ""
-	@echo "$(BOLD)Install Commands$(NC) (install external tools and skills):"
-	@echo "  $(GREEN)install$(NC)          Install all registered targets"
-	@echo "  $(GREEN)install all$(NC)      Install all registered targets"
-	@echo "  $(GREEN)install <target>$(NC) Install a specific target"
-	@echo "  $(BLUE)Targets:$(NC) $(INSTALL_TARGETS)"
-	@echo ""
-	@echo "$(BOLD)Dependency Commands$(NC) (install tool requirements with brew):"
-	@echo "  $(GREEN)dependency$(NC)       Install requirements for all registered targets"
-	@echo "  $(GREEN)dependency <target>$(NC) Install requirements for a specific target"
-	@echo "  $(BLUE)Targets:$(NC) $(DEPENDENCY_TARGETS)"
+	@echo "$(BOLD)Install Commands$(NC) (install external tools and requirements):"
+	@echo "  $(GREEN)install$(NC)          Install every registered target"
+	@echo "  $(GREEN)install skills$(NC)   Skill installs: $(INSTALL_SKILLS)"
+	@echo "  $(GREEN)install plugins$(NC)  Plugin requirements: $(INSTALL_PLUGINS)"
+	@echo "  $(GREEN)install mcps$(NC)     MCP server requirements: $(INSTALL_MCPS)"
+	@echo "  $(GREEN)install <target>$(NC) Install a single target"
 	@echo ""
 	@echo "$(BOLD)Remove Commands$(NC) (remove repo files from $(TARGET_DIR)):"
 	@echo "  $(RED)rm-agents$(NC)      Remove matching agents"
@@ -102,20 +98,44 @@ help:
 # INSTALL TARGETS REGISTRY
 # ============================================================================
 
-# Registry of installable targets. To add a new one:
-#   1. Append its <name> to INSTALL_TARGETS below
+# Registry of installable targets, split by group. To add a new one:
+#   1. Append its <name> to the matching group below
 #   2. Add a matching `install-<name>` recipe in the INSTALL COMMANDS section
-INSTALL_TARGETS := google-maps-scraper
-
-# Registry of dependency targets that prepare tool requirements (installations).
-# To add a new one (e.g. mcp server requirements):
-#   1. Append its <name> to DEPENDENCY_TARGETS below
-#   2. Add a matching `dependency-<name>` recipe in the DEPENDENCY COMMANDS section
-DEPENDENCY_TARGETS := claudish
+# `make install <group>` runs one group; `make install` runs them all.
+INSTALL_SKILLS := google-maps-scraper
+INSTALL_PLUGINS := claudish claude-hud claude-pray
+INSTALL_MCPS := build123d-mcp terraform-mcp
+INSTALL_GROUPS := skills plugins mcps
+INSTALL_TARGETS := $(INSTALL_SKILLS) $(INSTALL_PLUGINS) $(INSTALL_MCPS)
 
 # ============================================================================
 # UTILITY FUNCTIONS
 # ============================================================================
+
+# Install one brew formula after asking, skipping when its command exists.
+# $(1) = brew formula, $(2) = command to check on PATH
+define install_brew_pkg
+	@if command -v $(2) >/dev/null 2>&1; then \
+		echo "Present: $(2)"; \
+	elif [ "$(DRY_RUN)" = "1" ]; then \
+		echo "Would ask, then install: $(1)"; \
+	elif ! command -v brew >/dev/null 2>&1; then \
+		echo "$(RED)Homebrew not found. Install it from https://brew.sh first.$(NC)"; \
+		exit 1; \
+	else \
+		install=1; \
+		if [ "$(FORCE)" != "1" ]; then \
+			printf "$(YELLOW)Install $(1) with brew? [y/N]: $(NC)"; \
+			read -r answer; \
+			case "$$answer" in y|Y) ;; *) install=0;; esac; \
+		fi; \
+		if [ "$$install" = "1" ]; then \
+			brew install $(1); \
+		else \
+			echo "Skipped. Run later with: brew install $(1)"; \
+		fi; \
+	fi
+endef
 
 define confirm
 	@if [ "$(FORCE)" != "1" ] && [ "$(DRY_RUN)" != "1" ]; then \
@@ -365,11 +385,21 @@ install:
 	if [ -z "$$targets" ] || [ "$$targets" = "all" ]; then \
 		targets="$(INSTALL_TARGETS)"; \
 	fi; \
+	expanded=""; \
 	for t in $$targets; do \
+		case "$$t" in \
+			skills) expanded="$$expanded $(INSTALL_SKILLS)" ;; \
+			plugins) expanded="$$expanded $(INSTALL_PLUGINS)" ;; \
+			mcps) expanded="$$expanded $(INSTALL_MCPS)" ;; \
+			*) expanded="$$expanded $$t" ;; \
+		esac; \
+	done; \
+	for t in $$expanded; do \
 		if echo " $(INSTALL_TARGETS) " | grep -q " $$t "; then \
 			$(MAKE) --no-print-directory install-$$t; \
 		else \
 			echo "$(RED)Unknown install target: $$t$(NC)"; \
+			echo "Available groups: $(INSTALL_GROUPS)"; \
 			echo "Available targets: $(INSTALL_TARGETS)"; \
 			exit 1; \
 		fi \
@@ -377,31 +407,15 @@ install:
 
 .PHONY: install-google-maps-scraper
 install-google-maps-scraper:
-	@echo "$(BOLD)Installing google-maps-scraper...$(NC)"
-	npx skills add gosom/google-maps-scraper
+	@echo "$(BOLD)Installing google-maps-scraper...$(NC) $(DRY_RUN_MSG)"
+	@if [ "$(DRY_RUN)" = "1" ]; then \
+		echo "Would run: npx skills add gosom/google-maps-scraper"; \
+	else \
+		npx skills add gosom/google-maps-scraper; \
+	fi
 
-# ============================================================================
-# DEPENDENCY COMMANDS (install tool requirements)
-# ============================================================================
-
-.PHONY: dependency
-dependency:
-	@targets="$(filter-out dependency,$(MAKECMDGOALS))"; \
-	if [ -z "$$targets" ] || [ "$$targets" = "all" ]; then \
-		targets="$(DEPENDENCY_TARGETS)"; \
-	fi; \
-	for t in $$targets; do \
-		if echo " $(DEPENDENCY_TARGETS) " | grep -q " $$t "; then \
-			$(MAKE) --no-print-directory dependency-$$t; \
-		else \
-			echo "$(RED)Unknown dependency target: $$t$(NC)"; \
-			echo "Available targets: $(DEPENDENCY_TARGETS)"; \
-			exit 1; \
-		fi \
-	done
-
-.PHONY: dependency-claudish
-dependency-claudish:
+.PHONY: install-claudish
+install-claudish:
 	@echo "$(BOLD)Installing claudish requirements...$(NC) $(DRY_RUN_MSG)"
 	@if ! command -v brew >/dev/null 2>&1; then \
 		echo "$(RED)Homebrew not found. Install it from https://brew.sh first.$(NC)"; \
@@ -501,12 +515,80 @@ dependency-claudish:
 	fi
 	@echo "$(GREEN)claudish requirements done.$(NC)"
 
-# Absorb install and dependency target names passed as extra goals so Make
-# does not error (e.g. `make install all` / `make dependency claudish`). The
-# real work is done by the `install` and `dependency` targets above; these
-# are no-ops.
-.PHONY: all $(INSTALL_TARGETS) $(DEPENDENCY_TARGETS)
-all $(INSTALL_TARGETS) $(DEPENDENCY_TARGETS):
+.PHONY: install-claude-hud
+install-claude-hud:
+	@echo "$(BOLD)Installing claude-hud requirements...$(NC) $(DRY_RUN_MSG)"
+	$(call install_brew_pkg,node,node)
+	@echo "$(GREEN)claude-hud requirements done.$(NC)"
+
+.PHONY: install-claude-pray
+install-claude-pray:
+	@echo "$(BOLD)Installing claude-pray requirements...$(NC) $(DRY_RUN_MSG)"
+	$(call install_brew_pkg,node,node)
+	@echo "$(GREEN)claude-pray requirements done.$(NC)"
+
+.PHONY: install-build123d-mcp
+install-build123d-mcp:
+	@echo "$(BOLD)Installing build123d-mcp requirements...$(NC) $(DRY_RUN_MSG)"
+	$(call install_brew_pkg,uv,uv)
+	@echo "$(GREEN)build123d-mcp requirements done.$(NC)"
+
+.PHONY: install-terraform-mcp
+install-terraform-mcp:
+	@echo "$(BOLD)Installing terraform-mcp requirements...$(NC) $(DRY_RUN_MSG)"
+	@if command -v docker >/dev/null 2>&1; then \
+		echo "Present: docker"; \
+	elif [ "$(DRY_RUN)" = "1" ]; then \
+		echo "Would ask, then install: docker (brew cask)"; \
+	elif ! command -v brew >/dev/null 2>&1; then \
+		echo "$(RED)Homebrew not found. Install it from https://brew.sh first.$(NC)"; \
+		exit 1; \
+	else \
+		install=1; \
+		if [ "$(FORCE)" != "1" ]; then \
+			printf "$(YELLOW)Install Docker Desktop with brew (--cask docker)? [y/N]: $(NC)"; \
+			read -r answer; \
+			case "$$answer" in y|Y) ;; *) install=0;; esac; \
+		fi; \
+		if [ "$$install" = "1" ]; then \
+			brew install --cask docker; \
+		else \
+			echo "Skipped. Run later with: brew install --cask docker"; \
+		fi; \
+	fi
+	@if ! command -v docker >/dev/null 2>&1; then \
+		:; \
+	elif ! docker info >/dev/null 2>&1; then \
+		echo "$(YELLOW)Docker is not running. Start it, then rerun to pull the server image.$(NC)"; \
+	elif docker image inspect hashicorp/terraform-mcp-server >/dev/null 2>&1; then \
+		echo "Present: hashicorp/terraform-mcp-server image"; \
+	elif [ "$(DRY_RUN)" = "1" ]; then \
+		echo "Would ask, then pull: hashicorp/terraform-mcp-server"; \
+	else \
+		pull=1; \
+		if [ "$(FORCE)" != "1" ]; then \
+			printf "$(YELLOW)Pull the hashicorp/terraform-mcp-server image? [y/N]: $(NC)"; \
+			read -r answer; \
+			case "$$answer" in y|Y) ;; *) pull=0;; esac; \
+		fi; \
+		if [ "$$pull" = "1" ]; then \
+			docker pull hashicorp/terraform-mcp-server; \
+		else \
+			echo "Skipped. Run later with: docker pull hashicorp/terraform-mcp-server"; \
+		fi; \
+	fi
+	@if [ -n "$$TFE_TOKEN" ]; then \
+		echo "Present: TFE_TOKEN"; \
+	else \
+		echo "$(YELLOW)TFE_TOKEN is not set. Export it before launching Claude Code or the HCP Terraform tools stay hidden.$(NC)"; \
+	fi
+	@echo "$(GREEN)terraform-mcp requirements done.$(NC)"
+
+# Absorb install group and target names passed as extra goals so Make does
+# not error (e.g. `make install plugins` / `make install claudish`). The
+# real work is done by the `install` target above; these are no-ops.
+.PHONY: all $(INSTALL_GROUPS) $(INSTALL_TARGETS)
+all $(INSTALL_GROUPS) $(INSTALL_TARGETS):
 	@:
 
 # ============================================================================
