@@ -1,6 +1,6 @@
 ---
 name: explain
-description: This skill should be used when the user asks to "explain this", "what does this do", "walk me through this", "explain this change", "explain this PR", "what is this function for", "explain it simply", "I don't understand this code", or "/explain". Explains code, changes, pull requests, or concepts in plain English.
+description: This skill should be used when the user asks to "explain this", "what does this do", "how does this work", "walk me through this", "explain this change", "explain this PR", "what is this function for", "explain it simply", "I don't understand this code", or "/explain". Explains code, changes, pull requests, or concepts in plain English.
 ---
 
 # Explain Skill

@@ -1,13 +1,13 @@
 ---
 name: simplifier
-description: This skill should be used when the user asks to "clean up code", "remove dead code", "simplify this function", "reduce complexity", "find unused imports", "code quality sweep", or "/simplifier". Focuses on dead code, complexity reduction, and duplication removal.
+description: This skill should be used when the user asks to "clean up code", "remove dead code", "simplify this function", "this code is too complex", "reduce complexity", "find unused imports", "code quality sweep", or "/simplifier". Focuses on dead code, complexity reduction, and duplication removal.
 ---
 
 # Simplifier
 
 ## Overview
 
-Dispatch the simplifier agent to cleanup dead code, reduce complexity, and improve code quality. Focuses on Go and JavaScript/TypeScript codebases.
+Dispatch the simplifier agent to cleanup dead code, reduce complexity, and improve code quality. Focuses on Go, JavaScript/TypeScript, Python, and Rust codebases.
 
 ## When to Use
 
@@ -48,50 +48,17 @@ Focus only on this area. Find dead code, reduce complexity, improve quality."
 
 ### Comprehensive: `/simplifier all`
 
-**Planned, modular code quality audit** covering the entire repository.
-
-**CRITICAL: Do not skip any aspect. Continue until ALL areas are reviewed.**
-
-#### Execution Flow
-
-1. **Explore repository structure** - Identify all code areas
-2. **Create TodoWrite plan** - One todo item per module/package
-3. **Process sequentially** - Complete each area before moving to next
-4. **Mark progress** - Update todos as each section completes
-
-#### Quality Aspects to Review
-
-Process each area one-by-one:
-
-| Aspect | What to Check |
-|--------|---------------|
-| Dead imports | Unused imports across all files |
-| Dead variables | Unused variables and constants |
-| Dead functions | Unused exported/internal functions |
-| Dead code paths | Unreachable code after returns |
-| Commented code | Old code blocks that should be removed |
-| Complexity | Deeply nested conditionals, long functions |
-| Duplication | Repeated code patterns, copy-paste |
-| Magic values | Hardcoded numbers and strings |
-| Naming | Unclear or inconsistent names |
-| Patterns | Inconsistent coding patterns |
-
-#### Example: Full Audit
+Perform a planned, modular code quality audit covering the entire repository.
 
 ```
-/simplifier all
+Task tool with subagent_type="simplifier"
+prompt: "Perform comprehensive code quality audit of the entire repository.
+Create a TodoWrite plan with one item per module or package, then process sequentially.
+Consult references/comprehensive-mode.md for the quality aspect checklist and execution flow.
+Do not skip any area. Continue until ALL areas are reviewed."
 ```
 
-Creates todos like:
-- [ ] Scan and cleanup src/handlers/
-- [ ] Scan and cleanup src/services/
-- [ ] Scan and cleanup src/utils/
-- [ ] Scan and cleanup src/models/
-- [ ] Scan and cleanup internal/
-- [ ] Review cross-cutting patterns
-- [ ] Generate final quality report
-
-Then dispatches simplifier agent for each area sequentially.
+For the quality aspect checklist and example plan, consult **`references/comprehensive-mode.md`**.
 
 ## What the Agent Does
 
@@ -135,6 +102,7 @@ Then dispatches simplifier agent for each area sequentially.
 | Go | Unchecked errors, empty interface abuse, defer in loops, context propagation |
 | JS/TS | `any` abuse, unused hooks deps, mixed async patterns, optional chaining opportunities |
 | Python | Mutable defaults, broad exceptions, unused imports |
+| Rust | Unwrap in production paths, needless clones, owned parameters for read-only use, verbose matching |
 
 ## Additional Resources
 
@@ -145,5 +113,6 @@ Language-specific pattern references are available for deeper analysis. When dis
 | Go | `references/go-patterns.md` |
 | JavaScript / TypeScript | `references/js-ts-patterns.md` |
 | Python | `references/python-patterns.md` |
+| Rust | `references/rust-patterns.md` |
 
-**Dispatch instruction**: Read the relevant reference file(s) and append their content to the agent prompt under a "## Language-Specific Patterns" heading. If the scope contains multiple languages, include all applicable references. If the language is unknown or mixed, include all three.
+**Dispatch instruction**: Read the relevant reference file(s) and append their content to the agent prompt under a "## Language-Specific Patterns" heading. If the scope contains multiple languages, include all applicable references. If the language is unknown or mixed, include all four.

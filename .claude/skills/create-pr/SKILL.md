@@ -1,6 +1,6 @@
 ---
 name: create-pr
-description: This skill should be used when the user asks to "open a PR", "create a pull request", "commit and open a PR", "raise a PR for this branch", "write a PR description", "update the PR body", "fix this PR description", "describe this PR", or "/create-pr". Commits the pending work, pushes the branch, writes the title and body, sets the PR fields, and opens the pull request with gh.
+description: This skill should be used when the user asks to "open a PR", "make a PR", "create a pull request", "commit and open a PR", "raise a PR for this branch", "write a PR description", "update the PR body", "fix this PR description", "describe this PR", or "/create-pr". Commits the pending work, pushes the branch, writes the title and body, sets the PR fields, and opens the pull request with gh.
 ---
 
 # Create PR Skill
