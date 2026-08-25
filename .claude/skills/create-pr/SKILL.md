@@ -166,9 +166,11 @@ the working tree has uncommitted changes and check the PR out with
 gh pr checkout.
 Work only on files in the PR's diff, and only on comment lines in
 them. Remove comments that are not 100% necessary, verifying each
-against the code it describes before cutting. Rewrite kept comments
-that are stale or padded. Never touch protected content, code, or
-string literals.
+against the code it describes before cutting. Removal is the
+default: a comment that is merely accurate or helpful goes, and one
+stays only when you can name the fact the code cannot give back.
+Rewrite kept comments that are stale or padded. Never touch
+protected content, code, or string literals.
 Apply the edits directly, then review your own git diff to confirm
 only comment lines in scoped files changed. Never commit, push, or
 stash. Report removed, rewritten, kept, and protected comments.

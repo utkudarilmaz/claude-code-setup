@@ -562,7 +562,7 @@ Remove code comments in a PR's changed files that are not 100% necessary and rew
 
 Default, pull request, and scoped modes apply changes directly without asking. Use `check` to review first. Edits always stay uncommitted; the agent never commits, pushes, or stashes.
 
-**Classification:** Every comment in a changed file is classified as REMOVE (adds nothing the code does not say), REWRITE (real information, but stale or padded), KEEP (deleting it loses information not in the code), or PROTECTED. Every removal and rewrite is verified against the code first; an unverified suspicion is not a finding, and genuine doubt means keep.
+**Classification:** Every comment in a changed file is classified as REMOVE (adds nothing the code does not say), REWRITE (real information, but stale or padded), KEEP (deleting it loses information not in the code), or PROTECTED. Removal is the default: a comment that is merely accurate or helpful goes, and a keep must name the fact the code cannot give back. Verification runs both ways; doubt about protection or about the code itself being wrong keeps the comment, doubt about whether it is useful enough does not.
 
 **What it never touches:**
 

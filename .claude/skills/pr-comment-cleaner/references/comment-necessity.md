@@ -1,6 +1,8 @@
 # Comment Necessity
 
-The pattern list for the `pr-comment-cleaner` agent. A comment is necessary only when deleting it loses information the surrounding code does not carry. Every removable and rewritable pattern comes with the check that must pass before acting on it. An unverified suspicion is not a finding. When verification still leaves genuine doubt, keep the comment and note it in the report. A wrong deletion costs the reader the only record of why.
+The pattern list for the `pr-comment-cleaner` agent. A comment is necessary only when deleting it loses information the surrounding code does not carry. Removal is the default: a comment earns its place by naming a fact a competent reader of the code cannot recover, and accurate, harmless, or mildly helpful does not earn it.
+
+Verification runs both ways. A removal is verified by reading the code and confirming it already says everything the comment says. A keep is verified by naming the fact the code cannot give back. Doubt about whether content is protected, or whether the code rather than the comment is wrong, keeps the comment; doubt about whether a comment is useful enough removes it, because usefulness is not the bar.
 
 ## Remove
 
@@ -94,6 +96,36 @@ const userId = String(id);
 
 **Verify:** confirm there is no owner, no date, and no issue reference. A TODO with any of those stays.
 
+### Accurate summary on an internal helper
+
+```python
+def build_index(rows):
+    """Build the lookup index from the rows."""
+```
+
+**Verify:** the symbol is internal, no doc generator consumes it, and the name plus body already say what it says. Accuracy is not necessity; an accurate restatement is still a restatement. Exported symbols under a docs convention are PROTECTED.
+
+### Obvious why
+
+```go
+// use a map for O(1) lookup
+seen := map[string]bool{}
+
+// check the user exists before deleting
+```
+
+**Verify:** cover the comment and read the code. A reader who infers the reason from the code in front of them did not need the comment. A why survives only when the reason is genuinely not inferable: a non-obvious alternative was rejected, an external contract forces the shape, a failure mode is invisible.
+
+### Intent narration
+
+```python
+# we need to fetch the config before starting the workers
+config = load_config()
+start_workers(config)
+```
+
+**Verify:** the code states the order and the data flow. If the ordering is a real constraint the code cannot show, whose violation breaks something invisibly, rewrite it down to that constraint instead.
+
 ## Rewrite
 
 ### Stale comment contradicting the code
@@ -141,12 +173,16 @@ After:  // timeout in milliseconds
 
 ## Keep
 
-- Why the code does a thing this way rather than the obvious way
+Every keep must pass the same test: cover the comment, read the code alone, and name the fact a competent reader loses. No named fact, no keep. The categories:
+
+- Why the code does a thing this way rather than the obvious way, when the reason is not inferable from the code
 - Constraints invisible in the code: ordering requirements, external contracts
 - Workarounds, together with their issue link or reference
 - Units, ranges, invariants, and precision notes
 - Warnings about non-obvious failure modes
 - Doc comments a convention or generator requires on public APIs
+
+Matching a category by shape is not enough. "Why" comments stating an obvious reason and "warnings" about failures the code plainly shows read like keepers and are removals; the test is the named fact, not the shape.
 
 ## Protected
 

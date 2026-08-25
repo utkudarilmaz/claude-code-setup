@@ -360,7 +360,7 @@ Proposed fixes:
 
 ## pr-comment-cleaner
 
-Removes code comments in a pull request's changed files that are not 100% necessary, and rewrites stale or padded comments that must stay.
+Removes code comments in a pull request's changed files that are not 100% necessary, and rewrites stale or padded comments that must stay. Removal is the default: a comment survives only by carrying a fact the code cannot give back, not by being accurate or helpful.
 
 **Trigger:** Before asking for review on a PR, after a session that generated code with narrating comments, when a reviewer flags comment noise, or before committing a branch built with an agent
 
@@ -370,7 +370,7 @@ Removes code comments in a pull request's changed files that are not 100% necess
 - Resolve the target PR with `gh pr view`, falling back to the branch diff against the merge base with the default branch
 - Build the allowed file list from the PR's diff and treat it as a hard boundary
 - Read each file fully and inventory every comment, marking which ones the PR introduced
-- Classify each comment as REMOVE, REWRITE, KEEP, or PROTECTED, verifying every removal and rewrite against the code first
+- Classify each comment as REMOVE, REWRITE, KEEP, or PROTECTED, verifying every removal and rewrite against the code and every keep against the necessity test: name the fact the code cannot give back, or remove
 - Apply the edits in place, then review its own `git diff` to confirm only comment lines in scoped files changed, and revert anything else
 - Run the project test command when one is discoverable, since a comment edit can still break syntax
 
