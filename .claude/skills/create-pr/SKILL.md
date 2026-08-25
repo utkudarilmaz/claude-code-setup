@@ -13,6 +13,8 @@ Plain and short is the default in every mode. The agent writes the smallest body
 
 This skill owns the whole path: commit, push, title, body, fields, creation. Use it instead of `/commit-commands:commit-push-pr`, which opens a PR without writing a real description. When the branch already has an open PR, the skill updates it rather than failing.
 
+After the PR exists, the skill runs a cleanup pass over it: `pr-comment-cleaner` on the code comments, `text-slop-cleaner` on the PR text, and `code-slop-cleaner` on the scope. Every mode except `show` gets the pass, and `no-clean` skips it. See Cleanup Pass below.
+
 ## When to Invoke
 
 Invoke this skill:
@@ -145,6 +147,70 @@ Anything typed after the mode is passed to the agent as plain text:
 - `/create-pr base develop` - open the PR against `develop`
 - `/create-pr draft reviewer alice` - draft PR with alice requested
 - `/create-pr label bug milestone 2.1` - set an existing label and milestone
+- `/create-pr no-clean` - open the PR and skip the cleanup pass
+
+## Cleanup Pass
+
+The `create-pr` agent cannot dispatch other agents, so this pass runs here, after that agent returns. Run it once per PR the run created or updated. Skip it in `show` mode, when the run stopped before a PR existed, or when the user typed `no-clean`.
+
+Take the PR number from the URL the `create-pr` agent printed, then dispatch these three agents. When the run worked on the current branch (default, draft, refresh), send all three in the same turn so they run concurrently; they touch different surfaces and do not collide. When the run targeted another PR by number or URL, run `pr-comment-cleaner` first, since it checks the PR branch out, and send the other two together after it finishes.
+
+**1. Code comments** (edits files, leaves them uncommitted):
+
+```
+Task tool with subagent_type="pr-comment-cleaner"
+prompt: "Clean the code comments in pull request: [number]
+Resolve the PR with gh pr view. If the current branch is already the
+PR's branch, work in place; otherwise stop with a one line message if
+the working tree has uncommitted changes and check the PR out with
+gh pr checkout.
+Work only on files in the PR's diff, and only on comment lines in
+them. Remove comments that are not 100% necessary, verifying each
+against the code it describes before cutting. Rewrite kept comments
+that are stale or padded. Never touch protected content, code, or
+string literals.
+Apply the edits directly, then review your own git diff to confirm
+only comment lines in scoped files changed. Never commit, push, or
+stash. Report removed, rewritten, kept, and protected comments.
+Consult references/comment-necessity.md for the full pattern list."
+```
+
+**2. PR text** (edits the body and own comments through gh):
+
+```
+Task tool with subagent_type="text-slop-cleaner"
+prompt: "Clean the text on pull request: [number]
+Read the body and every comment with gh pr view and gh api.
+Separate your own comments from other people's before changing anything.
+Rewrite the body and your own comments into plain English, and apply
+them with gh pr edit and gh api.
+Never edit another person's comment. GitHub does not allow it. List
+what reads as slop in theirs and leave it alone.
+Report what changed and what was reported only."
+```
+
+**3. Scope** (report only):
+
+```
+Task tool with subagent_type="code-slop-cleaner"
+prompt: "Review the diff of pull request: [number]
+Resolve it with gh pr view. Read the body and any linked issue for the
+scope. Fetch external ticket links with WebFetch. Fall back to the
+commit messages. If no scope can be found, stop and ask.
+Extract a numbered requirement list from the scope.
+[Include here any ticket URL, pasted requirements, or stated purpose
+from the current session.]
+Diff against that PR's base branch.
+Group the diff into units by concern. Classify each as REQUIRED,
+SUPPORTING, UNNECESSARY, or UNRELATED.
+Give every requirement a status: COVERED, PARTIAL, or MISSING. Before
+calling one missing, search the codebase for an existing implementation.
+Verify every suspicion with a search before reporting it.
+Report only. Do not post comments and do not change the PR.
+Consult references/change-patterns.md for the pattern list."
+```
+
+After all three return, give the user one combined summary: the PR URL, what each cleaner changed or found, and a reminder that any comment edits from `pr-comment-cleaner` sit uncommitted on the branch, waiting for the user to commit and push. Never commit or push them on the user's behalf.
 
 ## Body Shape
 
@@ -216,6 +282,8 @@ Built from `git diff --name-status -M` against the PR's base branch:
 | `/create-pr refresh` | `create-pr` | Existing PR updated, author's notes kept |
 | `/create-pr <number\|url>` | `create-pr` | Title and body updated on the named PR |
 
+Every mode except `show` is followed by the cleanup pass, which dispatches `pr-comment-cleaner`, `text-slop-cleaner`, and `code-slop-cleaner` against the finished PR. `no-clean` after any mode skips it.
+
 ## Usage Examples
 
 ```
@@ -225,6 +293,7 @@ Built from `git diff --name-status -M` against the PR's base branch:
 /create-pr refresh         # Update the existing PR, keep hand-written notes
 /create-pr 142             # Update the title and body of PR 142
 /create-pr base develop    # Open the PR against develop
+/create-pr no-clean        # Open the PR, skip the cleanup pass
 ```
 
 ## Additional Resources
