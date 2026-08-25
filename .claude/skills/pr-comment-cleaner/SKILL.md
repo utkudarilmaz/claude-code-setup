@@ -7,7 +7,7 @@ description: This skill should be used when the user asks to "clean the comments
 
 ## Purpose
 
-Enforces the rule that a comment which is not 100% necessary does not stay, across the files a pull request changes. Dispatches to the `pr-comment-cleaner` agent, which resolves the PR, builds the list of changed files, verifies every removal against the code, applies the edits, and reviews its own diff to confirm only comment lines changed.
+Enforces the rule that a comment which is not 100% necessary does not stay, across the files a pull request changes. Removal is the default outcome: a comment does not survive by being accurate or helpful, only by carrying a fact the code cannot give back. Dispatches to the `pr-comment-cleaner` agent, which resolves the PR, builds the list of changed files, verifies every removal against the code and every keep against that necessity test, applies the edits, and reviews its own diff to confirm only comment lines changed.
 
 Applies changes directly and never commits or pushes; the edits stay uncommitted for the user to review and commit. Use `check` mode to see the report without touching anything.
 
@@ -36,9 +36,11 @@ branch against its merge base with the default branch, including
 uncommitted changes.
 Work only on files in that diff, and only on comment lines in them.
 Remove comments that are not 100% necessary, verifying each against
-the code it describes before cutting. Rewrite kept comments that are
-stale or padded. Never touch protected content, code, or string
-literals.
+the code it describes before cutting. Removal is the default: a
+comment that is merely accurate or helpful goes, and one stays only
+when you can name the fact the code cannot give back. Rewrite kept
+comments that are stale or padded. Never touch protected content,
+code, or string literals.
 Apply the edits directly, then review your own git diff to confirm
 only comment lines in scoped files changed. Never commit, push, or
 stash. Report removed, rewritten, kept, and protected comments.
@@ -56,8 +58,11 @@ Stop with a one line message if the working tree has uncommitted
 changes. Otherwise check the PR out with gh pr checkout.
 Work only on files in the PR's diff, and only on comment lines in
 them. Remove comments that are not 100% necessary, verifying each
-against the code first. Rewrite kept comments that are stale or
-padded. Never touch protected content, code, or string literals.
+against the code first. Removal is the default: a comment that is
+merely accurate or helpful goes, and one stays only when you can
+name the fact the code cannot give back. Rewrite kept comments that
+are stale or padded. Never touch protected content, code, or string
+literals.
 Apply the edits directly and leave them uncommitted on the PR
 branch. Never commit, push, stash, or switch back. Say in the
 report that the repository is now on the PR branch.
@@ -77,8 +82,10 @@ against the merge base with the default branch. Intersect the diff's
 file list with the given path; files outside either are out of
 scope.
 Remove comments that are not 100% necessary, verifying each against
-the code first. Rewrite kept comments that are stale or padded.
-Never touch protected content, code, or string literals.
+the code first. Removal is the default: a comment that is merely
+accurate or helpful goes, and one stays only when you can name the
+fact the code cannot give back. Rewrite kept comments that are stale
+or padded. Never touch protected content, code, or string literals.
 Apply the edits directly. Never commit, push, or stash. Report
 removed, rewritten, kept, and protected comments.
 Consult references/comment-necessity.md for the full pattern list."
@@ -99,16 +106,21 @@ current branch's PR | pull request <number or url>]. Change nothing.
 Do not edit any file, do not check out any branch, and do not run
 any git command that writes. For a PR that is not checked out, read
 its files with gh pr diff and gh api.
+Removal is the default: a comment that is merely accurate or
+helpful is a finding, and one survives only when you can name the
+fact the code cannot give back.
 For each finding show the comment, its file and line, whether this
 PR introduced it, and the removal or the proposed rewrite, with the
-verification that backs it. List protected comments left alone.
+verification that backs it. List protected comments left alone, and
+for each comment you would keep name the fact that keeps it.
 Consult references/comment-necessity.md for the full pattern list."
 ```
 
 ## Rules
 
 - Only files in the PR's diff, and only comment lines in them. Never code, never string literals
-- Every removal and rewrite is verified against the code first. An unverified suspicion is not a finding
+- Removal is the default. A keep must name the fact the code cannot give back; accurate or helpful is not enough
+- Every removal and rewrite is verified against the code first, by confirming the code already says what the comment says
 - Protected content is never touched: lint directives, build markers, licence headers, required doc comments, pragma comments, sole statement docstrings
 - Edits stay uncommitted. The agent never commits, pushes, or stashes; the user commits
 - An explicit PR target requires a clean working tree and leaves the repository on the PR branch, stated in the report
