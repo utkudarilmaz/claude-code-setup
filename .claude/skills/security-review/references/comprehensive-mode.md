@@ -64,4 +64,4 @@ When `/security-review all` is invoked, create todos such as:
 - [ ] Scan dependencies for CVEs and supply chain risks
 - [ ] Check for modern attack vectors (ReDoS, SSRF, deserialization)
 
-Dispatch the security-reviewer agent for each area sequentially, marking each complete as it finishes.
+Dispatch the security-review agent for each area sequentially, marking each complete as it finishes.

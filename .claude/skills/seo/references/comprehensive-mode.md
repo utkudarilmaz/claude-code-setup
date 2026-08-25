@@ -47,4 +47,4 @@ When `/seo all` is invoked, create todos such as:
 - [ ] Optimize for GEO: entity clarity, FAQ schemas, passage structure
 - [ ] Optimize for AIO: machine readability, context density, document outline
 
-Dispatch the seo-optimizer agent for each aspect sequentially, marking each complete as it finishes.
+Dispatch the seo agent for each aspect sequentially, marking each complete as it finishes.

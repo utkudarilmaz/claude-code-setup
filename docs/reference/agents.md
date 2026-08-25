@@ -75,7 +75,7 @@ Code quality expert that removes dead code, reduces complexity, and eliminates d
 
 ---
 
-## security-reviewer
+## security-review
 
 Security expert that performs comprehensive security-focused code review.
 
@@ -164,7 +164,7 @@ Opens a pull request end to end: commits the work, pushes the branch, writes the
 
 ---
 
-## seo-optimizer
+## seo
 
 SEO/GEO/AIO optimization expert that improves web content discoverability across traditional search engines, generative AI systems, and AI crawlers.
 
@@ -354,7 +354,7 @@ Proposed fixes:
 - **Default:** Analyze the review pasted in the conversation
 - **File:** Analyze a review saved to a file
 
-**Not the same as `code-slop-cleaner`:** That one judges a diff against its ticket. **Not the same as `explain`:** That one describes code without judging. **Not the same as `/code-review` or `security-reviewer`:** Those find issues; this one verifies issues already found.
+**Not the same as `code-slop-cleaner`:** That one judges a diff against its ticket. **Not the same as `explain`:** That one describes code without judging. **Not the same as `/code-review` or `security-review`:** Those find issues; this one verifies issues already found.
 
 ---
 

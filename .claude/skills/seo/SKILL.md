@@ -7,7 +7,7 @@ description: This skill should be used when the user asks to "optimize SEO", "im
 
 ## Purpose
 
-Dispatch the seo-optimizer agent to optimize web content for search engines (SEO), generative AI engines (GEO), and AI crawlers (AIO). The agent improves meta tags, heading hierarchy, structured data (JSON-LD), Open Graph, image optimization, internal linking, entity clarity, FAQ schemas, and machine-readable content by directly editing files.
+Dispatch the seo agent to optimize web content for search engines (SEO), generative AI engines (GEO), and AI crawlers (AIO). The agent improves meta tags, heading hierarchy, structured data (JSON-LD), Open Graph, image optimization, internal linking, entity clarity, FAQ schemas, and machine-readable content by directly editing files.
 
 ## When to Invoke
 
@@ -28,7 +28,7 @@ Invoke this skill when:
 Optimize recently changed or uncommitted web files. The agent identifies recently modified HTML, templates, and configuration files and applies SEO/GEO/AIO improvements.
 
 ```
-Task tool with subagent_type="seo-optimizer"
+Task tool with subagent_type="seo"
 prompt: "Review recent code changes and optimize all affected web content for SEO, GEO, and AIO.
 Identify modified HTML files, templates, and web configuration. Apply improvements to meta tags, headings, structured data, Open Graph, and semantic HTML.
 Report all changes applied with before/after comparison."
@@ -39,7 +39,7 @@ Report all changes applied with before/after comparison."
 Optimize only the specified scope (file, page, section, or directory).
 
 ```
-Task tool with subagent_type="seo-optimizer"
+Task tool with subagent_type="seo"
 prompt: "Optimize web content for SEO, GEO, and AIO in: [scope]
 Focus only on this area. Apply improvements to meta tags, headings, structured data, Open Graph, images, linking, and semantic HTML.
 Report all changes applied with before/after comparison."
@@ -57,7 +57,7 @@ Report all changes applied with before/after comparison."
 Perform a planned, full-project SEO/GEO/AIO audit and optimization covering every web content aspect.
 
 ```
-Task tool with subagent_type="seo-optimizer"
+Task tool with subagent_type="seo"
 prompt: "Perform comprehensive SEO/GEO/AIO optimization of all web content in the project.
 Create a TodoWrite plan with one item per optimization aspect, then process sequentially.
 Consult references/comprehensive-mode.md for the full aspect checklist and execution flow.
@@ -71,7 +71,7 @@ For detailed aspect checklist and example plan, consult **`references/comprehens
 Score all web content and produce a report card WITHOUT editing any files. Useful for baseline assessment or pre-release checks.
 
 ```
-Task tool with subagent_type="seo-optimizer"
+Task tool with subagent_type="seo"
 prompt: "Perform SEO/GEO/AIO audit of all web content in the project.
 Do NOT modify any files. Score each aspect 0-100 and produce a report card.
 Consult references/audit-mode.md for the scoring rubric, weighted calculation, and report card template.

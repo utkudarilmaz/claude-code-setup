@@ -85,6 +85,7 @@ Format: `<type>: <description>`
 
 - Agent files: `.claude/agents/<name>.md`
 - Skill files: `.claude/skills/<name>/SKILL.md`
+- When a skill dispatches to exactly one agent, the skill directory and the agent file share the same name (e.g. `skills/seo/` and `agents/seo.md`)
 - Hook scripts: `.claude/hooks/<script>.sh`
 - JSON fields: always camelCase
 - Tags: without `v` prefix (e.g., `1.0.0`, not `v1.0.0`)
