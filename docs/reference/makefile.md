@@ -85,11 +85,16 @@ Registered targets:
 
 | Target | Requirements |
 |--------|--------------|
-| `claudish` | `ollama` and `jq` via brew, then asks before starting the ollama service and pulling the `CLAUDISH_MODEL` named in `.claude/settings.json` |
+| `claudish` | `ollama` and `jq` via brew, the ollama service started and enabled at login, and the `CLAUDISH_MODEL` named in `.claude/settings.json` pulled |
 
-Each step is skipped when the requirement is already present. The model pull
-asks for confirmation because it is a multi-GB download; `FORCE=1` skips the
-prompt and pulls directly. To add a new
+Each step is skipped when the requirement is already present, and each asks
+for approval first, only when actually needed: installing the missing brew
+packages, starting the ollama server now, enabling autostart at login for the
+ollama service (asked even when the server is already running some other way),
+and pulling the model (a multi-GB download). Answering no to autostart when
+starting the server uses `brew services run` instead of `brew services start`,
+so the server runs now without a login item. Declining a step skips it and the
+run continues. `FORCE=1` skips all prompts. To add a new
 target (for example MCP server requirements), append its name to
 `DEPENDENCY_TARGETS` in the Makefile and add a matching `dependency-<name>`
 recipe in the DEPENDENCY COMMANDS section.

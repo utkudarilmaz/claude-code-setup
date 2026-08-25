@@ -407,43 +407,99 @@ dependency-claudish:
 		echo "$(RED)Homebrew not found. Install it from https://brew.sh first.$(NC)"; \
 		exit 1; \
 	fi
-	@for pkg in ollama jq; do \
+	@missing=""; \
+	for pkg in ollama jq; do \
 		if command -v $$pkg >/dev/null 2>&1; then \
 			echo "Present: $$pkg"; \
-		elif [ "$(DRY_RUN)" = "1" ]; then \
-			echo "Would install: $$pkg"; \
 		else \
-			brew install $$pkg; \
-		fi \
-	done
+			missing="$$missing $$pkg"; \
+		fi; \
+	done; \
+	if [ -n "$$missing" ]; then \
+		if [ "$(DRY_RUN)" = "1" ]; then \
+			echo "Would ask, then install:$$missing"; \
+		else \
+			install=1; \
+			if [ "$(FORCE)" != "1" ]; then \
+				printf "$(YELLOW)Install$$missing with brew? [y/N]: $(NC)"; \
+				read -r answer; \
+				case "$$answer" in y|Y) ;; *) install=0;; esac; \
+			fi; \
+			if [ "$$install" = "1" ]; then \
+				brew install $$missing; \
+			else \
+				echo "Skipped package install. Run later with: brew install$$missing"; \
+			fi; \
+		fi; \
+	fi
 	@model=$$(jq -r '.env.CLAUDISH_MODEL // empty' $(REPO_DIR)/settings.json 2>/dev/null); \
 	if [ -z "$$model" ]; then \
 		echo "$(YELLOW)No CLAUDISH_MODEL in $(REPO_DIR)/settings.json, skipping model pull$(NC)"; \
 	elif [ "$(DRY_RUN)" = "1" ]; then \
 		echo "Would ask, then start ollama and pull model: $$model"; \
+	elif ! command -v ollama >/dev/null 2>&1; then \
+		echo "$(YELLOW)ollama is not installed, skipping the service and model steps$(NC)"; \
 	else \
-		if [ "$(FORCE)" != "1" ]; then \
-			printf "$(YELLOW)Pull ollama model $$model (multi-GB download)? [y/N]: $(NC)"; \
-			read -r answer; \
-			if [ "$$answer" != "y" ] && [ "$$answer" != "Y" ]; then \
-				echo "Skipped model pull. Run later with: ollama pull $$model"; \
-				exit 0; \
+		ready=1; \
+		svc=$$(brew services list 2>/dev/null | awk '$$1 == "ollama" {print $$2}'); \
+		if ! curl -sf http://localhost:11434/api/version >/dev/null 2>&1; then \
+			start=1; \
+			if [ "$(FORCE)" != "1" ]; then \
+				printf "$(YELLOW)ollama server is not running. Start it now with brew? [y/N]: $(NC)"; \
+				read -r answer; \
+				case "$$answer" in y|Y) ;; *) start=0;; esac; \
+			fi; \
+			if [ "$$start" = "1" ]; then \
+				auto=1; \
+				if [ "$(FORCE)" != "1" ]; then \
+					printf "$(YELLOW)Enable autostart at login for the ollama service? [y/N]: $(NC)"; \
+					read -r answer; \
+					case "$$answer" in y|Y) ;; *) auto=0;; esac; \
+				fi; \
+				if [ "$$auto" = "1" ]; then \
+					brew services start ollama; \
+				else \
+					brew services run ollama; \
+				fi; \
+				sleep 3; \
+			else \
+				ready=0; \
+				echo "Skipped starting ollama. Start it later, then run: ollama pull $$model"; \
+			fi; \
+		elif [ "$$svc" != "started" ]; then \
+			auto=1; \
+			if [ "$(FORCE)" != "1" ]; then \
+				printf "$(YELLOW)ollama is running but not enabled at login. Enable autostart (brew services start ollama)? [y/N]: $(NC)"; \
+				read -r answer; \
+				case "$$answer" in y|Y) ;; *) auto=0;; esac; \
+			fi; \
+			if [ "$$auto" = "1" ]; then \
+				brew services start ollama; \
+			else \
+				echo "Skipped autostart. Enable later with: brew services start ollama"; \
 			fi; \
 		fi; \
-		if ! curl -sf http://localhost:11434/api/version >/dev/null 2>&1; then \
-			brew services start ollama; \
-			sleep 3; \
-		fi; \
-		if curl -sf http://localhost:11434/api/version >/dev/null 2>&1; then \
-			if ollama list 2>/dev/null | awk 'NR>1 {print $$1}' | grep -qx "$$model"; then \
+		if [ "$$ready" = "1" ]; then \
+			if ! curl -sf http://localhost:11434/api/version >/dev/null 2>&1; then \
+				echo "$(YELLOW)ollama server not reachable. Start it, then run: ollama pull $$model$(NC)"; \
+			elif ollama list 2>/dev/null | awk 'NR>1 {print $$1}' | grep -qx "$$model"; then \
 				echo "Present: model $$model"; \
 			else \
-				ollama pull "$$model"; \
-			fi \
-		else \
-			echo "$(YELLOW)ollama server not reachable. Start it, then run: ollama pull $$model$(NC)"; \
-		fi \
+				pull=1; \
+				if [ "$(FORCE)" != "1" ]; then \
+					printf "$(YELLOW)Pull ollama model $$model (multi-GB download)? [y/N]: $(NC)"; \
+					read -r answer; \
+					case "$$answer" in y|Y) ;; *) pull=0;; esac; \
+				fi; \
+				if [ "$$pull" = "1" ]; then \
+					ollama pull "$$model"; \
+				else \
+					echo "Skipped model pull. Run later with: ollama pull $$model"; \
+				fi; \
+			fi; \
+		fi; \
 	fi
+	@echo "$(GREEN)claudish requirements done.$(NC)"
 
 # Absorb install and dependency target names passed as extra goals so Make
 # does not error (e.g. `make install all` / `make dependency claudish`). The
