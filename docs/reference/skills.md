@@ -159,7 +159,9 @@ Cleanup dead code and reduce complexity.
 - **Scoped:** Focuses cleanup on specified area; detects primary language(s) and applies language-specific patterns
 - **Comprehensive:** Creates TodoWrite plan covering all aspects (dead code, complexity, patterns, organization), processes each sequentially
 
-**Language Support:** Go, JavaScript/TypeScript, Python (language-specific pattern references loaded automatically per scope)
+**Language Support:** Go, JavaScript/TypeScript, Python, Rust (language-specific pattern references loaded automatically per scope)
+
+**Reference Files:** `references/comprehensive-mode.md` (quality aspect checklist, execution flow), `references/go-patterns.md`, `references/js-ts-patterns.md`, `references/python-patterns.md`, `references/rust-patterns.md`
 
 **Examples:**
 ```

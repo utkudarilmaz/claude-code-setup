@@ -1,6 +1,6 @@
 ---
 name: text-slop-cleaner
-description: This skill should be used when the user asks to "clean up this text", "remove the AI slop", "make this sound human", "rewrite this in plain English", "remove unnecessary comments", "strip the comments", "this reads like AI wrote it", or "/text-slop-cleaner". Rewrites machine sounding prose and removes every comment that is not 100% necessary.
+description: This skill should be used when the user asks to "clean up this text", "remove the AI slop", "make this sound human", "humanize this", "rewrite this in plain English", "remove unnecessary comments", "strip the comments", "this reads like AI wrote it", or "/text-slop-cleaner". Rewrites machine sounding prose and removes every comment that is not 100% necessary.
 ---
 
 # Text Slop Cleaner Skill

@@ -69,7 +69,7 @@ Code quality expert that removes dead code, reduces complexity, and eliminates d
 - Classify findings by severity (HIGH/MEDIUM/LOW) and confidence (CERTAIN/LIKELY/POSSIBLE)
 - Report only CERTAIN or LIKELY findings; flag POSSIBLE items separately
 
-**Language Support:** Go, JavaScript/TypeScript, Python (language-specific pattern references applied per scope)
+**Language Support:** Go, JavaScript/TypeScript, Python, Rust (language-specific pattern references applied per scope)
 
 **Output:** Code Simplification Report with before/after code examples and severity summary table
 
