@@ -265,6 +265,8 @@ A branch that already has an open PR routes to the update path in every mode, so
 
 Anything typed after the mode is passed through as plain text: `/create-pr base develop`, `/create-pr draft reviewer alice`, `/create-pr label bug`.
 
+**Cleanup pass:** Every mode except show ends with a cleanup pass over each PR the run created or updated. The skill dispatches three agents against the finished PR: `pr-comment-cleaner` removes unnecessary code comments in the PR's changed files and leaves the edits uncommitted, `text-slop-cleaner` rewrites the PR body and your own comments into plain English, and `code-slop-cleaner` reports whether the diff matches its scope. They run concurrently when the run was for the current branch; a targeted PR runs `pr-comment-cleaner` first because it checks the PR branch out. Add `no-clean` to skip the pass.
+
 **Title:** Conventional commit form, under 70 characters, lower case after the type, no ticket ID. The repository's own convention wins when recent merged PRs show one.
 
 **Body shape:**
@@ -307,6 +309,7 @@ Optional sections are dropped entirely when empty, never filled with "N/A".
 /create-pr 142                                      # Update the title and body of PR 142
 /create-pr https://github.com/owner/repo/pull/142   # Same, by URL
 /create-pr base develop reviewer alice              # Open against develop, request alice
+/create-pr no-clean                                 # Open the PR, skip the cleanup pass
 ```
 
 **Reference Files:** `references/pr-creation.md` (preflight, branch naming, commit and push rules, title rules, field selection, gh commands)
