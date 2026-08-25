@@ -7,7 +7,7 @@ description: This skill should be used when the user asks to "security review", 
 
 ## Purpose
 
-Dispatch the security-reviewer agent to perform security-focused code review. The agent identifies vulnerabilities across 13 security areas including authentication, injection, data exposure, secrets management, OWASP Top 10, API security, cryptography, and modern attack vectors.
+Dispatch the security-review agent to perform security-focused code review. The agent identifies vulnerabilities across 13 security areas including authentication, injection, data exposure, secrets management, OWASP Top 10, API security, cryptography, and modern attack vectors.
 
 ## When to Invoke
 
@@ -27,7 +27,7 @@ Invoke this skill when:
 Review recent code changes for security vulnerabilities.
 
 ```
-Task tool with subagent_type="security-reviewer"
+Task tool with subagent_type="security-review"
 prompt: "Review recent code changes for security vulnerabilities.
 Focus on: auth, input validation, data exposure, secrets, OWASP Top 10.
 Report findings with severity, location, and remediation."
@@ -38,7 +38,7 @@ Report findings with severity, location, and remediation."
 Review specific files or modules for security issues.
 
 ```
-Task tool with subagent_type="security-reviewer"
+Task tool with subagent_type="security-review"
 prompt: "Perform security review of: [path]
 Focus on: auth, input validation, data exposure, secrets, OWASP Top 10.
 Report findings with severity, location, and remediation."
@@ -55,7 +55,7 @@ Report findings with severity, location, and remediation."
 Perform a full security audit of the entire codebase across all 13 security areas.
 
 ```
-Task tool with subagent_type="security-reviewer"
+Task tool with subagent_type="security-review"
 prompt: "Perform comprehensive security audit of the entire codebase.
 Create a TodoWrite plan with one item per security area, then process sequentially.
 Consult references/comprehensive-mode.md for the 13 security areas and OWASP cross-reference."

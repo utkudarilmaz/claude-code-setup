@@ -61,11 +61,11 @@ Hooks intercept tool calls for pre/post processing:
 ├── agents/           # Agent definitions (domain expertise)
 │   ├── docs.md
 │   ├── tester.md
-│   ├── security-reviewer.md
+│   ├── security-review.md
 │   ├── simplifier.md
 │   ├── release-notes.md
 │   ├── changelog-generator.md
-│   ├── seo-optimizer.md
+│   ├── seo.md
 │   ├── create-pr.md
 │   ├── text-slop-cleaner.md
 │   ├── code-slop-cleaner.md
