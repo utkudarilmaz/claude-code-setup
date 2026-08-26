@@ -2,7 +2,7 @@
   "env": {
     "CLAUDISH_MODEL": "qwen3.5:35b-a3b",
     "CLAUDISH_MODE": "append",
-    "CLAUDISH_TIMEOUT": "300"
+    "CLAUDISH_TIMEOUT": "55"
   },
   "hooks": {
     "PreToolUse": [
@@ -42,6 +42,7 @@
     "github@claude-plugins-official": false,
     "claude-hud@claude-hud": true,
     "claude-pray@claude-pray": true,
+    "claudish-to-english@gvzdv-plugins": true,
     "security-guidance@claude-plugins-official": false,
     "code-simplifier@claude-plugins-official": false,
     "atlassian@claude-plugins-official": false,
@@ -80,8 +81,7 @@
     "ui-ux-pro-max@ui-ux-pro-max-skill": false,
     "marketing-skills@marketingskills": false,
     "chrome-devtools-mcp@claude-plugins-official": false,
-    "skill-creator@claude-plugins-official": false,
-    "claudish-to-english@gvzdv-plugins": true
+    "skill-creator@claude-plugins-official": false
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
