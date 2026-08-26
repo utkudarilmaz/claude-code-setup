@@ -26,6 +26,14 @@ BOLD := \033[1m
 # Feature flags
 DRY_RUN ?= 0
 FORCE ?= 0
+
+# How long ollama keeps an idle model in memory. Its own default is 5m, short
+# enough that a model unloads during a normal reading gap and the next claudish
+# rewrite pays a multi-second reload. Written to the brew services env override
+# file, which brew merges into the generated plist on every start, so it
+# survives `brew upgrade` where a hand-edited plist would not.
+OLLAMA_KEEP_ALIVE ?= 30m
+OLLAMA_ENV_FILE := $(if $(HOMEBREW_USER_CONFIG_HOME),$(HOMEBREW_USER_CONFIG_HOME),$(HOME)/.homebrew)/services/ollama.env
 # Set NO_RSYNC=1 to force the plain-copy fallback path even when rsync exists
 NO_RSYNC ?=
 
@@ -420,6 +428,30 @@ install-claudish:
 	@if ! command -v brew >/dev/null 2>&1; then \
 		echo "$(RED)Homebrew not found. Install it from https://brew.sh first.$(NC)"; \
 		exit 1; \
+	fi
+	@if grep -qs '^OLLAMA_KEEP_ALIVE=' "$(OLLAMA_ENV_FILE)"; then \
+		echo "Present: OLLAMA_KEEP_ALIVE in $(OLLAMA_ENV_FILE)"; \
+	elif [ "$(DRY_RUN)" = "1" ]; then \
+		echo "Would ask, then write OLLAMA_KEEP_ALIVE=$(OLLAMA_KEEP_ALIVE) to $(OLLAMA_ENV_FILE)"; \
+	else \
+		keep=1; \
+		if [ "$(FORCE)" != "1" ]; then \
+			echo "$(YELLOW)ollama unloads an idle model after 5m, so a rewrite after a pause waits for a reload.$(NC)"; \
+			printf "$(YELLOW)Keep models loaded for $(OLLAMA_KEEP_ALIVE) of idle time instead? [y/N]: $(NC)"; \
+			read -r answer; \
+			case "$$answer" in y|Y) ;; *) keep=0;; esac; \
+		fi; \
+		if [ "$$keep" = "1" ]; then \
+			mkdir -p "$$(dirname "$(OLLAMA_ENV_FILE)")"; \
+			printf 'OLLAMA_KEEP_ALIVE=%s\n' "$(OLLAMA_KEEP_ALIVE)" >> "$(OLLAMA_ENV_FILE)"; \
+			chmod 600 "$(OLLAMA_ENV_FILE)"; \
+			echo "Wrote OLLAMA_KEEP_ALIVE=$(OLLAMA_KEEP_ALIVE) to $(OLLAMA_ENV_FILE)"; \
+			if [ "$$(brew services list 2>/dev/null | awk '$$1 == "ollama" {print $$2}')" = "started" ]; then \
+				echo "$(YELLOW)ollama is already running. Apply it with: brew services restart ollama$(NC)"; \
+			fi; \
+		else \
+			echo "Skipped keep-alive. Set it later with: echo 'OLLAMA_KEEP_ALIVE=$(OLLAMA_KEEP_ALIVE)' >> $(OLLAMA_ENV_FILE)"; \
+		fi; \
 	fi
 	@missing=""; \
 	for pkg in ollama jq; do \
