@@ -11,3 +11,4 @@
 - Always check available skills, agents, plugins, and MCP servers when planning or working on tasks
 - Always use tofu instead of terraform
 - Always give PR addresses as links
+- Always create a git worktree before starting any task, code change, or PR; never edit files on the main checkout, and open the PR from the worktree branch
