@@ -1,6 +1,6 @@
 {
   "env": {
-    "CLAUDISH_MODEL": "qwen3.5:35b-a3b",
+    "CLAUDISH_MODEL": "gemma4:26b-mlx",
     "CLAUDISH_MODE": "append",
     "CLAUDISH_TIMEOUT": "55"
   },
