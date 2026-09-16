@@ -6,11 +6,17 @@ by `make update-config` or `make update-mcp`. See
 
 | Server | Runs with | Needs |
 |--------|-----------|-------|
+| `bellek` | `bellek mcp` | `bellek` on PATH |
 | `build123d-mcp` | `uv tool run --python 3.12 build123d-mcp@latest` | `uv` on PATH |
 | `terraform` | `docker run -i --rm hashicorp/terraform-mcp-server` | Docker, `TFE_TOKEN` |
 
 `make install mcps` installs these requirements, asking for approval before
 each install. See [Makefile Commands](makefile.md#install-commands).
+
+## bellek
+
+A memory graph for AI agents, served over stdio. The `bellek mcp` command
+bridges to the bellek server, so the server has to be running.
 
 ## build123d-mcp
 
