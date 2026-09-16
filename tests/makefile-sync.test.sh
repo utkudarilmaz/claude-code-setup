@@ -108,8 +108,9 @@ jq '.mcpServers["local-server"] = {command: "echo"}' \
 mv "$TMP_TARGET_MCP/.claude.json.tmp" "$TMP_TARGET_MCP/.claude.json"
 run_make update-mcp TARGET_DIR="$TMP_TARGET_MCP" DRY_RUN=1
 
+REPO_MCP_COUNT=$(jq '.mcpServers | length' "$REPO_ROOT/.claude/mcp-servers.json")
 check "update-mcp DRY_RUN=1 writes nothing" \
-  test "$(jq -r '.mcpServers | keys | length' "$TMP_TARGET_MCP/.claude.json")" = "3"
+  test "$(jq -r '.mcpServers | keys | length' "$TMP_TARGET_MCP/.claude.json")" = "$((REPO_MCP_COUNT + 1))"
 
 # --- rm commands remove repo-managed files only ---
 run_make rm-agents TARGET_DIR="$TMP_TARGET"

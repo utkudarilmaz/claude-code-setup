@@ -1,5 +1,9 @@
 {
   "mcpServers": {
+    "bellek": {
+      "command": "bellek",
+      "args": ["mcp"]
+    },
     "build123d-mcp": {
       "command": "uv",
       "args": ["tool", "run", "--python", "3.12", "build123d-mcp@latest"]
