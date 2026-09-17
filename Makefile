@@ -111,7 +111,7 @@ help:
 #   2. Add a matching `install-<name>` recipe in the INSTALL COMMANDS section
 # `make install <group>` runs one group; `make install` runs them all.
 INSTALL_SKILLS := google-maps-scraper
-INSTALL_PLUGINS := claudish claude-hud claude-pray
+INSTALL_PLUGINS := claudish claude-hud claude-pray typescript-lsp gopls-lsp
 INSTALL_MCPS := build123d-mcp terraform-mcp
 INSTALL_GROUPS := skills plugins mcps
 INSTALL_TARGETS := $(INSTALL_SKILLS) $(INSTALL_PLUGINS) $(INSTALL_MCPS)
@@ -558,6 +558,18 @@ install-claude-pray:
 	@echo "$(BOLD)Installing claude-pray requirements...$(NC) $(DRY_RUN_MSG)"
 	$(call install_brew_pkg,node,node)
 	@echo "$(GREEN)claude-pray requirements done.$(NC)"
+
+.PHONY: install-typescript-lsp
+install-typescript-lsp:
+	@echo "$(BOLD)Installing typescript-lsp requirements...$(NC) $(DRY_RUN_MSG)"
+	$(call install_brew_pkg,typescript-language-server,typescript-language-server)
+	@echo "$(GREEN)typescript-lsp requirements done.$(NC)"
+
+.PHONY: install-gopls-lsp
+install-gopls-lsp:
+	@echo "$(BOLD)Installing gopls-lsp requirements...$(NC) $(DRY_RUN_MSG)"
+	$(call install_brew_pkg,gopls,gopls)
+	@echo "$(GREEN)gopls-lsp requirements done.$(NC)"
 
 .PHONY: install-build123d-mcp
 install-build123d-mcp:

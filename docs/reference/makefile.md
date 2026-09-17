@@ -74,6 +74,8 @@ Registered targets:
 | plugins | `claudish` | `ollama` and `jq` via brew, a 30m idle keep-alive for loaded models, the ollama service started and enabled at login, and the `CLAUDISH_MODEL` named in `.claude/settings.json` pulled |
 | plugins | `claude-hud` | `node` via brew, needed by the statusline |
 | plugins | `claude-pray` | `node` via brew, needed by the statusline |
+| plugins | `typescript-lsp` | `typescript-language-server` via brew, the language server the TypeScript LSP plugin talks to |
+| plugins | `gopls-lsp` | `gopls` via brew, the language server the Go LSP plugin talks to |
 | mcps | `build123d-mcp` | `uv` via brew |
 | mcps | `terraform-mcp` | Docker Desktop via brew cask, the `hashicorp/terraform-mcp-server` image pulled, and a warning when `TFE_TOKEN` is not exported |
 
