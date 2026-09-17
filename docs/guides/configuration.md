@@ -72,6 +72,8 @@ Plugins are toggled via `enabledPlugins` map:
 | `explanatory-output-style` | `claude-plugins-official` | Output formatting |
 | `context7` | `claude-plugins-official` | Documentation queries |
 | `code-review` | `claude-plugins-official` | Code review assistance |
+| `typescript-lsp` | `claude-plugins-official` | TypeScript and JavaScript code intelligence via `typescript-language-server` |
+| `gopls-lsp` | `claude-plugins-official` | Go code intelligence via `gopls` |
 
 Disabled plugins (set to `false`) remain registered but inactive. Notable disabled plugins include `code-simplifier@claude-plugins-official`, `security-guidance@claude-plugins-official`, `marketing-skills@marketingskills`, and various design/animation skills from `claude-design-skillstack`.
 
