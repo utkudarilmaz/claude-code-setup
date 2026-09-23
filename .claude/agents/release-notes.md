@@ -1,7 +1,7 @@
 ---
 name: release-notes
 description: "This agent should be invoked to generate user-friendly release notes from git commit history. This includes grouping changes by type, writing from user perspective, and highlighting breaking changes."
-model: sonnet
+model: opus
 color: purple
 ---
 
