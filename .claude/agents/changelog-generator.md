@@ -1,7 +1,7 @@
 ---
 name: changelog-generator
 description: "This agent should be invoked to generate, update, or create a CHANGELOG.md file from git commit history. This includes documenting version changes, parsing conventional commits, and maintaining Keep a Changelog format."
-model: sonnet
+model: opus
 color: pink
 ---
 
