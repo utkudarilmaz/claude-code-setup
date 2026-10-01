@@ -279,41 +279,6 @@ Requirements get their own status: COVERED (a unit implements it), PARTIAL (part
 
 ---
 
-## explain
-
-Explains code, changes, pull requests, and concepts in words anyone can follow.
-
-**Trigger:** When picking up unfamiliar code, when a diff or pull request is hard to follow, or when a term in the codebase has no obvious meaning
-
-**Responsibilities:**
-- Work out the target and state it on the first line, so a wrong guess is visible immediately
-- Cover what it is, what it does, why it exists, and how it fits, plus gotchas when real ones exist
-- Read the callers before saying why something exists, and check commit messages and linked issues for the reason behind a change
-- Define any unavoidable term in the sentence it first appears in, and give one concrete example with real values
-- Say when the reason for something cannot be determined, what was checked, and what would answer it
-- Keep what was read apart from what was inferred
-
-**Target Detection:**
-
-| Argument | Target |
-|----------|--------|
-| none, tree dirty | The uncommitted changes |
-| none, tree clean | The most recent commit |
-| an existing path | That file or directory |
-| a number or PR url | That pull request |
-| a symbol in the repository | That function, type, or class |
-| anything else | A concept question, answered in this codebase's terms |
-
-**Scope:** Terminal output only. Writes no files and publishes nothing. Explains rather than reviews, and never suggests changes.
-
-**Modes:**
-- **Default:** What it is, what it does, why it exists, how it fits, and watch out for. Empty sections are dropped rather than padded
-- **Deep:** Adds a walkthrough in execution order anchored with `file:line`, a worked example traced from a concrete input to its output, and the edge cases the code handles
-
-**Anti bluff rule:** Never invents a rationale. An honest gap beats a plausible guess, since the reader acts on what they are told. Never uses `simply`, `just`, `obviously`, `of course`, or `as you know`.
-
----
-
 ## review-analyzer
 
 Checks a code review someone else wrote against the actual code, judges the proposed fixes, and explains everything in plain language.
@@ -354,7 +319,7 @@ Proposed fixes:
 - **Default:** Analyze the review pasted in the conversation
 - **File:** Analyze a review saved to a file
 
-**Not the same as `code-slop-cleaner`:** That one judges a diff against its ticket. **Not the same as `explain`:** That one describes code without judging. **Not the same as `/code-review` or `security-review`:** Those find issues; this one verifies issues already found.
+**Not the same as `code-slop-cleaner`:** That one judges a diff against its ticket. **Not the same as `/code-review` or `security-review`:** Those find issues; this one verifies issues already found.
 
 ---
 

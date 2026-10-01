@@ -69,7 +69,6 @@ Hooks intercept tool calls for pre/post processing:
 │   ├── create-pr.md
 │   ├── text-slop-cleaner.md
 │   ├── code-slop-cleaner.md
-│   ├── explain.md
 │   ├── review-analyzer.md
 │   └── pr-comment-cleaner.md
 ├── hooks/            # Hook scripts (tool call interception)
@@ -114,10 +113,6 @@ Hooks intercept tool calls for pre/post processing:
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       └── change-patterns.md
-│   ├── explain/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       └── deep-mode.md
 │   ├── review-analyzer/
 │   │   ├── SKILL.md
 │   │   └── references/
