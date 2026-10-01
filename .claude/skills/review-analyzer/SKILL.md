@@ -13,7 +13,7 @@ The report gives every parsed issue its own numbered section answering five ques
 
 Report only. Nothing is edited, nothing is written to disk, and nothing is fetched from GitHub.
 
-Different from `/code-review`, which finds issues in code. This skill judges issues someone else already found. Different from `/explain`, which describes code without judging. This skill judges a review of the code.
+Different from `/code-review`, which finds issues in code. This skill judges issues someone else already found.
 
 ## When to Invoke
 
