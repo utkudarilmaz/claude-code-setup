@@ -7,7 +7,7 @@ description: This skill should be used when the user asks to "create a release t
 
 ## Purpose
 
-Bump a semantic version tag, update CHANGELOG.md via the `/changelog` skill, and create an annotated git tag with a commit summary message. Handles initial tagging from `0.0.0` when no tags exist.
+Bump a semantic version tag, update CHANGELOG.md via the `/changelog` skill, and create an annotated git tag with a commit summary message. Keeps the tag prefix the repository already uses (`1.2.3` or `v1.2.3`) and handles initial tagging from `0.0.0` when no tags exist.
 
 ## Invocation
 
@@ -16,7 +16,7 @@ Bump a semantic version tag, update CHANGELOG.md via the `/changelog` skill, and
 A bump type argument is **required**. Reject invocation without one.
 
 ```
-/release-tag patch   # 1.2.3 -> 1.2.4
+/release-tag patch   # 1.2.3 -> 1.2.4, v1.2.3 -> v1.2.4
 /release-tag minor   # 1.2.3 -> 1.3.0
 /release-tag major   # 1.2.3 -> 2.0.0
 ```
@@ -31,17 +31,24 @@ Execute these steps sequentially:
 git tag --sort=-version:refname | head -1
 ```
 
-If no tags exist, use `0.0.0` as the base version.
+Find the tag prefix from the latest tag:
+
+- Tag starts with `v` (for example `v1.2.3`): the prefix is `v`
+- Otherwise (for example `1.2.3`): there is no prefix
+
+If no tags exist, use `0.0.0` as the base version and ask the user whether the first tag should have a `v` prefix. Go modules need the `v` prefix, so recommend it when the repository has a `go.mod` file.
 
 ### Step 2: Calculate new version
 
-Parse the current version into `major.minor.patch` components and apply the bump:
+Strip the prefix, parse the current version into `major.minor.patch` components and apply the bump:
 
 | Bump type | Rule |
 |-----------|------|
 | `patch` | Increment patch, keep major and minor |
 | `minor` | Increment minor, reset patch to 0, keep major |
 | `major` | Increment major, reset minor and patch to 0 |
+
+Add the prefix back to get the new tag name. Use this full tag name as `<new-version>` in every later step.
 
 Report to the user: `Bumping <current> -> <new>`
 
@@ -88,7 +95,7 @@ Remind the user to push the tag when ready: `git push origin <new-version>`
 
 ## Rules
 
-- **No "v" prefix**: Tags are `1.0.0`, never `v1.0.0`
+- **Keep the tag prefix**: Follow the prefix of the latest tag; never add or drop a `v` on your own
 - **Annotated tags only**: Always use `git tag -a`, never lightweight tags
 - **Clean tree required**: Refuse to tag with uncommitted changes (step 3)
 - **Changelog first**: Always invoke `/changelog` before creating the tag (step 4)
