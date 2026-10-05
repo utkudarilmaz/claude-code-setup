@@ -67,7 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Important Rules
 
-1. **Tag Format**: This project uses tags WITHOUT the "v" prefix (e.g., `1.0.0` not `v1.0.0`)
+1. **Tag Format**: Tags may or may not have a "v" prefix (`1.0.0` or `v1.0.0`). Use the bare version in headings (`## [1.0.0]`) and the real tag name in git commands and comparison links
 2. **Unreleased Section**: Always include an `[Unreleased]` section for commits after the latest tag
 3. **Date Format**: Use ISO 8601 format (YYYY-MM-DD) for release dates
 4. **Commit Attribution**: Do NOT add AI attribution or Co-Authored-By lines
