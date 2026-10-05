@@ -10,6 +10,7 @@
   },
   "statusLine": {...},                // Status bar configuration
   "enabledPlugins": {...},            // Plugin enable/disable map
+  "skillOverrides": {...},            // Skill on/off map
   "extraKnownMarketplaces": {...},    // External plugin sources
   "effortLevel": "high",              // Default reasoning effort
   "skipDangerousModePermissionPrompt": true, // Skip prompt for dangerous mode
@@ -76,6 +77,20 @@ Plugins are toggled via `enabledPlugins` map:
 | `gopls-lsp` | `claude-plugins-official` | Go code intelligence via `gopls` |
 
 Disabled plugins (set to `false`) remain registered but inactive. Notable disabled plugins include `code-simplifier@claude-plugins-official`, `security-guidance@claude-plugins-official`, `marketing-skills@marketingskills`, and various design/animation skills from `claude-design-skillstack`.
+
+## Skill Overrides
+
+Single skills are turned off via the `skillOverrides` map, even when the plugin or built-in set that ships them stays on:
+
+```json
+{
+  "skillOverrides": {
+    "anthropic-skills:pdf": "off"
+  }
+}
+```
+
+The default settings turn off the built-in `anthropic-skills` for docs, office files (`docx`, `xlsx`, `pptx`, `pdf`), browsers (`built-in-browser`, `chrome-browser`), `computer-use`, `google-workspace`, `doc-coauthoring`, `skill-creator`, `morning`, and `import-memory`. Because `make update-all` deep merges `settings.json`, entries you add locally (for example `"seo": "off"`) are kept.
 
 ## Hook Configuration
 

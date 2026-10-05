@@ -83,6 +83,21 @@
     "chrome-devtools-mcp@claude-plugins-official": false,
     "skill-creator@claude-plugins-official": false
   },
+  "skillOverrides": {
+    "anthropic-skills:docs": "off",
+    "anthropic-skills:built-in-browser": "off",
+    "anthropic-skills:xlsx": "off",
+    "anthropic-skills:skill-creator": "off",
+    "anthropic-skills:pptx": "off",
+    "anthropic-skills:pdf": "off",
+    "anthropic-skills:morning": "off",
+    "anthropic-skills:import-memory": "off",
+    "anthropic-skills:google-workspace": "off",
+    "anthropic-skills:computer-use": "off",
+    "anthropic-skills:doc-coauthoring": "off",
+    "anthropic-skills:docx": "off",
+    "anthropic-skills:chrome-browser": "off"
+  },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
       "source": {
