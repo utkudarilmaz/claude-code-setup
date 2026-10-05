@@ -46,7 +46,6 @@ See `.claude/CLAUDE.md` for global conventions that apply when this config is us
 
 Key conventions for this repository:
 - **Conventional commits**: `feat:`, `fix:`, `docs:`, `refactor:`, `perf:`, `test:`, `chore:`
-- **Tags without v-prefix**: Use `1.0.0`, not `v1.0.0`
 - **No AI attribution**: Never add Co-Authored-By Claude or AI references
 - **JSON fields**: Always use camelCase
 - **Agent/Skill files**: YAML frontmatter with `name`, `description`, optional `model`, `color`
