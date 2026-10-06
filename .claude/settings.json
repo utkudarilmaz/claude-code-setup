@@ -2,7 +2,7 @@
   "env": {
     "CLAUDISH_MODEL": "gemma4:26b-mlx",
     "CLAUDISH_MODE": "append",
-    "CLAUDISH_TIMEOUT": "55"
+    "CLAUDISH_TIMEOUT": "300"
   },
   "hooks": {
     "PreToolUse": [
