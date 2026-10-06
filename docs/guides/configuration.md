@@ -12,7 +12,8 @@
   "enabledPlugins": {...},            // Plugin enable/disable map
   "skillOverrides": {...},            // Skill on/off map
   "extraKnownMarketplaces": {...},    // External plugin sources
-  "effortLevel": "high",              // Default reasoning effort
+  "effortLevel": "medium",            // Default reasoning effort
+  "modelSettings": {...},             // Per-model settings such as effortLevel
   "skipDangerousModePermissionPrompt": true, // Skip prompt for dangerous mode
   "skipAutoPermissionPrompt": true    // Skip prompt for auto-approved actions
 }
