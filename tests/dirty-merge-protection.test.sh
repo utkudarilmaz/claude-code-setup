@@ -1,6 +1,4 @@
 #!/bin/bash
-# Tests for .claude/hooks/dirty-merge-protection.sh
-# The hook receives PreToolUse JSON on stdin and must exit 2 to block.
 
 HOOK="$(cd "$(dirname "$0")/.." && pwd)/.claude/hooks/dirty-merge-protection.sh"
 FAILURES=0

@@ -1,6 +1,5 @@
 #!/bin/bash
-# PreToolUse hook: blocks `git merge` and `gh pr merge` while the repo has uncommitted changes.
-# Exit 2 blocks the tool call; stderr is fed back to Claude.
+# PreToolUse hook: exit 2 blocks the tool call; stderr is fed back to Claude.
 
 INPUT=$(cat)
 
