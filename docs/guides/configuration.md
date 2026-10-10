@@ -118,7 +118,7 @@ Hook scripts live in `.claude/hooks/` and are referenced from settings.json by t
 
 Script: `.claude/hooks/sensitive-file-protection.sh`
 
-Blocks Edit and Write calls on protected files (.env, credentials, secrets, lock files). Claude Code sends the tool call as JSON on stdin; the script extracts `tool_input.file_path` (with `jq`, or a `sed` fallback when jq is not installed) and exits with code 2 to block the call. Exit code 2 is required: it is the only exit code that blocks a tool call, and the script's stderr message is fed back to Claude.
+Blocks Edit and Write calls on protected files (.env, credentials, secrets, lock files). `.env.example` is allowed because it holds placeholder values, not real secrets. Claude Code sends the tool call as JSON on stdin; the script extracts `tool_input.file_path` (with `jq`, or a `sed` fallback when jq is not installed) and exits with code 2 to block the call. Exit code 2 is required: it is the only exit code that blocks a tool call, and the script's stderr message is fed back to Claude.
 
 Tests: `tests/sensitive-file-protection.test.sh`
 

@@ -12,6 +12,10 @@ else
   FILE_PATH=$(echo "$INPUT" | sed -n 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 fi
 
+if [ "$(basename "$FILE_PATH")" = ".env.example" ]; then
+  exit 0
+fi
+
 if [ -n "$FILE_PATH" ] && echo "$FILE_PATH" | grep -Eq '\.env|credentials|secrets|\.lock|lock\.json|lock\.yaml'; then
   echo "BLOCK: Protected file: $FILE_PATH" >&2
   exit 2
