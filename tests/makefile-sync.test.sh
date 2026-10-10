@@ -50,7 +50,7 @@ run_make update-config TARGET_DIR="$TMP_TARGET"
 check "update-config keeps machine-local keys" \
   test "$(jq -r '.localOnlyKey' "$TMP_TARGET/settings.json")" = "true"
 check "update-config applies repo values over local drift" \
-  test "$(jq -r '.effortLevel' "$TMP_TARGET/settings.json")" = "high"
+  test "$(jq -r '.effortLevel' "$TMP_TARGET/settings.json")" = "$(jq -r '.effortLevel' "$REPO_ROOT/.claude/settings.json")"
 
 # --- config paths stay portable across a custom TARGET_DIR ---
 # Hook and statusLine commands must resolve against the active Claude home.
