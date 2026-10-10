@@ -122,6 +122,14 @@ Blocks Edit and Write calls on protected files (.env, credentials, secrets, lock
 
 Tests: `tests/sensitive-file-protection.test.sh`
 
+#### dirty-merge-protection
+
+Script: `.claude/hooks/dirty-merge-protection.sh`
+
+Blocks Bash calls that run `git merge` or `gh pr merge` while the repo has uncommitted changes, including untracked files. It checks the directory from `git -C <dir>`, else the last `cd <dir>` anywhere in the command (subshells included), else the session's `cwd`. `git merge --abort`, `--continue`, and `--quit` are allowed so a merge in progress can still be finished or undone. Commands outside a git repo pass through. The hook runs git with `core.fsmonitor` and git hooks turned off, so the target repo's config cannot run commands.
+
+Tests: `tests/dirty-merge-protection.test.sh`
+
 #### notification
 
 Script: `.claude/hooks/notification.sh`

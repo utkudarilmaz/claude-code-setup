@@ -6,7 +6,7 @@ Personal Claude Code configuration: custom agents, skills, hooks, MCP servers, a
 
 - **Skills** - slash commands such as `/docs` and `/tester`, each with several invocation modes. See [Skills Reference](docs/reference/skills.md) for every command and mode.
 - **Agents** - the specialized assistants the skills dispatch to. See [Agents Reference](docs/reference/agents.md).
-- **Hooks** - tool call interception for sensitive file protection and cross-platform notifications.
+- **Hooks** - tool call interception for sensitive file protection, blocking merges with uncommitted changes, and cross-platform notifications.
 - **Plugin Management** - centralized plugin enable/disable configuration.
 - **MCP Servers** - declared in `.claude/mcp-servers.json` and merged into `.claude.json` on sync. See [MCP Servers](docs/reference/mcp-servers.md).
 - **Cross-Platform Support** - works on macOS and Linux with dynamic path resolution.
