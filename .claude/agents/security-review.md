@@ -1,7 +1,7 @@
 ---
 name: security-review
 description: "This agent should be invoked when the user asks to review code for security vulnerabilities, check for secrets, audit authentication, review API security, check for injection flaws, or perform OWASP compliance review. Covers 13 security areas including auth, input validation, data exposure, cryptography, and modern attack vectors."
-model: opus
+model: fable
 color: red
 ---
 
