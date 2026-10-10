@@ -45,7 +45,7 @@ Hooks intercept tool calls for pre/post processing:
 
 | Hook | Trigger | Purpose | Platform Support |
 |------|---------|---------|------------------|
-| `sensitive-file-protection` | Edit\|Write | Blocks writes to protected files (.env, credentials, secrets, lock files) via exit code 2 | All |
+| `sensitive-file-protection` | Edit\|Write | Blocks writes to protected files (.env, credentials, secrets, lock files; .env.example is allowed) via exit code 2 | All |
 | `notification` | All notifications | Plays audio notification when Claude Code sends a notification | macOS (afplay), Linux (paplay/aplay) |
 
 **Cross-platform notification implementation:**

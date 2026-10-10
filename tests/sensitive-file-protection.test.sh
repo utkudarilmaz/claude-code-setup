@@ -32,6 +32,12 @@ run_case() {
 run_case "blocks Edit on .env" \
   '{"tool_name":"Edit","tool_input":{"file_path":"/app/.env","old_string":"a","new_string":"b"}}' 2
 
+run_case "allows Edit on .env.example" \
+  '{"tool_name":"Edit","tool_input":{"file_path":"/app/.env.example","old_string":"a","new_string":"b"}}' 0
+
+run_case "blocks Edit on .env.example.local" \
+  '{"tool_name":"Edit","tool_input":{"file_path":"/app/.env.example.local","old_string":"a","new_string":"b"}}' 2
+
 run_case "blocks Write on credentials file" \
   '{"tool_name":"Write","tool_input":{"file_path":"/app/credentials.json","content":"x"}}' 2
 
