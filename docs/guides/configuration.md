@@ -91,7 +91,7 @@ Single skills are turned off via the `skillOverrides` map, even when the plugin 
 }
 ```
 
-The default settings turn off the built-in `anthropic-skills` for docs, office files (`docx`, `xlsx`, `pptx`, `pdf`), browsers (`built-in-browser`, `chrome-browser`), `computer-use`, `google-workspace`, `doc-coauthoring`, `skill-creator`, `morning`, and `import-memory`. Because `make update-all` deep merges `settings.json`, entries you add locally (for example `"seo": "off"`) are kept.
+The default settings turn off the built-in `anthropic-skills` for docs, office files (`docx`, `xlsx`, `pptx`, `pdf`), browsers (`built-in-browser`, `chrome-browser`), `computer-use`, `google-workspace`, `doc-coauthoring`, `skill-creator`, `morning`, and `import-memory`. They also turn off `anatomy`, the isometric figure skill that `make install anatomy` adds. Because `make update-all` deep merges `settings.json`, entries you add locally (for example `"seo": "off"`) are kept.
 
 ## Hook Configuration
 
