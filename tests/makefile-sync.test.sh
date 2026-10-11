@@ -112,6 +112,18 @@ REPO_MCP_COUNT=$(jq '.mcpServers | length' "$REPO_ROOT/.claude/mcp-servers.json"
 check "update-mcp DRY_RUN=1 writes nothing" \
   test "$(jq -r '.mcpServers | keys | length' "$TMP_TARGET_MCP/.claude.json")" = "$((REPO_MCP_COUNT + 1))"
 
+# --- install DRY_RUN=1 prints the command and never calls npx ---
+TMP_STUB_BIN=$(mktemp -d)
+printf '#!/bin/sh\ntouch "%s/npx-called"\n' "$TMP_STUB_BIN" > "$TMP_STUB_BIN/npx"
+chmod +x "$TMP_STUB_BIN/npx"
+ANATOMY_OUTPUT=$(PATH="$TMP_STUB_BIN:$PATH" make -C "$REPO_ROOT" --no-print-directory DRY_RUN=1 install anatomy TARGET_DIR="$TMP_TARGET" 2>&1)
+
+export ANATOMY_OUTPUT TMP_TARGET
+check "install anatomy DRY_RUN=1 prints npx command with CLAUDE_CONFIG_DIR" \
+  bash -c 'echo "$ANATOMY_OUTPUT" | grep -qF "Would run: CLAUDE_CONFIG_DIR=$TMP_TARGET npx skills add wheresryan22/anatomy -g -a claude-code"'
+check "install anatomy DRY_RUN=1 does not run npx" test ! -e "$TMP_STUB_BIN/npx-called"
+rm -rf "$TMP_STUB_BIN"
+
 # --- rm commands remove repo-managed files only ---
 run_make rm-agents TARGET_DIR="$TMP_TARGET"
 

@@ -110,7 +110,7 @@ help:
 #   1. Append its <name> to the matching group below
 #   2. Add a matching `install-<name>` recipe in the INSTALL COMMANDS section
 # `make install <group>` runs one group; `make install` runs them all.
-INSTALL_SKILLS := google-maps-scraper
+INSTALL_SKILLS := google-maps-scraper anatomy
 INSTALL_PLUGINS := claudish claude-hud claude-pray typescript-lsp gopls-lsp
 INSTALL_MCPS := build123d-mcp terraform-mcp
 INSTALL_GROUPS := skills plugins mcps
@@ -420,6 +420,15 @@ install-google-maps-scraper:
 		echo "Would run: npx skills add gosom/google-maps-scraper"; \
 	else \
 		npx skills add gosom/google-maps-scraper; \
+	fi
+
+.PHONY: install-anatomy
+install-anatomy:
+	@echo "$(BOLD)Installing anatomy...$(NC) $(DRY_RUN_MSG)"
+	@if [ "$(DRY_RUN)" = "1" ]; then \
+		echo "Would run: CLAUDE_CONFIG_DIR=$(TARGET_DIR) npx skills add wheresryan22/anatomy -g -a claude-code"; \
+	else \
+		CLAUDE_CONFIG_DIR="$(TARGET_DIR)" npx skills add wheresryan22/anatomy -g -a claude-code; \
 	fi
 
 .PHONY: install-claudish
