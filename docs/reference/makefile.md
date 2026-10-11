@@ -71,6 +71,7 @@ Registered targets:
 | Group | Target | Action |
 |-------|--------|--------|
 | skills | `google-maps-scraper` | `npx skills add gosom/google-maps-scraper` |
+| skills | `anatomy` | `npx skills add wheresryan22/anatomy -g -a claude-code` into `TARGET_DIR/skills`; turned off by default in `skillOverrides` |
 | plugins | `claudish` | `ollama` and `jq` via brew, a 30m idle keep-alive for loaded models, the ollama service started and enabled at login, and the `CLAUDISH_MODEL` named in `.claude/settings.json` pulled |
 | plugins | `claude-hud` | `node` via brew, needed by the statusline |
 | plugins | `claude-pray` | `node` via brew, needed by the statusline |
@@ -172,7 +173,9 @@ shared through parameterized `define` blocks in the Makefile (`sync_dir`,
 same way. `make test` runs `tests/makefile-sync.test.sh`, which exercises
 the sync commands against a temporary `TARGET_DIR`, including the
 `NO_RSYNC=1` fallback path, the settings.json merge, and the MCP server
-merge into `.claude.json` from both `update-config` and `update-mcp`.
+merge into `.claude.json` from both `update-config` and `update-mcp`. It
+also checks that `DRY_RUN=1 install anatomy` prints the command without
+running `npx`.
 
 ## Status Legend
 
