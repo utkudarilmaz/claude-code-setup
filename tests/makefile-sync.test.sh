@@ -1,6 +1,4 @@
 #!/bin/bash
-# Tests for Makefile sync commands. Runs against a temporary TARGET_DIR
-# so the real ~/.claude is never touched.
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 FAILURES=0

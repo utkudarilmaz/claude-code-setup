@@ -1,7 +1,3 @@
-# Makefile for Claude Code Configuration Sync
-# Manages synchronization between repo's .claude/ and ~/.claude
-
-# Configuration
 REPO_DIR := $(shell pwd)/.claude
 TARGET_DIR := $(HOME)/.claude
 BACKUP_DIR := $(HOME)/.claude-backups
@@ -15,7 +11,6 @@ else
 CLAUDE_JSON := $(TARGET_DIR)/.claude.json
 endif
 
-# Colors
 GREEN := \033[0;32m
 YELLOW := \033[0;33m
 RED := \033[0;31m
@@ -23,7 +18,6 @@ BLUE := \033[0;34m
 NC := \033[0m  # No Color
 BOLD := \033[1m
 
-# Feature flags
 DRY_RUN ?= 0
 FORCE ?= 0
 
@@ -34,13 +28,10 @@ FORCE ?= 0
 # survives `brew upgrade` where a hand-edited plist would not.
 OLLAMA_KEEP_ALIVE ?= 30m
 OLLAMA_ENV_FILE := $(if $(HOMEBREW_USER_CONFIG_HOME),$(HOMEBREW_USER_CONFIG_HOME),$(HOME)/.homebrew)/services/ollama.env
-# Set NO_RSYNC=1 to force the plain-copy fallback path even when rsync exists
 NO_RSYNC ?=
 
-# Use colored diff output when the local diff supports it
 DIFF_COLOR := $(shell diff --color=always /dev/null /dev/null > /dev/null 2>&1 && echo --color=always)
 
-# Rsync base options (used when rsync is available)
 RSYNC_OPTS := -av --chmod=+x
 
 ifeq ($(DRY_RUN),1)
@@ -50,7 +41,6 @@ else
 	DRY_RUN_MSG :=
 endif
 
-# Default target
 .DEFAULT_GOAL := help
 
 # ============================================================================
@@ -106,10 +96,9 @@ help:
 # INSTALL TARGETS REGISTRY
 # ============================================================================
 
-# Registry of installable targets, split by group. To add a new one:
+# To add an install target:
 #   1. Append its <name> to the matching group below
 #   2. Add a matching `install-<name>` recipe in the INSTALL COMMANDS section
-# `make install <group>` runs one group; `make install` runs them all.
 INSTALL_SKILLS := google-maps-scraper anatomy
 INSTALL_PLUGINS := claudish claude-hud claude-pray typescript-lsp gopls-lsp
 INSTALL_MCPS := build123d-mcp terraform-mcp
@@ -120,8 +109,6 @@ INSTALL_TARGETS := $(INSTALL_SKILLS) $(INSTALL_PLUGINS) $(INSTALL_MCPS)
 # UTILITY FUNCTIONS
 # ============================================================================
 
-# Install one brew formula after asking, skipping when its command exists.
-# $(1) = brew formula, $(2) = command to check on PATH
 define install_brew_pkg
 	@if command -v $(2) >/dev/null 2>&1; then \
 		echo "Present: $(2)"; \
@@ -164,7 +151,6 @@ define cleanup_empty_dirs
 	@find $(TARGET_DIR) -type d -empty -delete 2>/dev/null || true
 endef
 
-# Merge the repo's mcp-servers.json into the target .claude.json.
 define sync_mcp_servers
 	@echo "$(BOLD)Updating MCP servers...$(NC) $(DRY_RUN_MSG)"
 	@if [ -f $(REPO_DIR)/mcp-servers.json ]; then \
@@ -191,8 +177,6 @@ define sync_mcp_servers
 	fi
 endef
 
-# Sync one directory (agents, skills, hooks) from repo to target.
-# $(1) = directory name under .claude/
 define sync_dir
 	@echo "$(BOLD)Updating $(1)...$(NC) $(DRY_RUN_MSG)"; \
 	if [ ! -d $(REPO_DIR)/$(1) ]; then \
@@ -230,8 +214,6 @@ define sync_dir
 	fi
 endef
 
-# Remove repo-managed files of one directory from the target.
-# $(1) = directory name under .claude/
 define rm_dir
 	@echo "$(BOLD)Removing $(1)...$(NC) $(DRY_RUN_MSG)"; \
 	if [ -d $(REPO_DIR)/$(1) ]; then \
@@ -250,8 +232,6 @@ define rm_dir
 	fi
 endef
 
-# Print sync status for one directory.
-# $(1) = directory name under .claude/, $(2) = display label
 define status_dir
 	@echo "$(BOLD)$(2):$(NC)"; \
 	if [ -d $(REPO_DIR)/$(1) ]; then \
@@ -278,8 +258,6 @@ define status_dir
 	echo ""
 endef
 
-# Print detailed differences for one directory.
-# $(1) = directory name under .claude/, $(2) = display label
 define diff_dir
 	@echo "$(BOLD)$(2):$(NC)"; \
 	if [ -d $(REPO_DIR)/$(1) ]; then \
@@ -637,9 +615,8 @@ install-terraform-mcp:
 	fi
 	@echo "$(GREEN)terraform-mcp requirements done.$(NC)"
 
-# Absorb install group and target names passed as extra goals so Make does
-# not error (e.g. `make install plugins` / `make install claudish`). The
-# real work is done by the `install` target above; these are no-ops.
+# `make install claudish` also makes `claudish` a goal of its own; these
+# no-op rules stop Make failing with "No rule to make target".
 .PHONY: all $(INSTALL_GROUPS) $(INSTALL_TARGETS)
 all $(INSTALL_GROUPS) $(INSTALL_TARGETS):
 	@:
