@@ -4,6 +4,22 @@
     "CLAUDISH_MODE": "append",
     "CLAUDISH_TIMEOUT": "300"
   },
+  "skillOverrides": {
+    "anthropic-skills:docs": "off",
+    "anthropic-skills:built-in-browser": "off",
+    "anthropic-skills:xlsx": "off",
+    "anthropic-skills:skill-creator": "off",
+    "anthropic-skills:pptx": "off",
+    "anthropic-skills:pdf": "off",
+    "anthropic-skills:morning": "off",
+    "anthropic-skills:import-memory": "off",
+    "anthropic-skills:google-workspace": "off",
+    "anthropic-skills:computer-use": "off",
+    "anthropic-skills:doc-coauthoring": "off",
+    "anthropic-skills:docx": "off",
+    "anthropic-skills:chrome-browser": "off",
+    "anatomy": "off"
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -54,13 +70,11 @@
     "claudish-to-english@gvzdv-plugins": true,
     "security-guidance@claude-plugins-official": false,
     "code-simplifier@claude-plugins-official": false,
-    "atlassian@claude-plugins-official": false,
     "plugin-dev@claude-plugins-official": false,
     "hookify@claude-plugins-official": false,
     "claude-code-setup@claude-plugins-official": false,
     "gopls-lsp@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": false,
-    "greptile@claude-plugins-official": false,
     "stripe@claude-plugins-official": false,
     "playwright@claude-plugins-official": false,
     "typescript-lsp@claude-plugins-official": true,
@@ -91,22 +105,6 @@
     "marketing-skills@marketingskills": false,
     "chrome-devtools-mcp@claude-plugins-official": false,
     "skill-creator@claude-plugins-official": false
-  },
-  "skillOverrides": {
-    "anthropic-skills:docs": "off",
-    "anthropic-skills:built-in-browser": "off",
-    "anthropic-skills:xlsx": "off",
-    "anthropic-skills:skill-creator": "off",
-    "anthropic-skills:pptx": "off",
-    "anthropic-skills:pdf": "off",
-    "anthropic-skills:morning": "off",
-    "anthropic-skills:import-memory": "off",
-    "anthropic-skills:google-workspace": "off",
-    "anthropic-skills:computer-use": "off",
-    "anthropic-skills:doc-coauthoring": "off",
-    "anthropic-skills:docx": "off",
-    "anthropic-skills:chrome-browser": "off",
-    "anatomy": "off"
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
