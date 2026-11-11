@@ -11,13 +11,18 @@ make update-all       # Update agents, skills, hooks, and config
 make update-agents    # Update .claude/agents/ only
 make update-skills    # Update .claude/skills/ only
 make update-hooks     # Update .claude/hooks/ only
-make update-config    # Update settings.json (merged), CLAUDE.md, and MCP servers
+make update-config    # Run update-settings, update-claude-md, and update-mcp
+make update-settings  # Update settings.json only (merged)
+make update-claude-md # Update CLAUDE.md only
 make update-mcp       # Update MCP servers in .claude.json only
 ```
 
+`update-config` is a group target. Each of the three targets under it can be
+run alone and touches only its own file.
+
 ### settings.json Merge
 
-`update-config` does not overwrite the target `settings.json`. When `jq` is
+`update-settings` does not overwrite the target `settings.json`. When `jq` is
 available, it deep-merges the repo file into the target file:
 
 - Keys that exist only in the target (machine-local state) are kept
@@ -26,7 +31,9 @@ available, it deep-merges the repo file into the target file:
   them manually if needed
 
 Without `jq`, the old copy behavior is used and a warning is printed because
-local-only keys are lost. `CLAUDE.md` is always a plain copy.
+local-only keys are lost.
+
+`update-claude-md` always makes a plain copy of `CLAUDE.md`.
 
 ### MCP Server Sync
 
@@ -37,9 +44,9 @@ inside `~/.claude/`. User-scoped servers live in `.claude.json`:
 - Custom home (`CLAUDE_CONFIG_DIR`, e.g. `TARGET_DIR=$HOME/.claude-personal`):
   `<target dir>/.claude.json`
 
-`update-config` merges the `mcpServers` block from the repo's
-`.claude/mcp-servers.json` into that file. `update-mcp` runs that same merge on
-its own, without touching `settings.json` or `CLAUDE.md`:
+`update-mcp` merges the `mcpServers` block from the repo's
+`.claude/mcp-servers.json` into that file, without touching `settings.json` or
+`CLAUDE.md`. `update-config` runs it as its last step:
 
 - Servers defined in the repo replace the local definition of the same name
   wholesale (no stale keys survive inside a repo-managed server)
@@ -183,6 +190,8 @@ same way. `make test` runs `tests/makefile-sync.test.sh`, which exercises
 the sync commands against a temporary `TARGET_DIR`, including the
 `NO_RSYNC=1` fallback path, the settings.json merge, and the MCP server
 merge into `.claude.json` from both `update-config` and `update-mcp`. It
+checks that `update-settings`, `update-claude-md`, and `update-mcp` each
+leave the other two config files alone. It
 also checks that `DRY_RUN=1 install anatomy` prints the command without
 running `npx`, and that `install` asks for each target and installs only the
 approved ones, including `hooks` and `config`.

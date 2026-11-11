@@ -5,7 +5,9 @@ FAILURES=0
 TMP_TARGET=$(mktemp -d)
 TMP_TARGET_NORSYNC=$(mktemp -d)
 TMP_TARGET_MCP=$(mktemp -d)
-trap 'rm -rf "$TMP_TARGET" "$TMP_TARGET_NORSYNC" "$TMP_TARGET_MCP"' EXIT
+TMP_TARGET_SETTINGS=$(mktemp -d)
+TMP_TARGET_CLAUDE_MD=$(mktemp -d)
+trap 'rm -rf "$TMP_TARGET" "$TMP_TARGET_NORSYNC" "$TMP_TARGET_MCP" "$TMP_TARGET_SETTINGS" "$TMP_TARGET_CLAUDE_MD"' EXIT
 
 run_make() {
   make -C "$REPO_ROOT" --no-print-directory FORCE=1 "$@" >/dev/null 2>&1
@@ -109,6 +111,38 @@ run_make update-mcp TARGET_DIR="$TMP_TARGET_MCP" DRY_RUN=1
 REPO_MCP_COUNT=$(jq '.mcpServers | length' "$REPO_ROOT/.claude/mcp-servers.json")
 check "update-mcp DRY_RUN=1 writes nothing" \
   test "$(jq -r '.mcpServers | keys | length' "$TMP_TARGET_MCP/.claude.json")" = "$((REPO_MCP_COUNT + 1))"
+
+# --- update-settings syncs settings.json without touching the other config files ---
+run_make update-settings TARGET_DIR="$TMP_TARGET_SETTINGS"
+
+check "update-settings copies settings.json" \
+  cmp -s "$REPO_ROOT/.claude/settings.json" "$TMP_TARGET_SETTINGS/settings.json"
+check "update-settings leaves CLAUDE.md alone" test ! -e "$TMP_TARGET_SETTINGS/CLAUDE.md"
+check "update-settings leaves .claude.json alone" test ! -e "$TMP_TARGET_SETTINGS/.claude.json"
+
+jq '. + {localOnlyKey: true}' "$TMP_TARGET_SETTINGS/settings.json" > "$TMP_TARGET_SETTINGS/settings.json.tmp"
+mv "$TMP_TARGET_SETTINGS/settings.json.tmp" "$TMP_TARGET_SETTINGS/settings.json"
+run_make update-settings TARGET_DIR="$TMP_TARGET_SETTINGS"
+
+check "update-settings keeps machine-local keys" \
+  test "$(jq -r '.localOnlyKey' "$TMP_TARGET_SETTINGS/settings.json")" = "true"
+
+# --- update-claude-md syncs CLAUDE.md without touching the other config files ---
+run_make update-claude-md TARGET_DIR="$TMP_TARGET_CLAUDE_MD"
+
+check "update-claude-md copies CLAUDE.md" \
+  cmp -s "$REPO_ROOT/.claude/CLAUDE.md" "$TMP_TARGET_CLAUDE_MD/CLAUDE.md"
+check "update-claude-md leaves settings.json alone" test ! -e "$TMP_TARGET_CLAUDE_MD/settings.json"
+check "update-claude-md leaves .claude.json alone" test ! -e "$TMP_TARGET_CLAUDE_MD/.claude.json"
+
+echo "local edit" > "$TMP_TARGET_CLAUDE_MD/CLAUDE.md"
+run_make update-claude-md TARGET_DIR="$TMP_TARGET_CLAUDE_MD" DRY_RUN=1
+check "update-claude-md DRY_RUN=1 writes nothing" \
+  test "$(cat "$TMP_TARGET_CLAUDE_MD/CLAUDE.md")" = "local edit"
+
+run_make update-claude-md TARGET_DIR="$TMP_TARGET_CLAUDE_MD"
+check "update-claude-md refreshes a locally changed CLAUDE.md" \
+  cmp -s "$REPO_ROOT/.claude/CLAUDE.md" "$TMP_TARGET_CLAUDE_MD/CLAUDE.md"
 
 # --- install DRY_RUN=1 prints the command and never calls npx ---
 TMP_STUB_BIN=$(mktemp -d)
