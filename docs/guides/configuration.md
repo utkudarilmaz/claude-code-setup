@@ -150,6 +150,8 @@ bash -c 'EXISTING=$(\"$(command -v node)\" ...) ...'
 
 This approach works on both macOS (where node may be at `/opt/homebrew/bin/node`) and Linux (typically `/usr/bin/node`), avoiding hardcoded paths.
 
+The command also prints `user@hostname` in dim text at the start of the first line, before the claude-hud output. It reads `id -un` and `hostname -s` on every refresh, so each machine shows its own values and no claude-hud setting is needed.
+
 ## MCP Servers
 
 MCP servers are not part of `settings.json`. They live in
