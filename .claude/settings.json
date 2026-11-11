@@ -62,7 +62,6 @@
     "superpowers@claude-plugins-official": true,
     "commit-commands@claude-plugins-official": true,
     "explanatory-output-style@claude-plugins-official": true,
-    "context7@claude-plugins-official": true,
     "code-review@claude-plugins-official": true,
     "github@claude-plugins-official": false,
     "claude-hud@claude-hud": true,
