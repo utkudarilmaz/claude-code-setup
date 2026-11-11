@@ -63,7 +63,8 @@ help:
 	@echo "  $(GREEN)update-mcp$(NC)       Update MCP servers in $(CLAUDE_JSON) only"
 	@echo ""
 	@echo "$(BOLD)Install Commands$(NC) (install external tools and requirements):"
-	@echo "  $(GREEN)install$(NC)          Install every registered target"
+	@echo "  $(GREEN)install$(NC)          Go through every registered target, asking for each"
+	@echo "  $(GREEN)install sync$(NC)     Repo files synced into the target: $(INSTALL_SYNC)"
 	@echo "  $(GREEN)install skills$(NC)   Skill installs: $(INSTALL_SKILLS)"
 	@echo "  $(GREEN)install plugins$(NC)  Plugin requirements: $(INSTALL_PLUGINS)"
 	@echo "  $(GREEN)install mcps$(NC)     MCP server requirements: $(INSTALL_MCPS)"
@@ -87,7 +88,7 @@ help:
 	@echo ""
 	@echo "$(BOLD)Examples$(NC):"
 	@echo "  make update-all              # Update files in $(TARGET_DIR)"
-	@echo "  make install                 # Install all registered targets"
+	@echo "  make install                 # Ask for each registered target"
 	@echo "  make install google-maps-scraper  # Install a specific target"
 	@echo "  make DRY_RUN=1 rm-agents     # Preview agent removal"
 	@echo "  make FORCE=1 rm-skills       # Remove skills without confirmation"
@@ -102,8 +103,9 @@ help:
 INSTALL_SKILLS := google-maps-scraper anatomy
 INSTALL_PLUGINS := claudish claude-hud claude-pray typescript-lsp gopls-lsp
 INSTALL_MCPS := build123d-mcp terraform-mcp
-INSTALL_GROUPS := skills plugins mcps
-INSTALL_TARGETS := $(INSTALL_SKILLS) $(INSTALL_PLUGINS) $(INSTALL_MCPS)
+INSTALL_SYNC := hooks config
+INSTALL_GROUPS := sync skills plugins mcps
+INSTALL_TARGETS := $(INSTALL_SYNC) $(INSTALL_SKILLS) $(INSTALL_PLUGINS) $(INSTALL_MCPS)
 
 # ============================================================================
 # UTILITY FUNCTIONS
@@ -368,28 +370,45 @@ update-mcp:
 .PHONY: install
 install:
 	@targets="$(filter-out install,$(MAKECMDGOALS))"; \
-	if [ -z "$$targets" ] || [ "$$targets" = "all" ]; then \
-		targets="$(INSTALL_TARGETS)"; \
+	if [ -z "$$targets" ]; then \
+		targets="all"; \
 	fi; \
 	expanded=""; \
 	for t in $$targets; do \
 		case "$$t" in \
-			skills) expanded="$$expanded $(INSTALL_SKILLS)" ;; \
-			plugins) expanded="$$expanded $(INSTALL_PLUGINS)" ;; \
-			mcps) expanded="$$expanded $(INSTALL_MCPS)" ;; \
+			all) expanded="$$expanded $(addprefix ask:,$(INSTALL_TARGETS))" ;; \
+			sync) expanded="$$expanded $(addprefix ask:,$(INSTALL_SYNC))" ;; \
+			skills) expanded="$$expanded $(addprefix ask:,$(INSTALL_SKILLS))" ;; \
+			plugins) expanded="$$expanded $(addprefix ask:,$(INSTALL_PLUGINS))" ;; \
+			mcps) expanded="$$expanded $(addprefix ask:,$(INSTALL_MCPS))" ;; \
 			*) expanded="$$expanded $$t" ;; \
 		esac; \
 	done; \
-	for t in $$expanded; do \
-		if echo " $(INSTALL_TARGETS) " | grep -q " $$t "; then \
-			$(MAKE) --no-print-directory install-$$t; \
-		else \
+	for item in $$expanded; do \
+		t="$${item#ask:}"; \
+		if ! echo " $(INSTALL_TARGETS) " | grep -q " $$t "; then \
 			echo "$(RED)Unknown install target: $$t$(NC)"; \
 			echo "Available groups: $(INSTALL_GROUPS)"; \
 			echo "Available targets: $(INSTALL_TARGETS)"; \
 			exit 1; \
-		fi \
+		fi; \
+		if [ "$$item" != "$$t" ] && [ "$(FORCE)" != "1" ] && [ "$(DRY_RUN)" != "1" ]; then \
+			printf "$(YELLOW)Install $$t? [y/N]: $(NC)"; \
+			answer=""; \
+			read -r answer || true; \
+			case "$$answer" in \
+				y|Y) ;; \
+				*) echo "Skipped $$t. Run later with: make install $$t"; continue ;; \
+			esac; \
+		fi; \
+		$(MAKE) --no-print-directory install-$$t; \
 	done
+
+.PHONY: install-hooks
+install-hooks: update-hooks
+
+.PHONY: install-config
+install-config: update-config
 
 .PHONY: install-google-maps-scraper
 install-google-maps-scraper:

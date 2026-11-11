@@ -120,7 +120,38 @@ export ANATOMY_OUTPUT TMP_TARGET
 check "install anatomy DRY_RUN=1 prints npx command with CLAUDE_CONFIG_DIR" \
   bash -c 'echo "$ANATOMY_OUTPUT" | grep -qF "Would run: CLAUDE_CONFIG_DIR=$TMP_TARGET npx skills add wheresryan22/anatomy -g -a claude-code"'
 check "install anatomy DRY_RUN=1 does not run npx" test ! -e "$TMP_STUB_BIN/npx-called"
+
+# --- install asks for each item of a group and installs only the approved ones ---
+printf '#!/bin/sh\necho "$*" >> "%s/npx-args"\n' "$TMP_STUB_BIN" > "$TMP_STUB_BIN/npx"
+INSTALL_ASK_OUTPUT=$(printf 'n\ny\n' | PATH="$TMP_STUB_BIN:$PATH" make -C "$REPO_ROOT" --no-print-directory install skills TARGET_DIR="$TMP_TARGET" 2>&1)
+
+export INSTALL_ASK_OUTPUT
+check "install skills asks for each item" \
+  bash -c 'echo "$INSTALL_ASK_OUTPUT" | grep -qF "Install google-maps-scraper? [y/N]" && echo "$INSTALL_ASK_OUTPUT" | grep -qF "Install anatomy? [y/N]"'
+check "install skills skips a declined item" \
+  bash -c 'echo "$INSTALL_ASK_OUTPUT" | grep -qF "Skipped google-maps-scraper. Run later with: make install google-maps-scraper"'
+check "install skills runs only the approved item" \
+  test "$(cat "$TMP_STUB_BIN/npx-args" 2>/dev/null)" = "skills add wheresryan22/anatomy -g -a claude-code"
+
+rm -f "$TMP_STUB_BIN/npx-args"
+PATH="$TMP_STUB_BIN:$PATH" make -C "$REPO_ROOT" --no-print-directory install TARGET_DIR="$TMP_TARGET" </dev/null >/dev/null 2>&1
+check "install with no answers installs nothing" test ! -e "$TMP_STUB_BIN/npx-args"
+
+PATH="$TMP_STUB_BIN:$PATH" make -C "$REPO_ROOT" --no-print-directory install anatomy TARGET_DIR="$TMP_TARGET" </dev/null >/dev/null 2>&1
+check "install <target> runs without asking" \
+  test "$(cat "$TMP_STUB_BIN/npx-args" 2>/dev/null)" = "skills add wheresryan22/anatomy -g -a claude-code"
 rm -rf "$TMP_STUB_BIN"
+
+# --- install sync asks for hooks and config and syncs only the approved one ---
+TMP_TARGET_INSTALL=$(mktemp -d)
+printf 'y\nn\n' | make -C "$REPO_ROOT" --no-print-directory install sync TARGET_DIR="$TMP_TARGET_INSTALL" >/dev/null 2>&1
+check "install sync copies approved hooks" test -f "$TMP_TARGET_INSTALL/hooks/sensitive-file-protection.sh"
+check "install sync skips declined config" test ! -e "$TMP_TARGET_INSTALL/settings.json"
+
+make -C "$REPO_ROOT" --no-print-directory install config TARGET_DIR="$TMP_TARGET_INSTALL" </dev/null >/dev/null 2>&1
+check "install config copies settings.json" test -f "$TMP_TARGET_INSTALL/settings.json"
+check "install config copies CLAUDE.md" test -f "$TMP_TARGET_INSTALL/CLAUDE.md"
+rm -rf "$TMP_TARGET_INSTALL"
 
 # --- rm commands remove repo-managed files only ---
 run_make rm-agents TARGET_DIR="$TMP_TARGET"

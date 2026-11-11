@@ -58,18 +58,28 @@ Install external tools and the requirements they need to run, from a registry
 of named targets split into groups:
 
 ```bash
-make install                    # Install every registered target
-make install skills             # Skill installs only
-make install plugins            # Plugin requirements only
-make install mcps               # MCP server requirements only
-make install <target>           # Install a single target
+make install                    # Ask for each registered target
+make install sync               # Ask for hooks and config
+make install skills             # Ask for each skill install
+make install plugins            # Ask for each plugin requirement
+make install mcps               # Ask for each MCP server requirement
+make install <target>           # Install a single target without asking
 make DRY_RUN=1 install claudish # Preview without installing
 ```
+
+`make install`, `make install all`, and the group forms ask `Install <target>?
+[y/N]` before each target and install only the ones you approve. A declined
+target is skipped and the run moves on to the next one. Naming a target
+yourself (`make install anatomy`) installs it without that question. `FORCE=1`
+installs everything without asking, and `DRY_RUN=1` previews every target
+without asking.
 
 Registered targets:
 
 | Group | Target | Action |
 |-------|--------|--------|
+| sync | `hooks` | Same as `make update-hooks`: copies the hook scripts into `TARGET_DIR/hooks` |
+| sync | `config` | Same as `make update-config`: merges `settings.json` (repo values win), copies `CLAUDE.md`, and merges the MCP servers |
 | skills | `google-maps-scraper` | `npx skills add gosom/google-maps-scraper` |
 | skills | `anatomy` | `npx skills add wheresryan22/anatomy -g -a claude-code` into `TARGET_DIR/skills`; turned off by default in `skillOverrides` |
 | plugins | `claudish` | `ollama` and `jq` via brew, a 30m idle keep-alive for loaded models, the ollama service started and enabled at login, and the `CLAUDISH_MODEL` named in `.claude/settings.json` pulled |
@@ -85,7 +95,7 @@ commit-commands, explanatory-output-style, and code-review are skills and
 commands only, and context7 is a remote HTTP MCP server (set
 `CONTEXT7_API_KEY` in the environment if you have one; it works without it).
 
-Each step is skipped when the requirement is already present, and each asks
+Inside a target, each step is skipped when the requirement is already present, and each asks
 for approval first, only when actually needed: keeping ollama models loaded
 for 30m of idle time, installing missing brew packages, starting the ollama
 server now, enabling autostart at login for the ollama service (asked even when
@@ -105,7 +115,7 @@ waits for a multi-second reload. When the server is already running, the step
 prints the `brew services restart ollama` needed to apply it.
 
 To add a new target, append its name to the matching group variable in the
-Makefile (`INSTALL_SKILLS`, `INSTALL_PLUGINS`, or `INSTALL_MCPS`) and add a
+Makefile (`INSTALL_SYNC`, `INSTALL_SKILLS`, `INSTALL_PLUGINS`, or `INSTALL_MCPS`) and add a
 matching `install-<name>` recipe in the INSTALL COMMANDS section.
 
 ## Remove Commands
@@ -175,7 +185,8 @@ the sync commands against a temporary `TARGET_DIR`, including the
 `NO_RSYNC=1` fallback path, the settings.json merge, and the MCP server
 merge into `.claude.json` from both `update-config` and `update-mcp`. It
 also checks that `DRY_RUN=1 install anatomy` prints the command without
-running `npx`.
+running `npx`, and that `install` asks for each target and installs only the
+approved ones, including `hooks` and `config`.
 
 ## Status Legend
 
