@@ -72,7 +72,6 @@ Plugins are toggled via `enabledPlugins` map:
 | `superpowers` | `claude-plugins-official` | Advanced skill framework |
 | `commit-commands` | `claude-plugins-official` | Git commit helpers |
 | `explanatory-output-style` | `claude-plugins-official` | Output formatting |
-| `context7` | `claude-plugins-official` | Documentation queries |
 | `code-review` | `claude-plugins-official` | Code review assistance |
 | `typescript-lsp` | `claude-plugins-official` | TypeScript and JavaScript code intelligence via `typescript-language-server` |
 | `gopls-lsp` | `claude-plugins-official` | Go code intelligence via `gopls` |

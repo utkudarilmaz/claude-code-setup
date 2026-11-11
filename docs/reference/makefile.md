@@ -92,8 +92,7 @@ Registered targets:
 
 The remaining enabled plugins need no local installs: superpowers,
 commit-commands, explanatory-output-style, and code-review are skills and
-commands only, and context7 is a remote HTTP MCP server (set
-`CONTEXT7_API_KEY` in the environment if you have one; it works without it).
+commands only.
 
 Inside a target, each step is skipped when the requirement is already present, and each asks
 for approval first, only when actually needed: keeping ollama models loaded
