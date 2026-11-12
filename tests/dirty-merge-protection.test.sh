@@ -8,7 +8,7 @@ trap 'rm -rf "$TMP"' EXIT
 
 make_repo() {
   git init -q "$1"
-  git -C "$1" -c user.name=test -c user.email=test@example.com commit -q --allow-empty -m init
+  git -C "$1" -c user.name=test -c user.email=test@example.com -c commit.gpgsign=false commit -q --allow-empty -m init
 }
 
 CLEAN="$TMP/clean"
