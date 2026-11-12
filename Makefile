@@ -59,7 +59,9 @@ help:
 	@echo "  $(GREEN)update-agents$(NC)    Update .claude/agents/ only"
 	@echo "  $(GREEN)update-skills$(NC)    Update .claude/skills/ only"
 	@echo "  $(GREEN)update-hooks$(NC)     Update .claude/hooks/ only"
-	@echo "  $(GREEN)update-config$(NC)    Update settings.json (merged), CLAUDE.md, and MCP servers"
+	@echo "  $(GREEN)update-config$(NC)    Run update-settings, update-claude-md, and update-mcp"
+	@echo "  $(GREEN)update-settings$(NC)  Update settings.json only (merged)"
+	@echo "  $(GREEN)update-claude-md$(NC) Update CLAUDE.md only"
 	@echo "  $(GREEN)update-mcp$(NC)       Update MCP servers in $(CLAUDE_JSON) only"
 	@echo ""
 	@echo "$(BOLD)Install Commands$(NC) (install external tools and requirements):"
@@ -308,8 +310,11 @@ update-hooks:
 	$(call sync_dir,hooks)
 
 .PHONY: update-config
-update-config:
-	@echo "$(BOLD)Updating config files...$(NC) $(DRY_RUN_MSG)"
+update-config: update-settings update-claude-md update-mcp
+
+.PHONY: update-settings
+update-settings:
+	@echo "$(BOLD)Updating settings.json...$(NC) $(DRY_RUN_MSG)"
 	$(call ensure_target_dir)
 	@if [ ! -f $(TARGET_DIR)/settings.json ]; then \
 		if [ "$(DRY_RUN)" = "1" ]; then \
@@ -339,6 +344,11 @@ update-config:
 	else \
 		echo "Unchanged: settings.json"; \
 	fi
+
+.PHONY: update-claude-md
+update-claude-md:
+	@echo "$(BOLD)Updating CLAUDE.md...$(NC) $(DRY_RUN_MSG)"
+	$(call ensure_target_dir)
 	@if [ ! -f $(TARGET_DIR)/CLAUDE.md ]; then \
 		if [ "$(DRY_RUN)" = "1" ]; then \
 			echo "Would add: CLAUDE.md"; \
@@ -356,7 +366,6 @@ update-config:
 	else \
 		echo "Unchanged: CLAUDE.md"; \
 	fi
-	$(call sync_mcp_servers)
 
 .PHONY: update-mcp
 update-mcp:
