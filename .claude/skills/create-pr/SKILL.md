@@ -155,7 +155,7 @@ The `create-pr` agent cannot dispatch other agents, so this pass runs here, afte
 
 Take the PR number from the URL the `create-pr` agent printed, then dispatch these three agents. When the run worked on the current branch (default, draft, refresh), send all three in the same turn so they run concurrently; they touch different surfaces and do not collide. When the run targeted another PR by number or URL, run `pr-comment-cleaner` first, since it checks the PR branch out, and send the other two together after it finishes.
 
-**1. Code comments** (edits files, leaves them uncommitted):
+**1. Code comments** (edits files; the main conversation commits and pushes them):
 
 ```
 Task tool with subagent_type="pr-comment-cleaner"
@@ -173,7 +173,8 @@ Rewrite kept comments that are stale or padded. Never touch
 protected content, code, or string literals.
 Apply the edits directly, then review your own git diff to confirm
 only comment lines in scoped files changed. Never commit, push, or
-stash. Report removed, rewritten, kept, and protected comments.
+stash; the main conversation does that. Report removed, rewritten,
+kept, and protected comments.
 Consult references/comment-necessity.md for the full pattern list."
 ```
 
@@ -212,7 +213,7 @@ Report only. Do not post comments and do not change the PR.
 Consult references/change-patterns.md for the pattern list."
 ```
 
-After all three return, give the user one combined summary: the PR URL, what each cleaner changed or found, and a reminder that any comment edits from `pr-comment-cleaner` sit uncommitted on the branch, waiting for the user to commit and push. Never commit or push them on the user's behalf.
+After all three return, commit and push the `pr-comment-cleaner` edits by following the "After the Agent Returns" steps in the `pr-comment-cleaner` skill, including its checks for a dirty tree, the default branch, failing tests, and fork PRs. Then give the user one combined summary: the PR URL, what each cleaner changed or found, and the SHA of the comment commit, or why the edits were left uncommitted.
 
 ## Body Shape
 

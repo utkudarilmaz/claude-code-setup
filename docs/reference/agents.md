@@ -349,7 +349,7 @@ Removes code comments in a pull request's changed files that are not 100% necess
 | PROTECTED | Lint directives, build markers, licence headers, required doc comments, pragma comments, sole statement docstrings | Leave untouched |
 
 **Modes:**
-- **Applied (default):** Edits comment lines in place and leaves them uncommitted
+- **Applied (default):** Edits comment lines in place; the calling skill commits and pushes them, or leaves them uncommitted when a [skip condition](skills.md#pr-comment-cleaner) holds
 - **Check:** Reports every finding with its verification and changes nothing, checking out no branch
 
 **Never:** touches a file outside the PR's diff, changes code or string literals, commits, pushes, stashes, edits the PR on GitHub, edits review or discussion comments, or removes a comment without having read the code it describes

@@ -91,7 +91,15 @@ git tag -a <new-version> -m "<tag-message>"
 
 Report success: `Created tag <new-version>`
 
-Remind the user to push the tag when ready: `git push origin <new-version>`
+### Step 7: Push
+
+Push the changelog commit and the tag in one atomic push, so the tag never reaches the remote without its commit:
+
+```bash
+git push --atomic origin HEAD <new-version>
+```
+
+Never force push. If the push is rejected, stop and report it; the local tag stays.
 
 ## Rules
 
@@ -99,6 +107,6 @@ Remind the user to push the tag when ready: `git push origin <new-version>`
 - **Annotated tags only**: Always use `git tag -a`, never lightweight tags
 - **Clean tree required**: Refuse to tag with uncommitted changes (step 3)
 - **Changelog first**: Always invoke `/changelog` before creating the tag (step 4)
-- **No auto-push**: Never push automatically; remind the user to push manually
+- **Push after tagging**: Push the commit and the tag from the main conversation (step 7); never force push
 - **No AI attribution**: Never add Co-Authored-By or AI references to the changelog commit
 - **Bump argument required**: Reject invocation without `major`, `minor`, or `patch`

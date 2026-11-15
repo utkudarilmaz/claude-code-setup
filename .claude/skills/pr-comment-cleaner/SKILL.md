@@ -9,7 +9,7 @@ description: This skill should be used when the user asks to "clean the comments
 
 Enforces the rule that a comment which is not 100% necessary does not stay, across the files a pull request changes. Removal is the default outcome: a comment does not survive by being accurate or helpful, only by carrying a fact the code cannot give back. Dispatches to the `pr-comment-cleaner` agent, which resolves the PR, builds the list of changed files, verifies every removal against the code and every keep against that necessity test, applies the edits, and reviews its own diff to confirm only comment lines changed.
 
-Applies changes directly and never commits or pushes; the edits stay uncommitted for the user to review and commit. Use `check` mode to see the report without touching anything.
+The agent applies changes directly and never commits or pushes; the main conversation commits and pushes the edits after it returns. Use `check` mode to see the report without touching anything.
 
 Code comments only, inside the PR's diff only. This skill never edits GitHub review or discussion comments and never touches prose or markdown; that is `/text-slop-cleaner`'s job. It never judges code quality; that is `/simplifier`'s job. There is no repo-wide mode; whole-repository comment cleanup is `/text-slop-cleaner <path>`'s job.
 
@@ -43,7 +43,8 @@ comments that are stale or padded. Never touch protected content,
 code, or string literals.
 Apply the edits directly, then review your own git diff to confirm
 only comment lines in scoped files changed. Never commit, push, or
-stash. Report removed, rewritten, kept, and protected comments.
+stash; the main conversation does that. Report removed, rewritten,
+kept, and protected comments.
 Consult references/comment-necessity.md for the full pattern list."
 ```
 
@@ -63,8 +64,8 @@ merely accurate or helpful goes, and one stays only when you can
 name the fact the code cannot give back. Rewrite kept comments that
 are stale or padded. Never touch protected content, code, or string
 literals.
-Apply the edits directly and leave them uncommitted on the PR
-branch. Never commit, push, stash, or switch back. Say in the
+Apply the edits directly on the PR branch. Never commit, push,
+stash, or switch back; the main conversation does that. Say in the
 report that the repository is now on the PR branch.
 Consult references/comment-necessity.md for the full pattern list."
 ```
@@ -86,8 +87,9 @@ the code first. Removal is the default: a comment that is merely
 accurate or helpful goes, and one stays only when you can name the
 fact the code cannot give back. Rewrite kept comments that are stale
 or padded. Never touch protected content, code, or string literals.
-Apply the edits directly. Never commit, push, or stash. Report
-removed, rewritten, kept, and protected comments.
+Apply the edits directly. Never commit, push, or stash; the main
+conversation does that. Report removed, rewritten, kept, and
+protected comments.
 Consult references/comment-necessity.md for the full pattern list."
 ```
 
@@ -116,13 +118,28 @@ for each comment you would keep name the fact that keeps it.
 Consult references/comment-necessity.md for the full pattern list."
 ```
 
+## After the Agent Returns
+
+In the default, pull request, and scoped modes, the main conversation commits and pushes the agent's edits. Run `git status --porcelain` before dispatching the agent and keep the result.
+
+1. Run `git diff --name-only`. If it is empty, stop; there is nothing to commit
+2. Leave the edits uncommitted and say why when any of these hold:
+   - the tree was not clean before the agent ran, so the user's own work would be mixed in
+   - the current branch is the default branch
+   - the agent reported a failing test run
+   - the PR is from a fork or another person (`gh pr view --json isCrossRepository,author`)
+3. Commit only the files that are both in the agent's report and in `git diff --name-only`, by pathspec: `git commit -m "chore: remove unnecessary code comments" -- <paths>`, with no AI attribution
+4. Push with `git push`, or `git push -u origin <branch>` when the branch has no upstream. Never force push. If the push is rejected, stop and report it
+
+`check` mode changes nothing, so it skips this step.
+
 ## Rules
 
 - Only files in the PR's diff, and only comment lines in them. Never code, never string literals
 - Removal is the default. A keep must name the fact the code cannot give back; accurate or helpful is not enough
 - Every removal and rewrite is verified against the code first, by confirming the code already says what the comment says
 - Protected content is never touched: lint directives, build markers, licence headers, required doc comments, pragma comments, sole statement docstrings
-- Edits stay uncommitted. The agent never commits, pushes, or stashes; the user commits
+- The agent never commits, pushes, or stashes; the main conversation commits and pushes its edits after it returns
 - An explicit PR target requires a clean working tree and leaves the repository on the PR branch, stated in the report
 - Default, pull request, and scoped modes apply without asking. Use `check` to review first
 
@@ -131,7 +148,7 @@ Consult references/comment-necessity.md for the full pattern list."
 | Invocation | Agent | Output |
 |------------|-------|--------|
 | `/pr-comment-cleaner` | `pr-comment-cleaner` | Current PR's comments cleaned in place |
-| `/pr-comment-cleaner <number\|url>` | `pr-comment-cleaner` | PR checked out, comments cleaned, left uncommitted |
+| `/pr-comment-cleaner <number\|url>` | `pr-comment-cleaner` | PR checked out, comments cleaned |
 | `/pr-comment-cleaner <path>` | `pr-comment-cleaner` | PR's changed files under the path cleaned |
 | `/pr-comment-cleaner check [target]` | `pr-comment-cleaner` | Report only, nothing changed |
 
