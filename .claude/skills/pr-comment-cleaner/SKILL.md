@@ -127,7 +127,7 @@ In the default, pull request, and scoped modes, the main conversation commits an
    - the tree was not clean before the agent ran, so the user's own work would be mixed in
    - the current branch is the default branch
    - the agent reported a failing test run
-   - the PR is from a fork or another person (`gh pr view --json isCrossRepository,author`)
+   - the PR is from a fork or its author is not you: compare `gh pr view --json isCrossRepository,author` with `gh api user`. With no PR on the branch, skip this check
 3. Commit only the files that are both in the agent's report and in `git diff --name-only`, by pathspec: `git commit -m "chore: remove unnecessary code comments" -- <paths>`, with no AI attribution
 4. Push with `git push`, or `git push -u origin <branch>` when the branch has no upstream. Never force push. If the push is rejected, stop and report it
 
