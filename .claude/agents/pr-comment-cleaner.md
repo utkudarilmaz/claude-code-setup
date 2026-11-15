@@ -90,7 +90,7 @@ Run `git diff` on the working tree and confirm:
 
 Revert anything else. Then find the project's test command from its build files or documentation and run it; a comment edit can still break syntax, a Python docstring being the obvious case. Report the result honestly, including the output when it fails. When no cheap test command exists, say so instead of claiming a run.
 
-Never run `git commit`, `git push`, `git stash`, or `gh pr edit`. The user commits manually.
+Never run `git commit`, `git push`, `git stash`, or `gh pr edit`. The main conversation commits and pushes after you return.
 
 ## Comment Rules
 

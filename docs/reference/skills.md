@@ -231,7 +231,7 @@ Bump semantic version, update changelog, and create annotated git tag.
 - Invokes `/changelog` to update CHANGELOG.md, then commits the changelog
 - Builds tag message from grouped commit summary (conventional commit types)
 - Creates annotated git tag with the same prefix as the previous tag
-- Reminds user to push manually (never auto-pushes)
+- Pushes the changelog commit and the tag in one atomic push (never force pushes)
 
 **Examples:**
 ```
@@ -265,7 +265,7 @@ A branch that already has an open PR routes to the update path in every mode, so
 
 Anything typed after the mode is passed through as plain text: `/create-pr base develop`, `/create-pr draft reviewer alice`, `/create-pr label bug`.
 
-**Cleanup pass:** Every mode except show ends with a cleanup pass over each PR the run created or updated. The skill dispatches three agents against the finished PR: `pr-comment-cleaner` removes unnecessary code comments in the PR's changed files and leaves the edits uncommitted, `text-slop-cleaner` rewrites the PR body and your own comments into plain English, and `code-slop-cleaner` reports whether the diff matches its scope. They run concurrently when the run was for the current branch; a targeted PR runs `pr-comment-cleaner` first because it checks the PR branch out. Add `no-clean` to skip the pass.
+**Cleanup pass:** Every mode except show ends with a cleanup pass over each PR the run created or updated. The skill dispatches three agents against the finished PR: `pr-comment-cleaner` removes unnecessary code comments in the PR's changed files, which the skill then commits and pushes unless a [skip condition](#pr-comment-cleaner) holds; `text-slop-cleaner` rewrites the PR body and your own comments into plain English; and `code-slop-cleaner` reports whether the diff matches its scope. They run concurrently when the run was for the current branch; a targeted PR runs `pr-comment-cleaner` first because it checks the PR branch out. Add `no-clean` to skip the pass.
 
 **Title:** Conventional commit form, under 70 characters, lower case after the type, no ticket ID. The repository's own convention wins when recent merged PRs show one.
 
@@ -497,11 +497,17 @@ Remove code comments in a PR's changed files that are not 100% necessary and rew
 
 **What it does:**
 - **Default:** Resolves the current branch's PR with `gh pr view`, or falls back to the branch diff against the merge base with the default branch including uncommitted changes, then cleans the comments in the changed files
-- **Pull request:** Requires a clean working tree, checks the PR out with `gh pr checkout`, cleans its comments, and leaves the edits uncommitted on the PR branch, stating that the repository is now on that branch
+- **Pull request:** Requires a clean working tree, checks the PR out with `gh pr checkout`, cleans its comments, and leaves the repository on the PR branch, stating so in the report
 - **Scoped:** Intersects the PR's changed file list with the given path and cleans only that intersection
 - **Check:** Shows every finding with the comment, its location, whether this PR introduced it, and the verification behind the removal or rewrite; edits nothing and checks out nothing
 
-Default, pull request, and scoped modes apply changes directly without asking. Use `check` to review first. Edits always stay uncommitted; the agent never commits, pushes, or stashes.
+Default, pull request, and scoped modes apply changes directly without asking. Use `check` to review first.
+
+**Commit and push:** The agent never commits, pushes, or stashes. Once it returns, the main conversation commits only the files the agent changed, by pathspec, with `chore: remove unnecessary code comments`, then runs `git push` (with `-u origin <branch>` when there is no upstream). It never force pushes and stops on a rejected push. It leaves the edits uncommitted and says why when:
+- the tree had changes before the agent ran
+- the current branch is the default branch
+- the agent reported failing tests
+- the PR comes from a fork or another person
 
 **Classification:** Every comment in a changed file is classified as REMOVE (adds nothing the code does not say), REWRITE (real information, but stale or padded), KEEP (deleting it loses information not in the code), or PROTECTED. Removal is the default: a comment that is merely accurate or helpful goes, and a keep must name the fact the code cannot give back. Verification runs both ways; doubt about protection or about the code itself being wrong keeps the comment, doubt about whether it is useful enough does not.
 
