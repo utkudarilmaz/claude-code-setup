@@ -5,7 +5,7 @@
 - **Node.js** - Required for statusLine plugins (claude-hud, claude-pray)
 - **Bash** - For hook scripts and status line commands
 - **jq** - Merges `settings.json` and the MCP servers on sync; without it `settings.json` is copied over and the MCP sync is skipped
-- **Docker and `uv`** (optional) - Needed only by the MCP servers this repo ships, see [MCP Servers](../reference/mcp-servers.md)
+- **Docker** (optional) - Needed only by the MCP server this repo ships, see [MCP Servers](../reference/mcp-servers.md)
 - **Audio system** (optional) - For notification sounds:
   - macOS: Built-in `afplay` command
   - Linux: PulseAudio (`paplay`) or ALSA (`aplay`)

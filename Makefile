@@ -104,7 +104,7 @@ help:
 #   2. Add a matching `install-<name>` recipe in the INSTALL COMMANDS section
 INSTALL_SKILLS := google-maps-scraper anatomy
 INSTALL_PLUGINS := claudish claude-hud claude-pray typescript-lsp gopls-lsp
-INSTALL_MCPS := build123d-mcp terraform-mcp
+INSTALL_MCPS := terraform-mcp
 INSTALL_SYNC := hooks config
 INSTALL_GROUPS := sync skills plugins mcps
 INSTALL_TARGETS := $(INSTALL_SYNC) $(INSTALL_SKILLS) $(INSTALL_PLUGINS) $(INSTALL_MCPS)
@@ -585,12 +585,6 @@ install-gopls-lsp:
 	@echo "$(BOLD)Installing gopls-lsp requirements...$(NC) $(DRY_RUN_MSG)"
 	$(call install_brew_pkg,gopls,gopls)
 	@echo "$(GREEN)gopls-lsp requirements done.$(NC)"
-
-.PHONY: install-build123d-mcp
-install-build123d-mcp:
-	@echo "$(BOLD)Installing build123d-mcp requirements...$(NC) $(DRY_RUN_MSG)"
-	$(call install_brew_pkg,uv,uv)
-	@echo "$(GREEN)build123d-mcp requirements done.$(NC)"
 
 .PHONY: install-terraform-mcp
 install-terraform-mcp:

@@ -76,10 +76,10 @@ check "hook command follows CLAUDE_CONFIG_DIR rather than falling back" \
 
 # --- update-config merges MCP servers into the target .claude.json ---
 check "update-all creates .claude.json with repo MCP servers" \
-  test "$(jq -r '.mcpServers["build123d-mcp"].command' "$TMP_TARGET/.claude.json")" = "uv"
+  test "$(jq -r '.mcpServers["terraform"].command' "$TMP_TARGET/.claude.json")" = "docker"
 
 jq '.mcpServers["local-server"] = {command: "echo"}
-    | .mcpServers["build123d-mcp"].command = "drifted"
+    | .mcpServers["terraform"].command = "drifted"
     | .oauthAccount = "keep-me"
     | .history = "line1\nline2\ttabbed"' \
   "$TMP_TARGET/.claude.json" > "$TMP_TARGET/.claude.json.tmp"
@@ -89,7 +89,7 @@ run_make update-config TARGET_DIR="$TMP_TARGET"
 check "MCP merge keeps machine-local servers" \
   test "$(jq -r '.mcpServers["local-server"].command' "$TMP_TARGET/.claude.json")" = "echo"
 check "MCP merge applies repo server config over local drift" \
-  test "$(jq -r '.mcpServers["build123d-mcp"].command' "$TMP_TARGET/.claude.json")" = "uv"
+  test "$(jq -r '.mcpServers["terraform"].command' "$TMP_TARGET/.claude.json")" = "docker"
 check "MCP merge keeps unrelated .claude.json keys" \
   test "$(jq -r '.oauthAccount' "$TMP_TARGET/.claude.json")" = "keep-me"
 check "MCP merge preserves backslash escapes in strings" \
@@ -99,7 +99,7 @@ check "MCP merge preserves backslash escapes in strings" \
 run_make update-mcp TARGET_DIR="$TMP_TARGET_MCP"
 
 check "update-mcp creates .claude.json with repo MCP servers" \
-  test "$(jq -r '.mcpServers["build123d-mcp"].command' "$TMP_TARGET_MCP/.claude.json")" = "uv"
+  test "$(jq -r '.mcpServers["terraform"].command' "$TMP_TARGET_MCP/.claude.json")" = "docker"
 check "update-mcp leaves settings.json alone" test ! -e "$TMP_TARGET_MCP/settings.json"
 check "update-mcp leaves CLAUDE.md alone" test ! -e "$TMP_TARGET_MCP/CLAUDE.md"
 
@@ -185,6 +185,13 @@ check "install sync skips declined config" test ! -e "$TMP_TARGET_INSTALL/settin
 make -C "$REPO_ROOT" --no-print-directory install config TARGET_DIR="$TMP_TARGET_INSTALL" </dev/null >/dev/null 2>&1
 check "install config copies settings.json" test -f "$TMP_TARGET_INSTALL/settings.json"
 check "install config copies CLAUDE.md" test -f "$TMP_TARGET_INSTALL/CLAUDE.md"
+
+# --- every install target has a matching install-<name> recipe ---
+INSTALL_TARGET_NAMES=$(make -C "$REPO_ROOT" --no-print-directory -pn help 2>/dev/null | sed -n 's/^INSTALL_TARGETS := //p')
+export INSTALL_TARGET_NAMES REPO_ROOT TMP_TARGET_INSTALL
+check "install target list is not empty" test -n "$INSTALL_TARGET_NAMES"
+check "every install target has an install-<name> recipe" \
+  bash -c 'for t in $INSTALL_TARGET_NAMES; do make -C "$REPO_ROOT" --no-print-directory -n "install-$t" TARGET_DIR="$TMP_TARGET_INSTALL" >/dev/null 2>&1 || { echo "missing recipe: install-$t"; exit 1; }; done'
 rm -rf "$TMP_TARGET_INSTALL"
 
 # --- rm commands remove repo-managed files only ---
