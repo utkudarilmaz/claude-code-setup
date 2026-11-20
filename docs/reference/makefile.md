@@ -54,6 +54,10 @@ inside `~/.claude/`. User-scoped servers live in `.claude.json`:
 - Everything else in `.claude.json` (session state, auth, projects) is
   untouched
 
+Removing a server from `.claude/mcp-servers.json` does not remove it from an
+already synced `.claude.json`. Run `claude mcp remove <name> -s user` to remove
+it there, with `CLAUDE_CONFIG_DIR` set when the target is a custom home.
+
 The merge requires `jq`; without it the MCP sync is skipped with a warning.
 The servers themselves are documented in [MCP Servers](mcp-servers.md).
 `make status` and `make diff` report each repo-managed server as synced,
@@ -94,7 +98,6 @@ Registered targets:
 | plugins | `claude-pray` | `node` via brew, needed by the statusline |
 | plugins | `typescript-lsp` | `typescript-language-server` via brew, the language server the TypeScript LSP plugin talks to |
 | plugins | `gopls-lsp` | `gopls` via brew, the language server the Go LSP plugin talks to |
-| mcps | `build123d-mcp` | `uv` via brew |
 | mcps | `terraform-mcp` | Docker Desktop via brew cask, the `hashicorp/terraform-mcp-server` image pulled, and a warning when `TFE_TOKEN` is not exported |
 
 The remaining enabled plugins need no local installs: superpowers,

@@ -6,16 +6,10 @@ by `make update-config` or `make update-mcp`. See
 
 | Server | Runs with | Needs |
 |--------|-----------|-------|
-| `build123d-mcp` | `uv tool run --python 3.12 build123d-mcp@latest` | `uv` on PATH |
 | `terraform` | `docker run -i --rm hashicorp/terraform-mcp-server` | Docker, `TFE_TOKEN` |
 
 `make install mcps` installs these requirements, asking for approval before
 each install. See [Makefile Commands](makefile.md#install-commands).
-
-## build123d-mcp
-
-A persistent CAD session for build123d. It builds, measures, renders, and
-exports 3D geometry across several calls instead of one shot scripts.
 
 ## terraform
 
