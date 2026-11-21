@@ -75,7 +75,7 @@ make install skills             # Ask for each skill install
 make install plugins            # Ask for each plugin requirement
 make install mcps               # Ask for each MCP server requirement
 make install <target>           # Install a single target without asking
-make DRY_RUN=1 install claudish # Preview without installing
+make DRY_RUN=1 install anatomy  # Preview without installing
 ```
 
 `make install`, `make install all`, and the group forms ask `Install <target>?
@@ -93,7 +93,6 @@ Registered targets:
 | sync | `config` | Same as `make update-config`: merges `settings.json` (repo values win), copies `CLAUDE.md`, and merges the MCP servers |
 | skills | `google-maps-scraper` | `npx skills add gosom/google-maps-scraper` |
 | skills | `anatomy` | `npx skills add wheresryan22/anatomy -g -a claude-code` into `TARGET_DIR/skills`; turned off by default in `skillOverrides` |
-| plugins | `claudish` | `ollama` and `jq` via brew, a 30m idle keep-alive for loaded models, the ollama service started and enabled at login, and the `CLAUDISH_MODEL` named in `.claude/settings.json` pulled |
 | plugins | `claude-hud` | `node` via brew, needed by the statusline |
 | plugins | `claude-pray` | `node` via brew, needed by the statusline |
 | plugins | `typescript-lsp` | `typescript-language-server` via brew, the language server the TypeScript LSP plugin talks to |
@@ -102,26 +101,13 @@ Registered targets:
 
 The remaining enabled plugins need no local installs: superpowers,
 commit-commands, explanatory-output-style, and code-review are skills and
-commands only.
+commands only. The claudish plugin needs a model server that is set up by
+hand, see [Installation](../guides/installation.md#claudish-plugin).
 
 Inside a target, each step is skipped when the requirement is already present, and each asks
-for approval first, only when actually needed: keeping ollama models loaded
-for 30m of idle time, installing missing brew packages, starting the ollama
-server now, enabling autostart at login for the ollama service (asked even when
-the server is already running some other way), pulling the claudish model (a
-multi-GB download), and pulling the terraform server image. Answering no to
-autostart when starting the ollama server uses `brew services run` instead of
-`brew services start`, so the server runs now without a login item. Declining a
-step skips it and the run continues. `FORCE=1` skips all prompts.
-
-The keep-alive is asked first, so the setting is in place before the recipe
-starts the service. It writes `OLLAMA_KEEP_ALIVE` to
-`~/.homebrew/services/ollama.env`, the env override file `brew services` merges
-into the generated launchd plist on every start, so it survives `brew upgrade`
-where a hand-edited plist would not. ollama's own default is 5m, short enough
-that a model unloads during a normal reading gap and the next claudish rewrite
-waits for a multi-second reload. When the server is already running, the step
-prints the `brew services restart ollama` needed to apply it.
+for approval first, only when actually needed: installing missing brew
+packages and pulling the terraform server image.
+Declining a step skips it and the run continues. `FORCE=1` skips all prompts.
 
 To add a new target, append its name to the matching group variable in the
 Makefile (`INSTALL_SYNC`, `INSTALL_SKILLS`, `INSTALL_PLUGINS`, or `INSTALL_MCPS`) and add a
@@ -155,7 +141,6 @@ make help      # Display all commands
 | `FORCE=1` | Skip confirmation prompts |
 | `TARGET_DIR=<path>` | Sync to a directory other than `~/.claude` |
 | `NO_RSYNC=1` | Force the plain-copy fallback path even when rsync exists |
-| `OLLAMA_KEEP_ALIVE=<duration>` | Idle time before ollama unloads a model, asked during `install claudish` (default `30m`) |
 
 Examples:
 ```bash

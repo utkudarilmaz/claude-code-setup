@@ -21,13 +21,6 @@ BOLD := \033[1m
 DRY_RUN ?= 0
 FORCE ?= 0
 
-# How long ollama keeps an idle model in memory. Its own default is 5m, short
-# enough that a model unloads during a normal reading gap and the next claudish
-# rewrite pays a multi-second reload. Written to the brew services env override
-# file, which brew merges into the generated plist on every start, so it
-# survives `brew upgrade` where a hand-edited plist would not.
-OLLAMA_KEEP_ALIVE ?= 30m
-OLLAMA_ENV_FILE := $(if $(HOMEBREW_USER_CONFIG_HOME),$(HOMEBREW_USER_CONFIG_HOME),$(HOME)/.homebrew)/services/ollama.env
 NO_RSYNC ?=
 
 DIFF_COLOR := $(shell diff --color=always /dev/null /dev/null > /dev/null 2>&1 && echo --color=always)
@@ -103,7 +96,7 @@ help:
 #   1. Append its <name> to the matching group below
 #   2. Add a matching `install-<name>` recipe in the INSTALL COMMANDS section
 INSTALL_SKILLS := google-maps-scraper anatomy
-INSTALL_PLUGINS := claudish claude-hud claude-pray typescript-lsp gopls-lsp
+INSTALL_PLUGINS := claude-hud claude-pray typescript-lsp gopls-lsp
 INSTALL_MCPS := terraform-mcp
 INSTALL_SYNC := hooks config
 INSTALL_GROUPS := sync skills plugins mcps
@@ -437,131 +430,6 @@ install-anatomy:
 		CLAUDE_CONFIG_DIR="$(TARGET_DIR)" npx skills add wheresryan22/anatomy -g -a claude-code; \
 	fi
 
-.PHONY: install-claudish
-install-claudish:
-	@echo "$(BOLD)Installing claudish requirements...$(NC) $(DRY_RUN_MSG)"
-	@if ! command -v brew >/dev/null 2>&1; then \
-		echo "$(RED)Homebrew not found. Install it from https://brew.sh first.$(NC)"; \
-		exit 1; \
-	fi
-	@if grep -qs '^OLLAMA_KEEP_ALIVE=' "$(OLLAMA_ENV_FILE)"; then \
-		echo "Present: OLLAMA_KEEP_ALIVE in $(OLLAMA_ENV_FILE)"; \
-	elif [ "$(DRY_RUN)" = "1" ]; then \
-		echo "Would ask, then write OLLAMA_KEEP_ALIVE=$(OLLAMA_KEEP_ALIVE) to $(OLLAMA_ENV_FILE)"; \
-	else \
-		keep=1; \
-		if [ "$(FORCE)" != "1" ]; then \
-			echo "$(YELLOW)ollama unloads an idle model after 5m, so a rewrite after a pause waits for a reload.$(NC)"; \
-			printf "$(YELLOW)Keep models loaded for $(OLLAMA_KEEP_ALIVE) of idle time instead? [y/N]: $(NC)"; \
-			read -r answer; \
-			case "$$answer" in y|Y) ;; *) keep=0;; esac; \
-		fi; \
-		if [ "$$keep" = "1" ]; then \
-			mkdir -p "$$(dirname "$(OLLAMA_ENV_FILE)")"; \
-			printf 'OLLAMA_KEEP_ALIVE=%s\n' "$(OLLAMA_KEEP_ALIVE)" >> "$(OLLAMA_ENV_FILE)"; \
-			chmod 600 "$(OLLAMA_ENV_FILE)"; \
-			echo "Wrote OLLAMA_KEEP_ALIVE=$(OLLAMA_KEEP_ALIVE) to $(OLLAMA_ENV_FILE)"; \
-			if [ "$$(brew services list 2>/dev/null | awk '$$1 == "ollama" {print $$2}')" = "started" ]; then \
-				echo "$(YELLOW)ollama is already running. Apply it with: brew services restart ollama$(NC)"; \
-			fi; \
-		else \
-			echo "Skipped keep-alive. Set it later with: echo 'OLLAMA_KEEP_ALIVE=$(OLLAMA_KEEP_ALIVE)' >> $(OLLAMA_ENV_FILE)"; \
-		fi; \
-	fi
-	@missing=""; \
-	for pkg in ollama jq; do \
-		if command -v $$pkg >/dev/null 2>&1; then \
-			echo "Present: $$pkg"; \
-		else \
-			missing="$$missing $$pkg"; \
-		fi; \
-	done; \
-	if [ -n "$$missing" ]; then \
-		if [ "$(DRY_RUN)" = "1" ]; then \
-			echo "Would ask, then install:$$missing"; \
-		else \
-			install=1; \
-			if [ "$(FORCE)" != "1" ]; then \
-				printf "$(YELLOW)Install$$missing with brew? [y/N]: $(NC)"; \
-				read -r answer; \
-				case "$$answer" in y|Y) ;; *) install=0;; esac; \
-			fi; \
-			if [ "$$install" = "1" ]; then \
-				brew install $$missing; \
-			else \
-				echo "Skipped package install. Run later with: brew install$$missing"; \
-			fi; \
-		fi; \
-	fi
-	@model=$$(jq -r '.env.CLAUDISH_MODEL // empty' $(REPO_DIR)/settings.json 2>/dev/null); \
-	if [ -z "$$model" ]; then \
-		echo "$(YELLOW)No CLAUDISH_MODEL in $(REPO_DIR)/settings.json, skipping model pull$(NC)"; \
-	elif [ "$(DRY_RUN)" = "1" ]; then \
-		echo "Would ask, then start ollama and pull model: $$model"; \
-	elif ! command -v ollama >/dev/null 2>&1; then \
-		echo "$(YELLOW)ollama is not installed, skipping the service and model steps$(NC)"; \
-	else \
-		ready=1; \
-		svc=$$(brew services list 2>/dev/null | awk '$$1 == "ollama" {print $$2}'); \
-		if ! curl -sf http://localhost:11434/api/version >/dev/null 2>&1; then \
-			start=1; \
-			if [ "$(FORCE)" != "1" ]; then \
-				printf "$(YELLOW)ollama server is not running. Start it now with brew? [y/N]: $(NC)"; \
-				read -r answer; \
-				case "$$answer" in y|Y) ;; *) start=0;; esac; \
-			fi; \
-			if [ "$$start" = "1" ]; then \
-				auto=1; \
-				if [ "$(FORCE)" != "1" ]; then \
-					printf "$(YELLOW)Enable autostart at login for the ollama service? [y/N]: $(NC)"; \
-					read -r answer; \
-					case "$$answer" in y|Y) ;; *) auto=0;; esac; \
-				fi; \
-				if [ "$$auto" = "1" ]; then \
-					brew services start ollama; \
-				else \
-					brew services run ollama; \
-				fi; \
-				sleep 3; \
-			else \
-				ready=0; \
-				echo "Skipped starting ollama. Start it later, then run: ollama pull $$model"; \
-			fi; \
-		elif [ "$$svc" != "started" ]; then \
-			auto=1; \
-			if [ "$(FORCE)" != "1" ]; then \
-				printf "$(YELLOW)ollama is running but not enabled at login. Enable autostart (brew services start ollama)? [y/N]: $(NC)"; \
-				read -r answer; \
-				case "$$answer" in y|Y) ;; *) auto=0;; esac; \
-			fi; \
-			if [ "$$auto" = "1" ]; then \
-				brew services start ollama; \
-			else \
-				echo "Skipped autostart. Enable later with: brew services start ollama"; \
-			fi; \
-		fi; \
-		if [ "$$ready" = "1" ]; then \
-			if ! curl -sf http://localhost:11434/api/version >/dev/null 2>&1; then \
-				echo "$(YELLOW)ollama server not reachable. Start it, then run: ollama pull $$model$(NC)"; \
-			elif ollama list 2>/dev/null | awk 'NR>1 {print $$1}' | grep -qx "$$model"; then \
-				echo "Present: model $$model"; \
-			else \
-				pull=1; \
-				if [ "$(FORCE)" != "1" ]; then \
-					printf "$(YELLOW)Pull ollama model $$model (multi-GB download)? [y/N]: $(NC)"; \
-					read -r answer; \
-					case "$$answer" in y|Y) ;; *) pull=0;; esac; \
-				fi; \
-				if [ "$$pull" = "1" ]; then \
-					ollama pull "$$model"; \
-				else \
-					echo "Skipped model pull. Run later with: ollama pull $$model"; \
-				fi; \
-			fi; \
-		fi; \
-	fi
-	@echo "$(GREEN)claudish requirements done.$(NC)"
-
 .PHONY: install-claude-hud
 install-claude-hud:
 	@echo "$(BOLD)Installing claude-hud requirements...$(NC) $(DRY_RUN_MSG)"
@@ -637,7 +505,7 @@ install-terraform-mcp:
 	fi
 	@echo "$(GREEN)terraform-mcp requirements done.$(NC)"
 
-# `make install claudish` also makes `claudish` a goal of its own; these
+# `make install claude-hud` also makes `claude-hud` a goal of its own; these
 # no-op rules stop Make failing with "No rule to make target".
 .PHONY: all $(INSTALL_GROUPS) $(INSTALL_TARGETS)
 all $(INSTALL_GROUPS) $(INSTALL_TARGETS):

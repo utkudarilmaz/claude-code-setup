@@ -210,6 +210,18 @@ check "fallback path copies agents" test -f "$TMP_TARGET_NORSYNC/agents/docs.md"
 check "fallback path copies skills with references" test -f "$TMP_TARGET_NORSYNC/skills/docs/references/comprehensive-mode.md"
 check "fallback path makes hook scripts executable" test -x "$TMP_TARGET_NORSYNC/hooks/sensitive-file-protection.sh"
 
+# --- the claudish server URL and API key stay machine-local ---
+TMP_CLAUDISH="$TMP_TARGET/claudish-test"
+mkdir -p "$TMP_CLAUDISH"
+printf '{"env":{"CLAUDISH_OPENAI_URL":"http://other-host:11435/v1","CLAUDISH_OPENAI_KEY":"local-key"}}\n' > "$TMP_CLAUDISH/settings.json"
+run_make update-settings TARGET_DIR="$TMP_CLAUDISH"
+check "repo settings.json holds no claudish server URL or API key" \
+  test "$(jq -r '.env | has("CLAUDISH_OPENAI_URL") or has("CLAUDISH_OPENAI_KEY")' "$REPO_ROOT/.claude/settings.json")" = "false"
+check "update-settings keeps a local claudish server URL" \
+  test "$(jq -r '.env.CLAUDISH_OPENAI_URL' "$TMP_CLAUDISH/settings.json")" = "http://other-host:11435/v1"
+check "update-settings keeps a local claudish API key" \
+  test "$(jq -r '.env.CLAUDISH_OPENAI_KEY' "$TMP_CLAUDISH/settings.json")" = "local-key"
+
 echo ""
 if [ "$FAILURES" -gt 0 ]; then
   echo "$FAILURES test(s) failed"
