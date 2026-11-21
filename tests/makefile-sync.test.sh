@@ -210,10 +210,10 @@ check "fallback path copies agents" test -f "$TMP_TARGET_NORSYNC/agents/docs.md"
 check "fallback path copies skills with references" test -f "$TMP_TARGET_NORSYNC/skills/docs/references/comprehensive-mode.md"
 check "fallback path makes hook scripts executable" test -x "$TMP_TARGET_NORSYNC/hooks/sensitive-file-protection.sh"
 
-# --- install claudish sets up the llama.cpp server without touching the repo ---
+# --- install claudish prepares the llama.cpp server without touching the repo ---
 TMP_CLAUDISH="$TMP_TARGET/claudish-test"
 mkdir -p "$TMP_CLAUDISH/bin" "$TMP_CLAUDISH/models" "$TMP_CLAUDISH/home"
-for stub in brew llama-server launchctl; do
+for stub in brew llama-server; do
   printf '#!/bin/sh\necho "$0 $*" >> "%s/calls"\n[ "$1" = "print" ] && exit 1\nexit 0\n' "$TMP_CLAUDISH" > "$TMP_CLAUDISH/bin/$stub"
   chmod +x "$TMP_CLAUDISH/bin/$stub"
 done
@@ -224,9 +224,7 @@ claudish_make() {
     LLAMA_MODEL_DIR="$TMP_CLAUDISH/models" \
     LLAMA_MODEL_URL="https://example.invalid/model.gguf" \
     LLAMA_MTP_URL="https://example.invalid/mtp.gguf" \
-    LLAMA_KEY_FILE="$TMP_CLAUDISH/key/api-key" \
-    LLAMA_PLIST="$TMP_CLAUDISH/agents/server.plist" \
-    LLAMA_LOG="$TMP_CLAUDISH/logs/server.log" 2>&1
+    LLAMA_KEY_FILE="$TMP_CLAUDISH/key/api-key" 2>&1
 }
 
 CLAUDISH_DRY_OUTPUT=$(claudish_make DRY_RUN=1)
@@ -241,7 +239,7 @@ check "install claudish DRY_RUN=1 leaves settings.json alone" \
 
 echo "model" > "$TMP_CLAUDISH/models/model.gguf"
 echo "mtp" > "$TMP_CLAUDISH/models/mtp.gguf"
-claudish_make FORCE=1 LLAMA_HOST=0.0.0.0 >/dev/null
+claudish_make FORCE=1 >/dev/null
 check "install claudish writes an API key" test -s "$TMP_CLAUDISH/key/api-key"
 check "install claudish keeps the API key private" \
   test "$(ls -l "$TMP_CLAUDISH/key/api-key" | cut -c1-10)" = "-rw-------"
@@ -253,17 +251,6 @@ check "install claudish keeps local-only settings" \
   test "$(jq -r '.env.LOCAL_ONLY' "$TMP_CLAUDISH/home/settings.json")" = "kept"
 check "repo settings.json holds no server URL or API key" \
   test "$(jq -r '.env | has("CLAUDISH_OPENAI_URL") or has("CLAUDISH_OPENAI_KEY")' "$REPO_ROOT/.claude/settings.json")" = "false"
-if [ "$(uname)" = "Darwin" ]; then
-  check "install claudish renders the login service file" \
-    grep -q "<string>$TMP_CLAUDISH/models/model.gguf</string>" "$TMP_CLAUDISH/agents/server.plist"
-  check "install claudish puts the host in the login service file" \
-    grep -q "<string>0.0.0.0</string>" "$TMP_CLAUDISH/agents/server.plist"
-  check "install claudish leaves no placeholder in the login service file" \
-    bash -c '! grep -q "@[A-Z_]*@" "$TMP_CLAUDISH/agents/server.plist"'
-  check "install claudish starts the login service" \
-    grep -q "launchctl bootstrap" "$TMP_CLAUDISH/calls"
-fi
-
 jq '.env.CLAUDISH_OPENAI_URL = "http://other-host:11435/v1"' "$TMP_CLAUDISH/home/settings.json" > "$TMP_CLAUDISH/home/settings.tmp"
 mv "$TMP_CLAUDISH/home/settings.tmp" "$TMP_CLAUDISH/home/settings.json"
 claudish_make FORCE=1 >/dev/null

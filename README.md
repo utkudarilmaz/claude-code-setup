@@ -47,7 +47,6 @@ claude-code-setup/
 │   ├── architecture/           # Extension model, diagrams
 │   ├── guides/                 # Installation, configuration, contributing
 │   └── reference/              # Agents, skills, MCP servers, makefile
-├── services/                   # Service file template for the claudish server
 ├── tests/                      # Tests for hook scripts and Makefile
 ├── CLAUDE.md                   # Repo guidance for contributors
 ├── LICENSE                     # MIT license

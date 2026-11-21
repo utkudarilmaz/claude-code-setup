@@ -18,7 +18,6 @@ claude-code-setup/              # This repository (shareable)
 │   ├── mcp-servers.json        # Shared MCP server definitions
 │   └── CLAUDE.md               # Global AI conventions (applied to all projects)
 ├── docs/                       # Detailed documentation
-├── services/                   # Service file template for the claudish llama.cpp server
 ├── tests/                      # Tests for hook scripts and Makefile
 ├── Makefile                    # Sync management between repo and ~/.claude
 ├── CLAUDE.md                   # This file (repo-specific guidance)

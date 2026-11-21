@@ -22,20 +22,13 @@ DRY_RUN ?= 0
 FORCE ?= 0
 
 # The local llama.cpp server that rewrites messages for the claudish plugin.
-# The settings come from a benchmark of this model on Apple Silicon. The URL
-# and the API key are written to the target settings.json only, never to the
-# repo, so a machine can point at a server on another host.
-LLAMA_HOST ?= 127.0.0.1
+# The URL and the API key are written to the target settings.json only, never
+# to the repo, so a machine can point at a server on another host.
 LLAMA_PORT ?= 11435
-LLAMA_IDLE_SLEEP ?= 1800
 LLAMA_MODEL_DIR ?= $(HOME)/models/gguf
 LLAMA_MODEL_URL ?= https://huggingface.co/google/gemma-4-26B-A4B-it-qat-q4_0-gguf/resolve/main/gemma-4-26B_q4_0-it.gguf
 LLAMA_MTP_URL ?= https://huggingface.co/ggml-org/gemma-4-26B-A4B-it-GGUF/resolve/main/mtp-gemma-4-26B-A4B-it-Q4_0.gguf
 LLAMA_KEY_FILE ?= $(HOME)/.config/llama-server/api-key
-LLAMA_LABEL := local.llama-server
-LLAMA_PLIST ?= $(HOME)/Library/LaunchAgents/$(LLAMA_LABEL).plist
-LLAMA_PLIST_TEMPLATE := $(shell pwd)/services/local.llama-server.plist.template
-LLAMA_LOG ?= $(HOME)/Library/Logs/llama-server.log
 NO_RSYNC ?=
 
 DIFF_COLOR := $(shell diff --color=always /dev/null /dev/null > /dev/null 2>&1 && echo --color=always)
@@ -507,47 +500,6 @@ install-claudish:
 		mkdir -p "$$(dirname "$(LLAMA_KEY_FILE)")"; \
 		(umask 077; printf 'sk-local-%s\n' "$$(openssl rand -hex 24)" > "$(LLAMA_KEY_FILE)"); \
 		echo "Wrote a new API key to $(LLAMA_KEY_FILE)"; \
-	fi
-	@alias=$$(jq -r '.env.CLAUDISH_MODEL // empty' $(REPO_DIR)/settings.json 2>/dev/null); \
-	if [ "$$(uname)" != "Darwin" ]; then \
-		echo "$(YELLOW)The login service is set up on macOS only. Start llama-server yourself, or point CLAUDISH_OPENAI_URL at a machine that runs it.$(NC)"; \
-	elif [ -z "$$alias" ]; then \
-		echo "$(YELLOW)No CLAUDISH_MODEL in $(REPO_DIR)/settings.json, skipping the login service$(NC)"; \
-	elif [ -f "$(LLAMA_PLIST)" ]; then \
-		echo "Present: $(LLAMA_PLIST)"; \
-	elif [ "$(DRY_RUN)" = "1" ]; then \
-		echo "Would ask, then write $(LLAMA_PLIST) and start the $(LLAMA_LABEL) service"; \
-	elif ! command -v llama-server >/dev/null 2>&1; then \
-		echo "$(YELLOW)llama-server is not installed, skipping the login service$(NC)"; \
-	else \
-		start=1; \
-		if [ "$(FORCE)" != "1" ]; then \
-			printf "$(YELLOW)Start llama-server on $(LLAMA_HOST):$(LLAMA_PORT) now and at every login? [y/N]: $(NC)"; \
-			read -r answer; \
-			case "$$answer" in y|Y) ;; *) start=0;; esac; \
-		fi; \
-		if [ "$$start" = "1" ]; then \
-			mkdir -p "$$(dirname "$(LLAMA_PLIST)")" "$$(dirname "$(LLAMA_LOG)")"; \
-			sed -e "s|@LABEL@|$(LLAMA_LABEL)|g" \
-				-e "s|@SERVER_BIN@|$$(command -v llama-server)|g" \
-				-e "s|@MODEL_FILE@|$(LLAMA_MODEL_DIR)/$(notdir $(LLAMA_MODEL_URL))|g" \
-				-e "s|@MTP_FILE@|$(LLAMA_MODEL_DIR)/$(notdir $(LLAMA_MTP_URL))|g" \
-				-e "s|@ALIAS@|$$alias|g" \
-				-e "s|@HOST@|$(LLAMA_HOST)|g" \
-				-e "s|@PORT@|$(LLAMA_PORT)|g" \
-				-e "s|@KEY_FILE@|$(LLAMA_KEY_FILE)|g" \
-				-e "s|@IDLE_SLEEP@|$(LLAMA_IDLE_SLEEP)|g" \
-				-e "s|@LOG_FILE@|$(LLAMA_LOG)|g" \
-				$(LLAMA_PLIST_TEMPLATE) > "$(LLAMA_PLIST)"; \
-			echo "Wrote $(LLAMA_PLIST)"; \
-			if launchctl print gui/$$(id -u)/$(LLAMA_LABEL) >/dev/null 2>&1; then \
-				echo "$(YELLOW)The $(LLAMA_LABEL) service is already loaded. Stop it with: launchctl bootout gui/$$(id -u)/$(LLAMA_LABEL), then run make install claudish again$(NC)"; \
-			else \
-				launchctl bootstrap gui/$$(id -u) "$(LLAMA_PLIST)" && echo "Started the $(LLAMA_LABEL) service"; \
-			fi; \
-		else \
-			echo "Skipped the login service. Run later with: make install claudish"; \
-		fi; \
 	fi
 	@settings="$(TARGET_DIR)/settings.json"; \
 	url="http://127.0.0.1:$(LLAMA_PORT)/v1"; \
