@@ -210,53 +210,17 @@ check "fallback path copies agents" test -f "$TMP_TARGET_NORSYNC/agents/docs.md"
 check "fallback path copies skills with references" test -f "$TMP_TARGET_NORSYNC/skills/docs/references/comprehensive-mode.md"
 check "fallback path makes hook scripts executable" test -x "$TMP_TARGET_NORSYNC/hooks/sensitive-file-protection.sh"
 
-# --- install claudish prepares the llama.cpp server without touching the repo ---
+# --- the claudish server URL and API key stay machine-local ---
 TMP_CLAUDISH="$TMP_TARGET/claudish-test"
-mkdir -p "$TMP_CLAUDISH/bin" "$TMP_CLAUDISH/models" "$TMP_CLAUDISH/home"
-for stub in brew llama-server; do
-  printf '#!/bin/sh\necho "$0 $*" >> "%s/calls"\n[ "$1" = "print" ] && exit 1\nexit 0\n' "$TMP_CLAUDISH" > "$TMP_CLAUDISH/bin/$stub"
-  chmod +x "$TMP_CLAUDISH/bin/$stub"
-done
-printf '{"env":{"LOCAL_ONLY":"kept"}}\n' > "$TMP_CLAUDISH/home/settings.json"
-claudish_make() {
-  PATH="$TMP_CLAUDISH/bin:$PATH" make -C "$REPO_ROOT" --no-print-directory "$@" install claudish \
-    TARGET_DIR="$TMP_CLAUDISH/home" \
-    LLAMA_MODEL_DIR="$TMP_CLAUDISH/models" \
-    LLAMA_MODEL_URL="https://example.invalid/model.gguf" \
-    LLAMA_MTP_URL="https://example.invalid/mtp.gguf" \
-    LLAMA_KEY_FILE="$TMP_CLAUDISH/key/api-key" 2>&1
-}
-
-CLAUDISH_DRY_OUTPUT=$(claudish_make DRY_RUN=1)
-export CLAUDISH_DRY_OUTPUT TMP_CLAUDISH
-check "install claudish DRY_RUN=1 names the model download" \
-  bash -c 'echo "$CLAUDISH_DRY_OUTPUT" | grep -qF "Would ask, then download: https://example.invalid/model.gguf"'
-check "install claudish DRY_RUN=1 names the server URL" \
-  bash -c 'echo "$CLAUDISH_DRY_OUTPUT" | grep -qF "Would set CLAUDISH_OPENAI_URL=http://127.0.0.1:11435/v1"'
-check "install claudish DRY_RUN=1 writes no API key" test ! -e "$TMP_CLAUDISH/key/api-key"
-check "install claudish DRY_RUN=1 leaves settings.json alone" \
-  test "$(cat "$TMP_CLAUDISH/home/settings.json")" = '{"env":{"LOCAL_ONLY":"kept"}}'
-
-echo "model" > "$TMP_CLAUDISH/models/model.gguf"
-echo "mtp" > "$TMP_CLAUDISH/models/mtp.gguf"
-claudish_make FORCE=1 >/dev/null
-check "install claudish writes an API key" test -s "$TMP_CLAUDISH/key/api-key"
-check "install claudish keeps the API key private" \
-  test "$(ls -l "$TMP_CLAUDISH/key/api-key" | cut -c1-10)" = "-rw-------"
-check "install claudish sets the server URL in the target settings" \
-  test "$(jq -r '.env.CLAUDISH_OPENAI_URL' "$TMP_CLAUDISH/home/settings.json")" = "http://127.0.0.1:11435/v1"
-check "install claudish sets the API key in the target settings" \
-  test "$(jq -r '.env.CLAUDISH_OPENAI_KEY' "$TMP_CLAUDISH/home/settings.json")" = "$(cat "$TMP_CLAUDISH/key/api-key")"
-check "install claudish keeps local-only settings" \
-  test "$(jq -r '.env.LOCAL_ONLY' "$TMP_CLAUDISH/home/settings.json")" = "kept"
-check "repo settings.json holds no server URL or API key" \
+mkdir -p "$TMP_CLAUDISH"
+printf '{"env":{"CLAUDISH_OPENAI_URL":"http://other-host:11435/v1","CLAUDISH_OPENAI_KEY":"local-key"}}\n' > "$TMP_CLAUDISH/settings.json"
+run_make update-settings TARGET_DIR="$TMP_CLAUDISH"
+check "repo settings.json holds no claudish server URL or API key" \
   test "$(jq -r '.env | has("CLAUDISH_OPENAI_URL") or has("CLAUDISH_OPENAI_KEY")' "$REPO_ROOT/.claude/settings.json")" = "false"
-jq '.env.CLAUDISH_OPENAI_URL = "http://other-host:11435/v1"' "$TMP_CLAUDISH/home/settings.json" > "$TMP_CLAUDISH/home/settings.tmp"
-mv "$TMP_CLAUDISH/home/settings.tmp" "$TMP_CLAUDISH/home/settings.json"
-claudish_make FORCE=1 >/dev/null
-run_make update-settings TARGET_DIR="$TMP_CLAUDISH/home"
-check "a server URL on another host survives install and update-settings" \
-  test "$(jq -r '.env.CLAUDISH_OPENAI_URL' "$TMP_CLAUDISH/home/settings.json")" = "http://other-host:11435/v1"
+check "update-settings keeps a local claudish server URL" \
+  test "$(jq -r '.env.CLAUDISH_OPENAI_URL' "$TMP_CLAUDISH/settings.json")" = "http://other-host:11435/v1"
+check "update-settings keeps a local claudish API key" \
+  test "$(jq -r '.env.CLAUDISH_OPENAI_KEY' "$TMP_CLAUDISH/settings.json")" = "local-key"
 
 echo ""
 if [ "$FAILURES" -gt 0 ]; then

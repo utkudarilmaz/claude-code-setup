@@ -21,14 +21,6 @@ BOLD := \033[1m
 DRY_RUN ?= 0
 FORCE ?= 0
 
-# The local llama.cpp server that rewrites messages for the claudish plugin.
-# The URL and the API key are written to the target settings.json only, never
-# to the repo, so a machine can point at a server on another host.
-LLAMA_PORT ?= 11435
-LLAMA_MODEL_DIR ?= $(HOME)/models/gguf
-LLAMA_MODEL_URL ?= https://huggingface.co/google/gemma-4-26B-A4B-it-qat-q4_0-gguf/resolve/main/gemma-4-26B_q4_0-it.gguf
-LLAMA_MTP_URL ?= https://huggingface.co/ggml-org/gemma-4-26B-A4B-it-GGUF/resolve/main/mtp-gemma-4-26B-A4B-it-Q4_0.gguf
-LLAMA_KEY_FILE ?= $(HOME)/.config/llama-server/api-key
 NO_RSYNC ?=
 
 DIFF_COLOR := $(shell diff --color=always /dev/null /dev/null > /dev/null 2>&1 && echo --color=always)
@@ -104,7 +96,7 @@ help:
 #   1. Append its <name> to the matching group below
 #   2. Add a matching `install-<name>` recipe in the INSTALL COMMANDS section
 INSTALL_SKILLS := google-maps-scraper anatomy
-INSTALL_PLUGINS := claudish claude-hud claude-pray typescript-lsp gopls-lsp
+INSTALL_PLUGINS := claude-hud claude-pray typescript-lsp gopls-lsp
 INSTALL_MCPS := terraform-mcp
 INSTALL_SYNC := hooks config
 INSTALL_GROUPS := sync skills plugins mcps
@@ -438,96 +430,6 @@ install-anatomy:
 		CLAUDE_CONFIG_DIR="$(TARGET_DIR)" npx skills add wheresryan22/anatomy -g -a claude-code; \
 	fi
 
-.PHONY: install-claudish
-install-claudish:
-	@echo "$(BOLD)Installing claudish requirements...$(NC) $(DRY_RUN_MSG)"
-	@if ! command -v brew >/dev/null 2>&1; then \
-		echo "$(RED)Homebrew not found. Install it from https://brew.sh first.$(NC)"; \
-		exit 1; \
-	fi
-	@missing=""; \
-	for pair in llama.cpp:llama-server jq:jq; do \
-		pkg=$${pair%%:*}; cmd=$${pair##*:}; \
-		if command -v $$cmd >/dev/null 2>&1; then \
-			echo "Present: $$pkg"; \
-		else \
-			missing="$$missing $$pkg"; \
-		fi; \
-	done; \
-	if [ -n "$$missing" ]; then \
-		if [ "$(DRY_RUN)" = "1" ]; then \
-			echo "Would ask, then install:$$missing"; \
-		else \
-			install=1; \
-			if [ "$(FORCE)" != "1" ]; then \
-				printf "$(YELLOW)Install$$missing with brew? [y/N]: $(NC)"; \
-				read -r answer; \
-				case "$$answer" in y|Y) ;; *) install=0;; esac; \
-			fi; \
-			if [ "$$install" = "1" ]; then \
-				brew install $$missing; \
-			else \
-				echo "Skipped package install. Run later with: brew install$$missing"; \
-			fi; \
-		fi; \
-	fi
-	@for url in "$(LLAMA_MODEL_URL)" "$(LLAMA_MTP_URL)"; do \
-		file="$(LLAMA_MODEL_DIR)/$${url##*/}"; \
-		if [ -s "$$file" ]; then \
-			echo "Present: $$file"; \
-		elif [ "$(DRY_RUN)" = "1" ]; then \
-			echo "Would ask, then download: $$url"; \
-		else \
-			pull=1; \
-			if [ "$(FORCE)" != "1" ]; then \
-				printf "$(YELLOW)Download $${url##*/} (the model is a multi-GB download)? [y/N]: $(NC)"; \
-				read -r answer; \
-				case "$$answer" in y|Y) ;; *) pull=0;; esac; \
-			fi; \
-			if [ "$$pull" = "1" ]; then \
-				mkdir -p "$(LLAMA_MODEL_DIR)"; \
-				curl -L --fail --retry 3 -C - -o "$$file.part" "$$url" && mv "$$file.part" "$$file"; \
-			else \
-				echo "Skipped download. Run later with: curl -L -o $$file $$url"; \
-			fi; \
-		fi; \
-	done
-	@if [ -s "$(LLAMA_KEY_FILE)" ]; then \
-		echo "Present: API key in $(LLAMA_KEY_FILE)"; \
-	elif [ "$(DRY_RUN)" = "1" ]; then \
-		echo "Would write a new API key to $(LLAMA_KEY_FILE)"; \
-	else \
-		mkdir -p "$$(dirname "$(LLAMA_KEY_FILE)")"; \
-		(umask 077; printf 'sk-local-%s\n' "$$(openssl rand -hex 24)" > "$(LLAMA_KEY_FILE)"); \
-		echo "Wrote a new API key to $(LLAMA_KEY_FILE)"; \
-	fi
-	@settings="$(TARGET_DIR)/settings.json"; \
-	url="http://127.0.0.1:$(LLAMA_PORT)/v1"; \
-	if [ ! -f "$$settings" ]; then \
-		echo "$(YELLOW)$$settings not found. Run make update-settings, then make install claudish again.$(NC)"; \
-	else \
-		if [ -n "$$(jq -r '.env.CLAUDISH_OPENAI_URL // empty' "$$settings")" ]; then \
-			echo "Present: CLAUDISH_OPENAI_URL in $$settings"; \
-		elif [ "$(DRY_RUN)" = "1" ]; then \
-			echo "Would set CLAUDISH_OPENAI_URL=$$url in $$settings"; \
-		else \
-			merged=$$(jq --arg u "$$url" '.env.CLAUDISH_OPENAI_URL = $$u' "$$settings") && printf '%s\n' "$$merged" > "$$settings"; \
-			echo "Set CLAUDISH_OPENAI_URL=$$url in $$settings"; \
-		fi; \
-		if [ -n "$$(jq -r '.env.CLAUDISH_OPENAI_KEY // empty' "$$settings")" ]; then \
-			echo "Present: CLAUDISH_OPENAI_KEY in $$settings"; \
-		elif [ "$(DRY_RUN)" = "1" ]; then \
-			echo "Would set CLAUDISH_OPENAI_KEY in $$settings from $(LLAMA_KEY_FILE)"; \
-		elif [ ! -s "$(LLAMA_KEY_FILE)" ]; then \
-			echo "$(YELLOW)No API key in $(LLAMA_KEY_FILE), skipping CLAUDISH_OPENAI_KEY$(NC)"; \
-		else \
-			merged=$$(jq --arg k "$$(cat "$(LLAMA_KEY_FILE)")" '.env.CLAUDISH_OPENAI_KEY = $$k' "$$settings") && printf '%s\n' "$$merged" > "$$settings"; \
-			chmod 600 "$$settings"; \
-			echo "Set CLAUDISH_OPENAI_KEY in $$settings"; \
-		fi; \
-	fi
-	@echo "$(GREEN)claudish requirements done.$(NC)"
-
 .PHONY: install-claude-hud
 install-claude-hud:
 	@echo "$(BOLD)Installing claude-hud requirements...$(NC) $(DRY_RUN_MSG)"
@@ -603,7 +505,7 @@ install-terraform-mcp:
 	fi
 	@echo "$(GREEN)terraform-mcp requirements done.$(NC)"
 
-# `make install claudish` also makes `claudish` a goal of its own; these
+# `make install claude-hud` also makes `claude-hud` a goal of its own; these
 # no-op rules stop Make failing with "No rule to make target".
 .PHONY: all $(INSTALL_GROUPS) $(INSTALL_TARGETS)
 all $(INSTALL_GROUPS) $(INSTALL_TARGETS):

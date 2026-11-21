@@ -75,7 +75,7 @@ make install skills             # Ask for each skill install
 make install plugins            # Ask for each plugin requirement
 make install mcps               # Ask for each MCP server requirement
 make install <target>           # Install a single target without asking
-make DRY_RUN=1 install claudish # Preview without installing
+make DRY_RUN=1 install anatomy  # Preview without installing
 ```
 
 `make install`, `make install all`, and the group forms ask `Install <target>?
@@ -93,7 +93,6 @@ Registered targets:
 | sync | `config` | Same as `make update-config`: merges `settings.json` (repo values win), copies `CLAUDE.md`, and merges the MCP servers |
 | skills | `google-maps-scraper` | `npx skills add gosom/google-maps-scraper` |
 | skills | `anatomy` | `npx skills add wheresryan22/anatomy -g -a claude-code` into `TARGET_DIR/skills`; turned off by default in `skillOverrides` |
-| plugins | `claudish` | `llama.cpp` and `jq` via brew, the Gemma 4 model and its helper file downloaded, an API key, and the server URL and key written to `TARGET_DIR/settings.json` |
 | plugins | `claude-hud` | `node` via brew, needed by the statusline |
 | plugins | `claude-pray` | `node` via brew, needed by the statusline |
 | plugins | `typescript-lsp` | `typescript-language-server` via brew, the language server the TypeScript LSP plugin talks to |
@@ -102,36 +101,13 @@ Registered targets:
 
 The remaining enabled plugins need no local installs: superpowers,
 commit-commands, explanatory-output-style, and code-review are skills and
-commands only.
+commands only. The claudish plugin needs a model server that is set up by
+hand, see [Installation](../guides/installation.md#claudish-plugin).
 
 Inside a target, each step is skipped when the requirement is already present, and each asks
 for approval first, only when actually needed: installing missing brew
-packages, downloading the claudish model files (a multi-GB download), and
-pulling the terraform server image.
+packages and pulling the terraform server image.
 Declining a step skips it and the run continues. `FORCE=1` skips all prompts.
-
-### The claudish server
-
-The claudish plugin rewrites each message with a local model served by
-`llama-server` from llama.cpp. `install claudish` prepares what that server
-needs:
-
-- The model is Gemma 4 26B-A4B (Google QAT Q4_0, 14.4 GB) with a small MTP
-  helper file. Both go to `LLAMA_MODEL_DIR`.
-- A random API key is written to `LLAMA_KEY_FILE`, readable by the owner only.
-  Pass it to the server with `--api-key-file`.
-- `CLAUDISH_OPENAI_URL` and `CLAUDISH_OPENAI_KEY` are written to
-  `TARGET_DIR/settings.json` when they are missing. They are never stored in
-  the repo, so `make update-settings` keeps them, and a machine without its own
-  server can point `CLAUDISH_OPENAI_URL` at another host.
-
-The repo `settings.json` holds only `CLAUDISH_PROVIDER=openai`, which selects
-the OpenAI API format that `llama-server` speaks, and `CLAUDISH_MODEL`, which
-must match the `--alias` of the server.
-
-Starting the server is not part of this repo. Run `llama-server` yourself on
-`LLAMA_PORT`, with thinking off, because the plugin does not turn it off for
-this kind of server.
 
 To add a new target, append its name to the matching group variable in the
 Makefile (`INSTALL_SYNC`, `INSTALL_SKILLS`, `INSTALL_PLUGINS`, or `INSTALL_MCPS`) and add a
@@ -165,9 +141,6 @@ make help      # Display all commands
 | `FORCE=1` | Skip confirmation prompts |
 | `TARGET_DIR=<path>` | Sync to a directory other than `~/.claude` |
 | `NO_RSYNC=1` | Force the plain-copy fallback path even when rsync exists |
-| `LLAMA_PORT=<port>` | Port of the claudish server, used for the URL written to the settings (default `11435`) |
-| `LLAMA_MODEL_DIR=<path>` | Where the model files are stored (default `~/models/gguf`) |
-| `LLAMA_KEY_FILE=<path>` | File that holds the API key of the claudish server (default `~/.config/llama-server/api-key`) |
 
 Examples:
 ```bash
