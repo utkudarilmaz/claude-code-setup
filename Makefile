@@ -21,13 +21,21 @@ BOLD := \033[1m
 DRY_RUN ?= 0
 FORCE ?= 0
 
-# How long ollama keeps an idle model in memory. Its own default is 5m, short
-# enough that a model unloads during a normal reading gap and the next claudish
-# rewrite pays a multi-second reload. Written to the brew services env override
-# file, which brew merges into the generated plist on every start, so it
-# survives `brew upgrade` where a hand-edited plist would not.
-OLLAMA_KEEP_ALIVE ?= 30m
-OLLAMA_ENV_FILE := $(if $(HOMEBREW_USER_CONFIG_HOME),$(HOMEBREW_USER_CONFIG_HOME),$(HOME)/.homebrew)/services/ollama.env
+# The local llama.cpp server that rewrites messages for the claudish plugin.
+# The settings come from a benchmark of this model on Apple Silicon. The URL
+# and the API key are written to the target settings.json only, never to the
+# repo, so a machine can point at a server on another host.
+LLAMA_HOST ?= 127.0.0.1
+LLAMA_PORT ?= 11435
+LLAMA_IDLE_SLEEP ?= 1800
+LLAMA_MODEL_DIR ?= $(HOME)/models/gguf
+LLAMA_MODEL_URL ?= https://huggingface.co/google/gemma-4-26B-A4B-it-qat-q4_0-gguf/resolve/main/gemma-4-26B_q4_0-it.gguf
+LLAMA_MTP_URL ?= https://huggingface.co/ggml-org/gemma-4-26B-A4B-it-GGUF/resolve/main/mtp-gemma-4-26B-A4B-it-Q4_0.gguf
+LLAMA_KEY_FILE ?= $(HOME)/.config/llama-server/api-key
+LLAMA_LABEL := local.llama-server
+LLAMA_PLIST ?= $(HOME)/Library/LaunchAgents/$(LLAMA_LABEL).plist
+LLAMA_PLIST_TEMPLATE := $(shell pwd)/services/local.llama-server.plist.template
+LLAMA_LOG ?= $(HOME)/Library/Logs/llama-server.log
 NO_RSYNC ?=
 
 DIFF_COLOR := $(shell diff --color=always /dev/null /dev/null > /dev/null 2>&1 && echo --color=always)
@@ -444,33 +452,10 @@ install-claudish:
 		echo "$(RED)Homebrew not found. Install it from https://brew.sh first.$(NC)"; \
 		exit 1; \
 	fi
-	@if grep -qs '^OLLAMA_KEEP_ALIVE=' "$(OLLAMA_ENV_FILE)"; then \
-		echo "Present: OLLAMA_KEEP_ALIVE in $(OLLAMA_ENV_FILE)"; \
-	elif [ "$(DRY_RUN)" = "1" ]; then \
-		echo "Would ask, then write OLLAMA_KEEP_ALIVE=$(OLLAMA_KEEP_ALIVE) to $(OLLAMA_ENV_FILE)"; \
-	else \
-		keep=1; \
-		if [ "$(FORCE)" != "1" ]; then \
-			echo "$(YELLOW)ollama unloads an idle model after 5m, so a rewrite after a pause waits for a reload.$(NC)"; \
-			printf "$(YELLOW)Keep models loaded for $(OLLAMA_KEEP_ALIVE) of idle time instead? [y/N]: $(NC)"; \
-			read -r answer; \
-			case "$$answer" in y|Y) ;; *) keep=0;; esac; \
-		fi; \
-		if [ "$$keep" = "1" ]; then \
-			mkdir -p "$$(dirname "$(OLLAMA_ENV_FILE)")"; \
-			printf 'OLLAMA_KEEP_ALIVE=%s\n' "$(OLLAMA_KEEP_ALIVE)" >> "$(OLLAMA_ENV_FILE)"; \
-			chmod 600 "$(OLLAMA_ENV_FILE)"; \
-			echo "Wrote OLLAMA_KEEP_ALIVE=$(OLLAMA_KEEP_ALIVE) to $(OLLAMA_ENV_FILE)"; \
-			if [ "$$(brew services list 2>/dev/null | awk '$$1 == "ollama" {print $$2}')" = "started" ]; then \
-				echo "$(YELLOW)ollama is already running. Apply it with: brew services restart ollama$(NC)"; \
-			fi; \
-		else \
-			echo "Skipped keep-alive. Set it later with: echo 'OLLAMA_KEEP_ALIVE=$(OLLAMA_KEEP_ALIVE)' >> $(OLLAMA_ENV_FILE)"; \
-		fi; \
-	fi
 	@missing=""; \
-	for pkg in ollama jq; do \
-		if command -v $$pkg >/dev/null 2>&1; then \
+	for pair in llama.cpp:llama-server jq:jq; do \
+		pkg=$${pair%%:*}; cmd=$${pair##*:}; \
+		if command -v $$cmd >/dev/null 2>&1; then \
 			echo "Present: $$pkg"; \
 		else \
 			missing="$$missing $$pkg"; \
@@ -493,71 +478,100 @@ install-claudish:
 			fi; \
 		fi; \
 	fi
-	@model=$$(jq -r '.env.CLAUDISH_MODEL // empty' $(REPO_DIR)/settings.json 2>/dev/null); \
-	if [ -z "$$model" ]; then \
-		echo "$(YELLOW)No CLAUDISH_MODEL in $(REPO_DIR)/settings.json, skipping model pull$(NC)"; \
-	elif [ "$(DRY_RUN)" = "1" ]; then \
-		echo "Would ask, then start ollama and pull model: $$model"; \
-	elif ! command -v ollama >/dev/null 2>&1; then \
-		echo "$(YELLOW)ollama is not installed, skipping the service and model steps$(NC)"; \
-	else \
-		ready=1; \
-		svc=$$(brew services list 2>/dev/null | awk '$$1 == "ollama" {print $$2}'); \
-		if ! curl -sf http://localhost:11434/api/version >/dev/null 2>&1; then \
-			start=1; \
+	@for url in "$(LLAMA_MODEL_URL)" "$(LLAMA_MTP_URL)"; do \
+		file="$(LLAMA_MODEL_DIR)/$${url##*/}"; \
+		if [ -s "$$file" ]; then \
+			echo "Present: $$file"; \
+		elif [ "$(DRY_RUN)" = "1" ]; then \
+			echo "Would ask, then download: $$url"; \
+		else \
+			pull=1; \
 			if [ "$(FORCE)" != "1" ]; then \
-				printf "$(YELLOW)ollama server is not running. Start it now with brew? [y/N]: $(NC)"; \
+				printf "$(YELLOW)Download $${url##*/} (the model is a multi-GB download)? [y/N]: $(NC)"; \
 				read -r answer; \
-				case "$$answer" in y|Y) ;; *) start=0;; esac; \
+				case "$$answer" in y|Y) ;; *) pull=0;; esac; \
 			fi; \
-			if [ "$$start" = "1" ]; then \
-				auto=1; \
-				if [ "$(FORCE)" != "1" ]; then \
-					printf "$(YELLOW)Enable autostart at login for the ollama service? [y/N]: $(NC)"; \
-					read -r answer; \
-					case "$$answer" in y|Y) ;; *) auto=0;; esac; \
-				fi; \
-				if [ "$$auto" = "1" ]; then \
-					brew services start ollama; \
-				else \
-					brew services run ollama; \
-				fi; \
-				sleep 3; \
+			if [ "$$pull" = "1" ]; then \
+				mkdir -p "$(LLAMA_MODEL_DIR)"; \
+				curl -L --fail --retry 3 -C - -o "$$file.part" "$$url" && mv "$$file.part" "$$file"; \
 			else \
-				ready=0; \
-				echo "Skipped starting ollama. Start it later, then run: ollama pull $$model"; \
-			fi; \
-		elif [ "$$svc" != "started" ]; then \
-			auto=1; \
-			if [ "$(FORCE)" != "1" ]; then \
-				printf "$(YELLOW)ollama is running but not enabled at login. Enable autostart (brew services start ollama)? [y/N]: $(NC)"; \
-				read -r answer; \
-				case "$$answer" in y|Y) ;; *) auto=0;; esac; \
-			fi; \
-			if [ "$$auto" = "1" ]; then \
-				brew services start ollama; \
-			else \
-				echo "Skipped autostart. Enable later with: brew services start ollama"; \
+				echo "Skipped download. Run later with: curl -L -o $$file $$url"; \
 			fi; \
 		fi; \
-		if [ "$$ready" = "1" ]; then \
-			if ! curl -sf http://localhost:11434/api/version >/dev/null 2>&1; then \
-				echo "$(YELLOW)ollama server not reachable. Start it, then run: ollama pull $$model$(NC)"; \
-			elif ollama list 2>/dev/null | awk 'NR>1 {print $$1}' | grep -qx "$$model"; then \
-				echo "Present: model $$model"; \
+	done
+	@if [ -s "$(LLAMA_KEY_FILE)" ]; then \
+		echo "Present: API key in $(LLAMA_KEY_FILE)"; \
+	elif [ "$(DRY_RUN)" = "1" ]; then \
+		echo "Would write a new API key to $(LLAMA_KEY_FILE)"; \
+	else \
+		mkdir -p "$$(dirname "$(LLAMA_KEY_FILE)")"; \
+		(umask 077; printf 'sk-local-%s\n' "$$(openssl rand -hex 24)" > "$(LLAMA_KEY_FILE)"); \
+		echo "Wrote a new API key to $(LLAMA_KEY_FILE)"; \
+	fi
+	@alias=$$(jq -r '.env.CLAUDISH_MODEL // empty' $(REPO_DIR)/settings.json 2>/dev/null); \
+	if [ "$$(uname)" != "Darwin" ]; then \
+		echo "$(YELLOW)The login service is set up on macOS only. Start llama-server yourself, or point CLAUDISH_OPENAI_URL at a machine that runs it.$(NC)"; \
+	elif [ -z "$$alias" ]; then \
+		echo "$(YELLOW)No CLAUDISH_MODEL in $(REPO_DIR)/settings.json, skipping the login service$(NC)"; \
+	elif [ -f "$(LLAMA_PLIST)" ]; then \
+		echo "Present: $(LLAMA_PLIST)"; \
+	elif [ "$(DRY_RUN)" = "1" ]; then \
+		echo "Would ask, then write $(LLAMA_PLIST) and start the $(LLAMA_LABEL) service"; \
+	elif ! command -v llama-server >/dev/null 2>&1; then \
+		echo "$(YELLOW)llama-server is not installed, skipping the login service$(NC)"; \
+	else \
+		start=1; \
+		if [ "$(FORCE)" != "1" ]; then \
+			printf "$(YELLOW)Start llama-server on $(LLAMA_HOST):$(LLAMA_PORT) now and at every login? [y/N]: $(NC)"; \
+			read -r answer; \
+			case "$$answer" in y|Y) ;; *) start=0;; esac; \
+		fi; \
+		if [ "$$start" = "1" ]; then \
+			mkdir -p "$$(dirname "$(LLAMA_PLIST)")" "$$(dirname "$(LLAMA_LOG)")"; \
+			sed -e "s|@LABEL@|$(LLAMA_LABEL)|g" \
+				-e "s|@SERVER_BIN@|$$(command -v llama-server)|g" \
+				-e "s|@MODEL_FILE@|$(LLAMA_MODEL_DIR)/$(notdir $(LLAMA_MODEL_URL))|g" \
+				-e "s|@MTP_FILE@|$(LLAMA_MODEL_DIR)/$(notdir $(LLAMA_MTP_URL))|g" \
+				-e "s|@ALIAS@|$$alias|g" \
+				-e "s|@HOST@|$(LLAMA_HOST)|g" \
+				-e "s|@PORT@|$(LLAMA_PORT)|g" \
+				-e "s|@KEY_FILE@|$(LLAMA_KEY_FILE)|g" \
+				-e "s|@IDLE_SLEEP@|$(LLAMA_IDLE_SLEEP)|g" \
+				-e "s|@LOG_FILE@|$(LLAMA_LOG)|g" \
+				$(LLAMA_PLIST_TEMPLATE) > "$(LLAMA_PLIST)"; \
+			echo "Wrote $(LLAMA_PLIST)"; \
+			if launchctl print gui/$$(id -u)/$(LLAMA_LABEL) >/dev/null 2>&1; then \
+				echo "$(YELLOW)The $(LLAMA_LABEL) service is already loaded. Stop it with: launchctl bootout gui/$$(id -u)/$(LLAMA_LABEL), then run make install claudish again$(NC)"; \
 			else \
-				pull=1; \
-				if [ "$(FORCE)" != "1" ]; then \
-					printf "$(YELLOW)Pull ollama model $$model (multi-GB download)? [y/N]: $(NC)"; \
-					read -r answer; \
-					case "$$answer" in y|Y) ;; *) pull=0;; esac; \
-				fi; \
-				if [ "$$pull" = "1" ]; then \
-					ollama pull "$$model"; \
-				else \
-					echo "Skipped model pull. Run later with: ollama pull $$model"; \
-				fi; \
+				launchctl bootstrap gui/$$(id -u) "$(LLAMA_PLIST)" && echo "Started the $(LLAMA_LABEL) service"; \
 			fi; \
+		else \
+			echo "Skipped the login service. Run later with: make install claudish"; \
+		fi; \
+	fi
+	@settings="$(TARGET_DIR)/settings.json"; \
+	url="http://127.0.0.1:$(LLAMA_PORT)/v1"; \
+	if [ ! -f "$$settings" ]; then \
+		echo "$(YELLOW)$$settings not found. Run make update-settings, then make install claudish again.$(NC)"; \
+	else \
+		if [ -n "$$(jq -r '.env.CLAUDISH_OPENAI_URL // empty' "$$settings")" ]; then \
+			echo "Present: CLAUDISH_OPENAI_URL in $$settings"; \
+		elif [ "$(DRY_RUN)" = "1" ]; then \
+			echo "Would set CLAUDISH_OPENAI_URL=$$url in $$settings"; \
+		else \
+			merged=$$(jq --arg u "$$url" '.env.CLAUDISH_OPENAI_URL = $$u' "$$settings") && printf '%s\n' "$$merged" > "$$settings"; \
+			echo "Set CLAUDISH_OPENAI_URL=$$url in $$settings"; \
+		fi; \
+		if [ -n "$$(jq -r '.env.CLAUDISH_OPENAI_KEY // empty' "$$settings")" ]; then \
+			echo "Present: CLAUDISH_OPENAI_KEY in $$settings"; \
+		elif [ "$(DRY_RUN)" = "1" ]; then \
+			echo "Would set CLAUDISH_OPENAI_KEY in $$settings from $(LLAMA_KEY_FILE)"; \
+		elif [ ! -s "$(LLAMA_KEY_FILE)" ]; then \
+			echo "$(YELLOW)No API key in $(LLAMA_KEY_FILE), skipping CLAUDISH_OPENAI_KEY$(NC)"; \
+		else \
+			merged=$$(jq --arg k "$$(cat "$(LLAMA_KEY_FILE)")" '.env.CLAUDISH_OPENAI_KEY = $$k' "$$settings") && printf '%s\n' "$$merged" > "$$settings"; \
+			chmod 600 "$$settings"; \
+			echo "Set CLAUDISH_OPENAI_KEY in $$settings"; \
 		fi; \
 	fi
 	@echo "$(GREEN)claudish requirements done.$(NC)"

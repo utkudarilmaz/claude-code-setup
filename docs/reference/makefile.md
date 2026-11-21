@@ -93,7 +93,7 @@ Registered targets:
 | sync | `config` | Same as `make update-config`: merges `settings.json` (repo values win), copies `CLAUDE.md`, and merges the MCP servers |
 | skills | `google-maps-scraper` | `npx skills add gosom/google-maps-scraper` |
 | skills | `anatomy` | `npx skills add wheresryan22/anatomy -g -a claude-code` into `TARGET_DIR/skills`; turned off by default in `skillOverrides` |
-| plugins | `claudish` | `ollama` and `jq` via brew, a 30m idle keep-alive for loaded models, the ollama service started and enabled at login, and the `CLAUDISH_MODEL` named in `.claude/settings.json` pulled |
+| plugins | `claudish` | `llama.cpp` and `jq` via brew, the Gemma 4 model and its helper file downloaded, an API key, a `llama-server` login service on macOS, and the server URL and key written to `TARGET_DIR/settings.json` |
 | plugins | `claude-hud` | `node` via brew, needed by the statusline |
 | plugins | `claude-pray` | `node` via brew, needed by the statusline |
 | plugins | `typescript-lsp` | `typescript-language-server` via brew, the language server the TypeScript LSP plugin talks to |
@@ -105,23 +105,50 @@ commit-commands, explanatory-output-style, and code-review are skills and
 commands only.
 
 Inside a target, each step is skipped when the requirement is already present, and each asks
-for approval first, only when actually needed: keeping ollama models loaded
-for 30m of idle time, installing missing brew packages, starting the ollama
-server now, enabling autostart at login for the ollama service (asked even when
-the server is already running some other way), pulling the claudish model (a
-multi-GB download), and pulling the terraform server image. Answering no to
-autostart when starting the ollama server uses `brew services run` instead of
-`brew services start`, so the server runs now without a login item. Declining a
-step skips it and the run continues. `FORCE=1` skips all prompts.
+for approval first, only when actually needed: installing missing brew
+packages, downloading the claudish model files (a multi-GB download), starting
+the `llama-server` login service, and pulling the terraform server image.
+Declining a step skips it and the run continues. `FORCE=1` skips all prompts.
 
-The keep-alive is asked first, so the setting is in place before the recipe
-starts the service. It writes `OLLAMA_KEEP_ALIVE` to
-`~/.homebrew/services/ollama.env`, the env override file `brew services` merges
-into the generated launchd plist on every start, so it survives `brew upgrade`
-where a hand-edited plist would not. ollama's own default is 5m, short enough
-that a model unloads during a normal reading gap and the next claudish rewrite
-waits for a multi-second reload. When the server is already running, the step
-prints the `brew services restart ollama` needed to apply it.
+### The claudish server
+
+The claudish plugin rewrites each message with a local model. `install claudish`
+sets up a `llama-server` from llama.cpp for it:
+
+- The model is Gemma 4 26B-A4B (Google QAT Q4_0, 14.4 GB) with a small MTP
+  helper file. Both go to `LLAMA_MODEL_DIR`.
+- A random API key is written to `LLAMA_KEY_FILE`, readable by the owner only.
+  The server refuses requests without it.
+- On macOS the service file is rendered from
+  `services/local.llama-server.plist.template` into `~/Library/LaunchAgents`
+  and started. It starts again at every login and unloads the model after
+  `LLAMA_IDLE_SLEEP` seconds without a request. On other systems this step is
+  skipped.
+- `CLAUDISH_OPENAI_URL` and `CLAUDISH_OPENAI_KEY` are written to
+  `TARGET_DIR/settings.json` when they are missing. They are never stored in
+  the repo, so `make update-settings` keeps them, and a machine without its own
+  server can point `CLAUDISH_OPENAI_URL` at another host.
+
+The repo `settings.json` holds only `CLAUDISH_PROVIDER=openai`, which selects
+the OpenAI API format that `llama-server` speaks, and `CLAUDISH_MODEL`, which
+is also the model alias of the server.
+
+The server flags in the template come from a benchmark on an Apple M5 Pro:
+speculative decoding with `draft-mtp,ngram-mod` ran at about 128 tokens/s
+against 77 without it. Thinking is off and the temperature is 0.3, because the
+plugin sends neither to this kind of server.
+
+Manage the service with `launchctl`:
+
+```bash
+launchctl kickstart -k gui/$(id -u)/local.llama-server    # Restart
+launchctl bootout gui/$(id -u)/local.llama-server         # Stop
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.llama-server.plist  # Start
+```
+
+An existing service file is never overwritten. To apply a changed template or
+option, stop the service, delete the file, and run `make install claudish`
+again.
 
 To add a new target, append its name to the matching group variable in the
 Makefile (`INSTALL_SYNC`, `INSTALL_SKILLS`, `INSTALL_PLUGINS`, or `INSTALL_MCPS`) and add a
@@ -155,7 +182,11 @@ make help      # Display all commands
 | `FORCE=1` | Skip confirmation prompts |
 | `TARGET_DIR=<path>` | Sync to a directory other than `~/.claude` |
 | `NO_RSYNC=1` | Force the plain-copy fallback path even when rsync exists |
-| `OLLAMA_KEEP_ALIVE=<duration>` | Idle time before ollama unloads a model, asked during `install claudish` (default `30m`) |
+| `LLAMA_HOST=<address>` | Address the claudish server listens on (default `127.0.0.1`; `0.0.0.0` lets other machines use it) |
+| `LLAMA_PORT=<port>` | Port of the claudish server (default `11435`) |
+| `LLAMA_IDLE_SLEEP=<seconds>` | Idle time before the claudish server unloads the model (default `1800`) |
+| `LLAMA_MODEL_DIR=<path>` | Where the model files are stored (default `~/models/gguf`) |
+| `LLAMA_KEY_FILE=<path>` | File that holds the API key of the claudish server (default `~/.config/llama-server/api-key`) |
 
 Examples:
 ```bash

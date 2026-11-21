@@ -1,6 +1,7 @@
 {
   "env": {
-    "CLAUDISH_MODEL": "gemma4:26b-mlx",
+    "CLAUDISH_PROVIDER": "openai",
+    "CLAUDISH_MODEL": "gemma4-26b",
     "CLAUDISH_MODE": "append",
     "CLAUDISH_TIMEOUT": "300"
   },
