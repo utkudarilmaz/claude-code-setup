@@ -109,7 +109,7 @@ same way. `make test` runs `tests/makefile-sync.test.sh`, which exercises
 the sync commands against a temporary `TARGET_DIR`, including the
 `NO_RSYNC=1` fallback path and the settings.json merge. It checks that
 `update-settings` and `update-claude-md` each leave the other config file
-alone, and that no target writes `.claude.json`.
+alone, and that `update-all` does not write `.claude.json`.
 
 ## Status Legend
 

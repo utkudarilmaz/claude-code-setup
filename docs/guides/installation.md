@@ -48,9 +48,6 @@ After installation, your `~/.claude` directory should contain:
 └── CLAUDE.md         # Global AI conventions
 ```
 
-MCP servers are not synced. Add the ones you want with `claude mcp add`, see
-[MCP Servers](../reference/mcp-servers.md).
-
 ## Basic Usage
 
 Once installed, you can use skills in Claude Code:
