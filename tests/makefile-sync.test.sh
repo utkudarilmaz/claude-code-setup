@@ -88,7 +88,7 @@ run_make update-config TARGET_DIR="$TMP_TARGET_CONFIG"
 check "update-config copies settings.json" test -f "$TMP_TARGET_CONFIG/settings.json"
 check "update-config copies CLAUDE.md" test -f "$TMP_TARGET_CONFIG/CLAUDE.md"
 check "update-config writes nothing else" \
-  test "$(ls -A "$TMP_TARGET_CONFIG" | sort | tr '\n' ' ')" = "CLAUDE.md settings.json "
+  test "$(ls -A "$TMP_TARGET_CONFIG" | LC_ALL=C sort | tr '\n' ' ')" = ".settings.managed.json CLAUDE.md settings.json "
 rm -rf "$TMP_TARGET_CONFIG"
 
 # --- the removed targets are gone ---
