@@ -143,7 +143,7 @@ status:
 	else \
 		printf "  $(YELLOW)●$(NC) CLAUDE.md $(YELLOW)(differs)$(NC)\n"; \
 	fi
-	@if DRY_RUN=1 bash scripts/migrate.sh "$(PLUGIN_DIR)" "$(TARGET_DIR)" | grep -q .; then \
+	@if DRY_RUN=1 bash scripts/migrate.sh "$(PLUGIN_DIR)" "$(TARGET_DIR)" 2>/dev/null | grep -q .; then \
 		printf "  $(YELLOW)●$(NC) old copies of plugin files $(YELLOW)(run make migrate)$(NC)\n"; \
 	fi
 	@echo ""

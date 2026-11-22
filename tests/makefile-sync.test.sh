@@ -297,6 +297,51 @@ check "status works for a home whose path has a space" \
   bash -c '! echo "$0" | grep -q "too many arguments" && echo "$0" | grep "CLAUDE.md" | grep -q synced' "$SPACE_STATUS"
 rm -rf "$TMP_SPACE_PARENT"
 
+# --- help lists every target and only targets that exist ---
+ESC=$(printf '\033')
+HELP_OUTPUT=$(make -C "$REPO_ROOT" --no-print-directory help 2>&1 | sed -e 's/\\033\[[0-9;]*m//g' -e "s/$ESC\[[0-9;]*m//g")
+HELP_COMMANDS=$(echo "$HELP_OUTPUT" | sed -nE 's/^  ([a-z][a-z-]*) +[A-Z].*/\1/p')
+HELP_EXAMPLES=$(echo "$HELP_OUTPUT" | sed -nE 's/^  make ([a-z][a-z-]*) .*/\1/p' | sort -u)
+MAKE_TARGETS=" $(grep -oE '^[a-z][a-z-]*:' "$REPO_ROOT/Makefile" | tr -d ':' | tr '\n' ' ') "
+
+check "help lists commands" test -n "$HELP_COMMANDS"
+for target in $HELP_COMMANDS $HELP_EXAMPLES; do
+  check "help names make $target, which exists" \
+    bash -c 'case "$1" in *" $0 "*) ;; *) exit 1 ;; esac' "$target" "$MAKE_TARGETS"
+done
+for target in $MAKE_TARGETS; do
+  [ "$target" = "help" ] && continue
+  check "help lists make $target" \
+    bash -c 'echo "$1" | grep -qx "$0"' "$target" "$HELP_COMMANDS"
+done
+
+# --- status and diff on an empty or missing home only report ---
+EMPTY_HOME=$(mktemp -d)
+MISSING_HOME="$EMPTY_HOME/missing"
+for home in "$EMPTY_HOME" "$MISSING_HOME"; do
+  label=$([ "$home" = "$EMPTY_HOME" ] && echo "an empty home" || echo "a missing home")
+
+  HOME_STATUS=$(make -C "$REPO_ROOT" --no-print-directory status TARGET_DIR="$home" 2>&1)
+  check "status on $label exits 0" test $? -eq 0
+  check "status on $label calls settings.json missing" \
+    bash -c 'echo "$0" | grep "settings.json" | grep -q "missing"' "$HOME_STATUS"
+  check "status on $label calls CLAUDE.md missing" \
+    bash -c 'echo "$0" | grep "CLAUDE.md" | grep -q "missing"' "$HOME_STATUS"
+  check "status on $label prints no migrate error" \
+    bash -c '! echo "$0" | grep -q "migrate:"' "$HOME_STATUS"
+  check "status on $label does not ask for make migrate" \
+    bash -c '! echo "$0" | grep -q "run make migrate"' "$HOME_STATUS"
+
+  HOME_DIFF=$(make -C "$REPO_ROOT" --no-print-directory diff TARGET_DIR="$home" 2>&1)
+  check "diff on $label exits 0" test $? -eq 0
+  check "diff on $label shows the base settings it would add" \
+    bash -c 'echo "$0" | grep -q "^+ *\"enabledPlugins\""' "$HOME_DIFF"
+  check "diff on $label says CLAUDE.md would be added" \
+    bash -c 'echo "$0" | grep "CLAUDE.md" | grep -q "would add"' "$HOME_DIFF"
+done
+check "status and diff write nothing and do not create a missing home" test -z "$(ls -A "$EMPTY_HOME")"
+rm -rf "$EMPTY_HOME"
+
 echo ""
 if [ "$FAILURES" -gt 0 ]; then
   echo "$FAILURES test(s) failed"
