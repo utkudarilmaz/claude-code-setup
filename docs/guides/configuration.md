@@ -90,7 +90,7 @@ Single skills are turned off via the `skillOverrides` map, even when the plugin 
 }
 ```
 
-The default settings turn off the built-in `anthropic-skills` for docs, office files (`docx`, `xlsx`, `pptx`, `pdf`), browsers (`built-in-browser`, `chrome-browser`), `computer-use`, `google-workspace`, `doc-coauthoring`, `skill-creator`, `morning`, and `import-memory`. They also turn off `anatomy`, the isometric figure skill from [External Tools](external-tools.md#third-party-skills). `make update-settings` keeps entries you add locally (for example `"seo": "off"`), and a key you want different from the repo on one machine goes in `settings.overrides.json`, see [Per-Machine Overrides](../reference/makefile.md#per-machine-overrides).
+The default settings turn off the built-in `anthropic-skills` for docs, office files (`docx`, `xlsx`, `pptx`, `pdf`), browsers (`built-in-browser`, `chrome-browser`), `computer-use`, `google-workspace`, `doc-coauthoring`, `skill-creator`, `morning`, and `import-memory`. They also turn off `anatomy`, the isometric figure skill from [External Tools](external-tools.md#third-party-skills). `make update-settings` keeps entries you add locally (for example `"seo": "off"`). To change a repo value on one machine, use `settings.overrides.json`, see [Per-Machine Overrides](../reference/makefile.md#per-machine-overrides).
 
 ## Hook Configuration
 

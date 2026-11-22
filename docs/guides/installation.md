@@ -81,16 +81,11 @@ make backup    # Creates timestamped backup of ~/.claude
 
 ### Sync Status
 
-Check sync status with color-coded indicators:
-
 ```bash
 make status
 ```
 
-- **Green (●)** - File is synced (identical)
-- **Yellow (●)** - File differs between repo and target
-- **Red (●)** - File missing from target
-- **Blue (●)** - Extra file in target (not in repo)
+The colors are explained in the [Status Legend](../reference/makefile.md#status-legend).
 
 ### StatusLine Not Working
 

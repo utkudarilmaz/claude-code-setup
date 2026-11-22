@@ -57,13 +57,13 @@ To add a new agent, skill, or hook, follow [docs/guides/contributing.md](docs/gu
 
 ## Testing
 
-Run `make test` to execute every `tests/*.test.sh` suite. Hook scripts and Makefile sync behavior are covered; add tests when changing either.
+Run `make test` to execute every `tests/*.test.sh` suite. Hook scripts, Makefile sync, and the settings merge are covered; add tests when changing any of them.
 
 ## Makefile Sync Management
 
 The Makefile syncs `.claude/` into `~/.claude` (or any `TARGET_DIR`):
 
-- `make update-all` - Add missing and update changed files, keep extras; `settings.json` is built by `scripts/apply-settings.sh` from the target file, the repo base, and the home's `settings.overrides.json`, so local keys survive and keys dropped from the repo are deleted
+- `make update-all` - Add missing and update changed files, keep extras; `settings.json` is merged in three layers by `scripts/apply-settings.sh`, see [settings.json Merge](docs/reference/makefile.md#settingsjson-merge)
 - `make update-config` - Run the two config targets below in one go
 - `make update-settings` - Merge only `settings.json`
 - `make update-claude-md` - Copy only `CLAUDE.md`
