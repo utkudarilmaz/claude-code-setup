@@ -1,6 +1,6 @@
 #!/bin/bash
 
-HOOK="$(cd "$(dirname "$0")/.." && pwd)/.claude/hooks/dirty-merge-protection.sh"
+HOOK="$(cd "$(dirname "$0")/.." && pwd)/plugins/core/hooks/dirty-merge-protection.sh"
 FAILURES=0
 
 TMP=$(mktemp -d)

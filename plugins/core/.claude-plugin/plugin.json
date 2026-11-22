@@ -1,0 +1,11 @@
+{
+  "name": "core",
+  "description": "Agents, skills and hooks for docs, tests, reviews, cleanups, changelogs and PRs",
+  "author": {
+    "name": "Utku Darilmaz"
+  },
+  "homepage": "https://github.com/utkudarilmaz/claude-code-setup",
+  "repository": "https://github.com/utkudarilmaz/claude-code-setup",
+  "license": "MIT",
+  "keywords": ["agents", "skills", "hooks", "code-review", "docs", "testing"]
+}

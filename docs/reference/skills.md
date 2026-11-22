@@ -70,15 +70,15 @@ Verify and create test coverage.
 
 ---
 
-## /security-review
+## /security-audit
 
 Perform security-focused code review.
 
 | Mode | Command | Description |
 |------|---------|-------------|
-| Default | `/security-review` | Review recent changes for security vulnerabilities |
-| Scoped | `/security-review <path>` | Review specific file/module for security issues |
-| Comprehensive | `/security-review all` | Complete security audit with TodoWrite planning |
+| Default | `/security-audit` | Review recent changes for security vulnerabilities |
+| Scoped | `/security-audit <path>` | Review specific file/module for security issues |
+| Comprehensive | `/security-audit all` | Complete security audit with TodoWrite planning |
 
 **What it does:**
 - **Default:** Reviews recent commits for security vulnerabilities
@@ -104,12 +104,12 @@ Perform security-focused code review.
 
 **Examples:**
 ```
-/security-review                  # Review recent changes
-/security-review src/auth         # Deep review of authentication module
-/security-review api/handlers     # Review API endpoints
-/security-review lib/payment.ts   # Review specific file
-/security-review controllers/     # Review all controllers
-/security-review all              # Comprehensive security audit with planning
+/security-audit                  # Review recent changes
+/security-audit src/auth         # Deep review of authentication module
+/security-audit api/handlers     # Review API endpoints
+/security-audit lib/payment.ts   # Review specific file
+/security-audit controllers/     # Review all controllers
+/security-audit all              # Comprehensive security audit with planning
 ```
 
 ---

@@ -382,9 +382,9 @@ check "without jq the script says jq is required" grep -q 'jq is required' "$TMP
 check "without jq nothing is written" test ! -e "$HOME_DIR/settings.json"
 
 # --- the repo base is valid and holds no machine secrets ---
-check "repo settings.json is valid JSON" jq empty "$REPO_ROOT/.claude/settings.json"
+check "repo settings.json is valid JSON" jq empty "$REPO_ROOT/config/settings.json"
 check "repo settings.json has no null values" \
-  test "$(jq '[paths(. == null)] | length' "$REPO_ROOT/.claude/settings.json")" = "0"
+  test "$(jq '[paths(. == null)] | length' "$REPO_ROOT/config/settings.json")" = "0"
 
 echo ""
 if [ "$FAILURES" -gt 0 ]; then

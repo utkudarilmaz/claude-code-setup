@@ -1,0 +1,118 @@
+---
+name: simplifier
+description: This skill should be used when the user asks to "clean up code", "remove dead code", "simplify this function", "this code is too complex", "reduce complexity", "find unused imports", "code quality sweep", or "/simplifier". Focuses on dead code, complexity reduction, and duplication removal.
+---
+
+# Simplifier
+
+## Overview
+
+Dispatch the simplifier agent to cleanup dead code, reduce complexity, and improve code quality. Focuses on Go, JavaScript/TypeScript, Python, and Rust codebases.
+
+## When to Use
+
+- After implementing features (cleanup pass)
+- After refactoring (dead code check)
+- When code feels too complex
+- When duplication is suspected
+- With "all" for full project quality audit
+- With specific scope for targeted cleanup
+
+## Invocation Modes
+
+### Default: `/simplifier`
+
+Scans recent changes for cleanup opportunities.
+
+```
+Task tool with subagent_type="core:simplifier"
+prompt: "Review recent code changes for dead code, complexity, and quality issues.
+Identify modified files, find cleanup opportunities, suggest simplifications."
+```
+
+### Scoped: `/simplifier <scope>`
+
+Analyzes only the specified scope (file, module, function).
+
+```
+Task tool with subagent_type="core:simplifier"
+prompt: "Review and simplify code in: [scope]
+Focus only on this area. Find dead code, reduce complexity, improve quality."
+```
+
+**Scope examples:**
+- `/simplifier src/handlers` - simplify handlers module
+- `/simplifier utils/parser.ts` - simplify specific file
+- `/simplifier internal/service` - simplify Go service package
+- `/simplifier UserService` - simplify specific class/service
+
+### Comprehensive: `/simplifier all`
+
+Perform a planned, modular code quality audit covering the entire repository.
+
+```
+Task tool with subagent_type="core:simplifier"
+prompt: "Perform comprehensive code quality audit of the entire repository.
+Create a TodoWrite plan with one item per module or package, then process sequentially.
+Consult ${CLAUDE_SKILL_DIR}/references/comprehensive-mode.md for the quality aspect checklist and execution flow.
+Do not skip any area. Continue until ALL areas are reviewed."
+```
+
+For the quality aspect checklist and example plan, consult **`references/comprehensive-mode.md`**.
+
+## What the Agent Does
+
+- Detects unused imports, variables, functions
+- Finds unreachable code paths
+- Identifies complexity hotspots
+- Spots duplicated logic
+- Suggests simplifications with before/after code
+- Reports severity (HIGH/MEDIUM/LOW)
+
+## Examples
+
+**After adding a feature:**
+```
+/simplifier
+→ Reviews recent changes, suggests cleanup
+```
+
+**Simplify specific module:**
+```
+/simplifier src/services/payment
+→ Focuses only on payment service
+```
+
+**Simplify a complex function:**
+```
+/simplifier processOrder
+→ Analyzes and simplifies the function
+```
+
+**Full project audit:**
+```
+/simplifier all
+→ Creates plan, systematically reviews every module
+```
+
+## Language Focus
+
+| Language | Key Checks |
+|----------|------------|
+| Go | Unchecked errors, empty interface abuse, defer in loops, context propagation |
+| JS/TS | `any` abuse, unused hooks deps, mixed async patterns, optional chaining opportunities |
+| Python | Mutable defaults, broad exceptions, unused imports |
+| Rust | Unwrap in production paths, needless clones, owned parameters for read-only use, verbose matching |
+
+## Additional Resources
+
+Language-specific pattern references are available for deeper analysis. When dispatching the simplifier agent, **detect the primary language(s) in scope** and include the relevant reference content in your dispatch prompt:
+
+| Scope Language | Reference File |
+|----------------|----------------|
+| Go | `references/go-patterns.md` |
+| JavaScript / TypeScript | `references/js-ts-patterns.md` |
+| Python | `references/python-patterns.md` |
+| Rust | `references/rust-patterns.md` |
+
+**Dispatch instruction**: Read the relevant reference file(s) and append their content to the agent prompt under a "## Language-Specific Patterns" heading. If the scope contains multiple languages, include all applicable references. If the language is unknown or mixed, include all four.
