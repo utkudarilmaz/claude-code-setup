@@ -41,10 +41,8 @@ jq -n \
   -f "$filter" > "$tmp/result.json"
 
 jq '.settings' "$tmp/result.json" > "$tmp/settings.json"
-jq '.managed' "$tmp/result.json" > "$tmp/managed.json"
-
 jq -S . "$tmp/target.json" > "$tmp/before.sorted"
-jq -S . "$tmp/settings.json" > "$tmp/after.sorted"
+jq -S '.settings' "$tmp/result.json" > "$tmp/after.sorted"
 
 if cmp -s "$tmp/before.sorted" "$tmp/after.sorted" && [ -f "$settings" ]; then
   changed=0
@@ -56,9 +54,11 @@ if [ "$check" = "1" ]; then
   exit "$changed"
 fi
 
+dry_run="${DRY_RUN:-0}"
+
 if [ "$changed" = "0" ]; then
   echo "Unchanged: settings.json"
-elif [ "${DRY_RUN:-0}" = "1" ]; then
+elif [ "$dry_run" = "1" ]; then
   echo "Would update: settings.json"
   diff -u --label "settings.json (now)" --label "settings.json (after update)" \
     "$tmp/before.sorted" "$tmp/after.sorted" || true
@@ -67,9 +67,10 @@ else
   echo "Updated: settings.json"
 fi
 
-if [ "${DRY_RUN:-0}" = "1" ]; then
-  jq -r '.removed[] | "Would remove: \(.)"' "$tmp/result.json"
+if [ "$dry_run" = "1" ]; then
+  verb="Would remove"
 else
-  cat "$tmp/managed.json" > "$managed"
-  jq -r '.removed[] | "Removed: \(.)"' "$tmp/result.json"
+  jq '.managed' "$tmp/result.json" > "$managed"
+  verb="Removed"
 fi
+jq -r --arg verb "$verb" '.removed[] | "\($verb): \(.)"' "$tmp/result.json"
