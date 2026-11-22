@@ -202,6 +202,77 @@ printf 'n\n' | make -C "$REPO_ROOT" --no-print-directory migrate TARGET_DIR="$OL
 check "migrate stops when the answer is no" test -f "$OLD_HOME/agents/docs.md"
 rm -rf "$OLD_HOME"
 
+# --- migrate never deletes outside the home ---
+MIGRATE="$REPO_ROOT/scripts/migrate.sh"
+PLUGIN_DIR="$REPO_ROOT/plugins/core"
+check "migrate refuses an empty home" \
+  bash -c '! DRY_RUN=1 bash "$0" "$1" "" >/dev/null 2>&1' "$MIGRATE" "$PLUGIN_DIR"
+check "migrate refuses a home that does not exist" \
+  bash -c '! DRY_RUN=1 bash "$0" "$1" "$1/no-such-home" >/dev/null 2>&1' "$MIGRATE" "$PLUGIN_DIR"
+check "migrate refuses the plugin folder as the home" \
+  bash -c '! DRY_RUN=1 bash "$0" "$1" "$1" >/dev/null 2>&1' "$MIGRATE" "$PLUGIN_DIR"
+check "make migrate with an empty TARGET_DIR fails" \
+  bash -c '! make -C "$0" --no-print-directory FORCE=1 DRY_RUN=1 migrate TARGET_DIR= >/dev/null 2>&1' "$REPO_ROOT"
+
+new_old_home
+OUTSIDE=$(mktemp -d)
+mv "$OLD_HOME/agents" "$OUTSIDE/agents"
+ln -s "$OUTSIDE/agents" "$OLD_HOME/agents"
+ln -s "$OLD_HOME/missing" "$OLD_HOME/skills/tester"
+run_make migrate TARGET_DIR="$OLD_HOME"
+check "migrate does not delete through a symlinked agents folder" test -f "$OUTSIDE/agents/docs.md"
+check "migrate still cleans the folders that are not symlinks" test ! -e "$OLD_HOME/skills/docs"
+check "migrate removes a dangling symlink copy" test ! -L "$OLD_HOME/skills/tester"
+rm -rf "$OLD_HOME" "$OUTSIDE"
+
+new_old_home
+cat > "$OLD_HOME/settings.json" <<'JSON'
+{
+  "hooks": {
+    "PreToolUse": [
+      {"matcher": "Bash", "hooks": [
+        {"type": "command", "command": "~/.claude/hooks/dirty-merge-protection.sh"},
+        {"type": "command", "command": "bash \"$HOME/.claude/hooks/sensitive-file-protection.sh\""},
+        {"type": "command", "command": "/opt/tools/hooks/notification.sh"},
+        {"type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/notification.sh"}
+      ]},
+      {"matcher": "Read", "hooks": []}
+    ],
+    "Stop": []
+  }
+}
+JSON
+run_make migrate TARGET_DIR="$OLD_HOME"
+check "migrate removes old hook entries in their older spellings" \
+  test "$(jq '[.hooks.PreToolUse[].hooks[].command | select(test("\\.claude/hooks/(dirty|sensitive)"))] | length' "$OLD_HOME/settings.json")" = "0"
+check "migrate keeps a user hook with the same name in another folder" \
+  test "$(jq '[.hooks.PreToolUse[0].hooks[].command | select(endswith("/hooks/notification.sh"))] | length' "$OLD_HOME/settings.json")" = "2"
+check "migrate keeps entries it did not touch, even empty ones" \
+  test "$(jq -c '[.hooks.PreToolUse[1].matcher, .hooks.Stop]' "$OLD_HOME/settings.json")" = '["Read",[]]'
+rm -rf "$OLD_HOME"
+
+# --- backup copies the real files behind a symlinked home ---
+REAL_HOME=$(mktemp -d)
+LINK_PARENT=$(mktemp -d)
+touch "$REAL_HOME/settings.json"
+ln -s "$REAL_HOME" "$LINK_PARENT/home"
+LINK_BACKUPS=$(mktemp -d)
+make -C "$REPO_ROOT" --no-print-directory backup TARGET_DIR="$LINK_PARENT/home" BACKUP_DIR="$LINK_BACKUPS" >/dev/null 2>&1
+LINK_BACKUP=$(ls -d "$LINK_BACKUPS"/claude_* 2>/dev/null | head -1)
+check "backup of a symlinked home is a real copy" \
+  bash -c '[ -n "$0" ] && [ ! -L "$0" ] && [ -f "$0/settings.json" ]' "$LINK_BACKUP"
+rm -rf "$REAL_HOME" "$LINK_PARENT" "$LINK_BACKUPS"
+
+if [ "$(id -u)" != "0" ]; then
+  new_old_home
+  touch "$OLD_HOME/unreadable"
+  chmod 000 "$OLD_HOME/unreadable"
+  run_make migrate TARGET_DIR="$OLD_HOME"
+  check "migrate deletes nothing when the backup fails" test -f "$OLD_HOME/agents/docs.md"
+  chmod 600 "$OLD_HOME/unreadable"
+  rm -rf "$OLD_HOME"
+fi
+
 # --- the claudish server URL and API key stay machine-local ---
 TMP_CLAUDISH="$TMP_TARGET_SETTINGS/claudish-test"
 mkdir -p "$TMP_CLAUDISH"

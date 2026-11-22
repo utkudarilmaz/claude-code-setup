@@ -173,7 +173,7 @@ backup:
 		if [ "$(DRY_RUN)" = "1" ]; then \
 			echo "Would create backup at: $$backup_path"; \
 		else \
-			cp -r "$(TARGET_DIR)" "$$backup_path"; \
+			cp -RH "$(TARGET_DIR)" "$$backup_path" && \
 			echo "$(GREEN)Backup created:$(NC) $$backup_path"; \
 		fi \
 	else \

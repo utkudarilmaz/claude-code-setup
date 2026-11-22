@@ -113,11 +113,14 @@ backup with `make backup`, then runs `scripts/migrate.sh`, which:
   the plugin ships, plus the old `agents/security-review.md` and
   `skills/security-review/`
 - removes the hook entries in `settings.json` whose command runs one of the
-  plugin's scripts from `<home>/hooks/`, then any matcher group or event left
-  empty
+  plugin's scripts from `<home>/hooks/`, then any matcher group or event that
+  this left empty
 
 Anything else in the home stays, including your own agents, skills and hooks.
-`FORCE=1` skips the question. Running it again does nothing.
+It stops when the backup fails or the home is empty, missing, or inside the
+plugin. When `agents/`, `skills/` or `hooks/` is a symlink, it leaves that
+folder alone and names the files to remove by hand. `FORCE=1` skips the
+question. Running it again does nothing.
 
 ## Utility Commands
 
