@@ -104,7 +104,7 @@ check "make update-mcp no longer exists" no_rule_for update-mcp
 run_make update-settings TARGET_DIR="$TMP_TARGET_SETTINGS"
 
 check "update-settings copies settings.json" \
-  cmp -s "$REPO_ROOT/.claude/settings.json" "$TMP_TARGET_SETTINGS/settings.json"
+  test "$(jq -S . "$REPO_ROOT/.claude/settings.json")" = "$(jq -S . "$TMP_TARGET_SETTINGS/settings.json")"
 check "update-settings leaves CLAUDE.md alone" test ! -e "$TMP_TARGET_SETTINGS/CLAUDE.md"
 
 jq '. + {localOnlyKey: true}' "$TMP_TARGET_SETTINGS/settings.json" > "$TMP_TARGET_SETTINGS/settings.json.tmp"
@@ -113,6 +113,18 @@ run_make update-settings TARGET_DIR="$TMP_TARGET_SETTINGS"
 
 check "update-settings keeps machine-local keys" \
   test "$(jq -r '.localOnlyKey' "$TMP_TARGET_SETTINGS/settings.json")" = "true"
+
+STATUS_OUTPUT=$(make -C "$REPO_ROOT" --no-print-directory status TARGET_DIR="$TMP_TARGET_SETTINGS" 2>&1)
+export STATUS_OUTPUT
+check "status calls settings.json synced when only local keys differ" \
+  bash -c 'echo "$STATUS_OUTPUT" | grep "settings.json" | grep -q "synced"'
+
+jq '.modelSettings["stale-model"] = {effortLevel: "low"}' "$TMP_TARGET_SETTINGS/settings.json" > "$TMP_TARGET_SETTINGS/settings.json.tmp"
+mv "$TMP_TARGET_SETTINGS/settings.json.tmp" "$TMP_TARGET_SETTINGS/settings.json"
+run_make update-settings TARGET_DIR="$TMP_TARGET_SETTINGS" PRUNE=modelSettings
+check "update-settings PRUNE clears a stale leaf" \
+  test "$(jq -r '.modelSettings | has("stale-model")' "$TMP_TARGET_SETTINGS/settings.json")" = "false"
+check "update-settings PRUNE=env fails" bash -c '! make -C "$0" --no-print-directory update-settings TARGET_DIR="$1" PRUNE=env >/dev/null 2>&1' "$REPO_ROOT" "$TMP_TARGET_SETTINGS"
 
 # --- update-claude-md syncs CLAUDE.md without touching the other config files ---
 run_make update-claude-md TARGET_DIR="$TMP_TARGET_CLAUDE_MD"

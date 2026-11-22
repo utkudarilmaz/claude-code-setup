@@ -11,6 +11,7 @@ BOLD := \033[1m
 
 DRY_RUN ?= 0
 FORCE ?= 0
+PRUNE ?=
 
 NO_RSYNC ?=
 
@@ -62,6 +63,7 @@ help:
 	@echo "  DRY_RUN=1    Preview changes without executing"
 	@echo "  FORCE=1      Skip confirmation prompts"
 	@echo "  NO_RSYNC=1   Force plain-copy fallback instead of rsync"
+	@echo "  PRUNE=\"k ..\" With update-settings, clear stale leaves under these top-level keys (never env)"
 	@echo ""
 	@echo "$(BOLD)Examples$(NC):"
 	@echo "  make update-all              # Update files in $(TARGET_DIR)"
@@ -226,34 +228,7 @@ update-config: update-settings update-claude-md
 update-settings:
 	@echo "$(BOLD)Updating settings.json...$(NC) $(DRY_RUN_MSG)"
 	$(call ensure_target_dir)
-	@if [ ! -f $(TARGET_DIR)/settings.json ]; then \
-		if [ "$(DRY_RUN)" = "1" ]; then \
-			echo "Would add: settings.json"; \
-		else \
-			cp $(REPO_DIR)/settings.json $(TARGET_DIR)/settings.json; \
-			echo "Added: settings.json"; \
-		fi \
-	elif command -v jq >/dev/null 2>&1; then \
-		merged=$$(jq -s '.[0] * .[1]' $(TARGET_DIR)/settings.json $(REPO_DIR)/settings.json); \
-		if printf '%s\n' "$$merged" | diff -q - $(TARGET_DIR)/settings.json > /dev/null 2>&1; then \
-			echo "Unchanged: settings.json"; \
-		elif [ "$(DRY_RUN)" = "1" ]; then \
-			echo "Would merge: settings.json (repo values win, local-only keys kept)"; \
-		else \
-			printf '%s\n' "$$merged" > $(TARGET_DIR)/settings.json; \
-			echo "Merged: settings.json (repo values win, local-only keys kept)"; \
-		fi \
-	elif ! diff -q $(REPO_DIR)/settings.json $(TARGET_DIR)/settings.json > /dev/null 2>&1; then \
-		if [ "$(DRY_RUN)" = "1" ]; then \
-			echo "Would update: settings.json (jq not found, local-only keys will be lost)"; \
-		else \
-			echo "$(YELLOW)Warning: jq not found, overwriting settings.json (local-only keys lost)$(NC)"; \
-			cp $(REPO_DIR)/settings.json $(TARGET_DIR)/settings.json; \
-			echo "Updated: settings.json"; \
-		fi \
-	else \
-		echo "Unchanged: settings.json"; \
-	fi
+	@DRY_RUN="$(DRY_RUN)" PRUNE="$(PRUNE)" bash scripts/apply-settings.sh "$(REPO_DIR)/settings.json" "$(TARGET_DIR)"
 
 .PHONY: update-claude-md
 update-claude-md:
@@ -311,15 +286,20 @@ status:
 	$(call status_dir,skills,Skills)
 	$(call status_dir,hooks,Hooks)
 	@echo "$(BOLD)Config Files:$(NC)"
-	@for f in settings.json CLAUDE.md; do \
-		if [ ! -f $(TARGET_DIR)/$$f ]; then \
-			printf "  $(RED)●$(NC) $$f $(RED)(missing)$(NC)\n"; \
-		elif diff -q $(REPO_DIR)/$$f $(TARGET_DIR)/$$f > /dev/null 2>&1; then \
-			printf "  $(GREEN)●$(NC) $$f $(GREEN)(synced)$(NC)\n"; \
-		else \
-			printf "  $(YELLOW)●$(NC) $$f $(YELLOW)(differs)$(NC)\n"; \
-		fi \
-	done
+	@if [ ! -f $(TARGET_DIR)/settings.json ]; then \
+		printf "  $(RED)●$(NC) settings.json $(RED)(missing)$(NC)\n"; \
+	elif bash scripts/apply-settings.sh --check $(REPO_DIR)/settings.json $(TARGET_DIR); then \
+		printf "  $(GREEN)●$(NC) settings.json $(GREEN)(synced)$(NC)\n"; \
+	else \
+		printf "  $(YELLOW)●$(NC) settings.json $(YELLOW)(differs)$(NC)\n"; \
+	fi
+	@if [ ! -f $(TARGET_DIR)/CLAUDE.md ]; then \
+		printf "  $(RED)●$(NC) CLAUDE.md $(RED)(missing)$(NC)\n"; \
+	elif diff -q $(REPO_DIR)/CLAUDE.md $(TARGET_DIR)/CLAUDE.md > /dev/null 2>&1; then \
+		printf "  $(GREEN)●$(NC) CLAUDE.md $(GREEN)(synced)$(NC)\n"; \
+	else \
+		printf "  $(YELLOW)●$(NC) CLAUDE.md $(YELLOW)(differs)$(NC)\n"; \
+	fi
 	@echo ""
 	@echo "$(BOLD)Legend:$(NC) $(GREEN)●$(NC) synced  $(YELLOW)●$(NC) differs  $(RED)●$(NC) missing  $(BLUE)●$(NC) extra"
 
@@ -332,15 +312,14 @@ diff:
 	$(call diff_dir,skills,Skills)
 	$(call diff_dir,hooks,Hooks)
 	@echo "$(BOLD)Config Files:$(NC)"
-	@for f in settings.json CLAUDE.md; do \
-		if [ ! -f $(TARGET_DIR)/$$f ]; then \
-			printf "  $(GREEN)●$(NC) $$f $(GREEN)(would add - not in $(TARGET_DIR))$(NC)\n"; \
-		elif ! diff -q $(REPO_DIR)/$$f $(TARGET_DIR)/$$f > /dev/null 2>&1; then \
-			echo "$(YELLOW)--- $$f ---$(NC)"; \
-			diff $(DIFF_COLOR) $(TARGET_DIR)/$$f $(REPO_DIR)/$$f; \
-			echo ""; \
-		fi \
-	done
+	@DRY_RUN=1 bash scripts/apply-settings.sh $(REPO_DIR)/settings.json $(TARGET_DIR)
+	@if [ ! -f $(TARGET_DIR)/CLAUDE.md ]; then \
+		printf "  $(GREEN)●$(NC) CLAUDE.md $(GREEN)(would add - not in $(TARGET_DIR))$(NC)\n"; \
+	elif ! diff -q $(REPO_DIR)/CLAUDE.md $(TARGET_DIR)/CLAUDE.md > /dev/null 2>&1; then \
+		echo "$(YELLOW)--- CLAUDE.md ---$(NC)"; \
+		diff $(DIFF_COLOR) $(TARGET_DIR)/CLAUDE.md $(REPO_DIR)/CLAUDE.md; \
+		echo ""; \
+	fi
 
 .PHONY: backup
 backup:

@@ -21,16 +21,61 @@ run alone and touches only its own file.
 
 ### settings.json Merge
 
-`update-settings` does not overwrite the target `settings.json`. When `jq` is
-available, it deep-merges the repo file into the target file:
+`update-settings` builds the target `settings.json` from three layers with
+`scripts/apply-settings.sh`. Later layers win:
 
-- Keys that exist only in the target (machine-local state) are kept
-- Keys present in the repo win on conflicts
-- Keys deleted from the repo file are NOT removed from the target; delete
-  them manually if needed
+1. The current target `settings.json`, with its machine-local keys
+2. The repo base, `.claude/settings.json`
+3. The home's own `settings.overrides.json`, if it exists
 
-Without `jq`, the old copy behavior is used and a warning is printed because
-local-only keys are lost.
+The rules:
+
+- Keys that only the target has are kept. Secrets in `env` and keys Claude
+  Code writes itself stay as they are.
+- Repo keys win over the target, and overrides win over the repo.
+- A key set to `null` in the overrides file is removed from the result.
+- A key that the repo or the overrides file stops setting is deleted from the
+  target on the next run. An object left empty by that is deleted too.
+- Arrays are replaced whole, never merged item by item.
+
+To know what it set last time, the script saves the merged repo and override
+layers to `.settings.managed.json` in the target. Leave that file alone. On
+the first run it does not exist yet, so nothing is deleted.
+
+`jq` is required. `DRY_RUN=1` prints a diff of the change and writes nothing.
+Each deleted key is printed as `Removed: <key path>`.
+
+### Per-Machine Overrides
+
+Put values that differ on one machine in `<target>/settings.overrides.json`.
+It is never in the repo. For example, a machine that wants a higher effort
+level and no status line:
+
+```json
+{
+  "effortLevel": "high",
+  "statusLine": null
+}
+```
+
+Settings that Claude Code saves for you, such as `/effort` or a plugin you
+turn on in `/plugin`, are written to `settings.json`. If the repo also sets
+that key, the next `make update-settings` puts the repo value back. Move the
+value into the overrides file to keep it.
+
+### Clearing Old Keys
+
+A home synced before `.settings.managed.json` existed can still hold keys the
+repo dropped long ago. `PRUNE` deletes every leaf under the named top-level
+keys that neither the repo nor the overrides file sets:
+
+```bash
+make update-settings DRY_RUN=1 PRUNE="modelSettings enabledPlugins"  # Preview
+make update-settings PRUNE="modelSettings enabledPlugins"
+```
+
+Move anything you want to keep into the overrides file first. `PRUNE` refuses
+`env`, because that is where local secrets live.
 
 `update-claude-md` always makes a plain copy of `CLAUDE.md`.
 

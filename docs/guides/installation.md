@@ -3,7 +3,7 @@
 ## Requirements
 
 - **Bash** - For hook scripts and status line commands
-- **jq** - Merges `settings.json` on sync; without it `settings.json` is copied over
+- **jq** - Required to merge `settings.json` on sync
 - **Audio system** (optional) - For notification sounds:
   - macOS: Built-in `afplay` command
   - Linux: PulseAudio (`paplay`) or ALSA (`aplay`)
