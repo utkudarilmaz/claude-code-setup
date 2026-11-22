@@ -30,8 +30,8 @@
    [Invocation modes, dispatch logic, examples]
    ```
 
-2. The skill is available as `/<name>`, and as `/core:<name>` when another
-   command has the same name
+2. The skill works as `/core:<name>`, and as `/<name>` unless another command
+   has the same name
 3. In a prompt passed to an agent, point at reference files with
    `${CLAUDE_SKILL_DIR}/references/<file>.md`, or
    `${CLAUDE_PLUGIN_ROOT}/skills/<other skill>/references/<file>.md` for another

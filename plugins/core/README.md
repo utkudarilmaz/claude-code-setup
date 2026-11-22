@@ -15,7 +15,7 @@ pull requests.
 - **Skills:** `/changelog`, `/code-slop-cleaner`, `/create-pr`, `/docs`,
   `/pr-comment-cleaner`, `/release-tag`, `/review-analyzer`, `/security-audit`,
   `/seo`, `/simplifier`, `/tester`, `/text-slop-cleaner`. Each also works as
-  `/core:<name>` when another command has the same name.
+  `/core:<name>`, which you need when another command has the same name.
 - **Agents:** the ten skills other than `/changelog` and `/release-tag` each
   dispatch an agent of the same name. `/changelog` uses `changelog-generator`
   and `release-notes`. All are named `core:<agent>`.

@@ -8,6 +8,7 @@ them into each home, see [Makefile Commands](../reference/makefile.md#settingsjs
 ```json
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {...},                       // CLAUDISH_* settings for the claudish plugin
   "statusLine": {...},                // Status bar configuration
   "enabledPlugins": {...},            // Plugin enable/disable map
   "skillOverrides": {...},            // Skill on/off map
@@ -96,24 +97,9 @@ The default settings turn off the built-in `anthropic-skills` for docs, office f
 
 ## Hook Configuration
 
-Hooks intercept tool calls for automation. See [Extension Model](../architecture/extension-model.md) for details.
-
-### Adding a Hook
-
-```json
-{
-  "hooks": {
-    "PreToolUse": [{
-      "matcher": "ToolPattern",
-      "hooks": [{"type": "command", "command": "path/to/script.sh"}]
-    }]
-  }
-}
-```
+Hook scripts live in `plugins/core/hooks/` and are wired in `plugins/core/hooks/hooks.json` with `${CLAUDE_PLUGIN_ROOT}`, so they run from the installed plugin. The base `settings.json` has no `hooks` block. To add a hook, follow [Contributing](contributing.md#new-hook). The wiring format is in [Extension Model](../architecture/extension-model.md#hook-system).
 
 ### Current Hooks
-
-Hook scripts live in `plugins/core/hooks/` and are wired in `plugins/core/hooks/hooks.json` with `${CLAUDE_PLUGIN_ROOT}`, so they run from the installed plugin. The base `settings.json` has no `hooks` block.
 
 #### sensitive-file-protection
 
@@ -150,7 +136,7 @@ The status line uses dynamic node path resolution for cross-platform compatibili
 bash -c 'EXISTING=$(\"$(command -v node)\" ...) ...'
 ```
 
-This approach works on both macOS (where node may be at `/opt/homebrew/bin/node`) and Linux (typically `/usr/bin/node`), avoiding hardcoded paths.
+This finds `node` wherever it is installed: `/opt/homebrew/bin/node` with Homebrew, `~/.nvm/versions/node/*/bin/node` with nvm, or `/usr/bin/node` on Linux.
 
 The command also prints `user@hostname` in dim text at the start of the first line, before the claude-hud output. It reads `id -un` and `hostname -s` on every refresh, so each machine shows its own values and no claude-hud setting is needed.
 

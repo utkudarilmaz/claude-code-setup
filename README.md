@@ -76,6 +76,7 @@ claude-code-setup/
 ├── tests/                      # Tests for hooks, scripts, Makefile and plugin layout
 ├── docs/                       # Guides and references
 ├── .claude/                    # Project settings for working on this repo only
+├── .github/workflows/          # CI runs make test on Linux and macOS
 ├── Makefile                    # Syncs config/ into a Claude home
 └── CLAUDE.md                   # Guidance for contributors
 ```

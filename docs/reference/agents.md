@@ -1,6 +1,6 @@
 # Agents Reference
 
-Agents are specialized AI assistants that contain domain expertise and execution workflows. They are invoked via the Task tool with `subagent_type="<name>"`.
+Agents hold the domain expertise and workflows. They ship in the `core` plugin and load as `core:<name>`, so a skill dispatches one with the Task tool and `subagent_type="core:<name>"`, for example `subagent_type="core:docs"`. The headings below use the bare file name.
 
 ## docs
 
@@ -77,7 +77,7 @@ Code quality expert that removes dead code, reduces complexity, and eliminates d
 
 ## security-audit
 
-Security expert that performs comprehensive security-focused code review.
+Security expert that performs security-focused code review. Formerly `security-review`.
 
 **Trigger:** When reviewing auth, payment, API endpoints, or input handling
 

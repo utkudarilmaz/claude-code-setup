@@ -117,8 +117,8 @@ backup with `make backup`, then runs `scripts/migrate.sh`, which:
   this left empty
 
 Anything else in the home stays, including your own agents, skills and hooks.
-It stops when the backup fails or the home is empty, missing, or inside the
-plugin. When `agents/`, `skills/` or `hooks/` is a symlink, it leaves that
+It stops when the backup fails, when `TARGET_DIR` is empty, or when the home
+is missing, is `/`, or is inside the plugin. When `agents/`, `skills/` or `hooks/` is a symlink, it leaves that
 folder alone and names the files to remove by hand. `FORCE=1` skips the
 question. Running it again does nothing.
 
@@ -144,7 +144,7 @@ hidden, then the `CLAUDE.md` diff.
 | `TARGET_DIR=<path>` | Sync a Claude home other than `~/.claude` |
 | `DRY_RUN=1` | Preview changes without writing |
 | `FORCE=1` | Skip confirmation prompts |
-| `PRUNE="<keys>"` | With `update-settings`, clear stale leaves under these top-level keys once |
+| `PRUNE="<keys>"` | With `update-settings` or `update-config`, clear stale leaves under these top-level keys once |
 | `BACKUP_DIR=<path>` | Where `make backup` and `make migrate` put backups (default `~/.claude-backups`) |
 
 To keep more than one Claude home, such as a work and a personal profile, sync
