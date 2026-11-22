@@ -91,12 +91,47 @@ There are two ways to add it. Pick one. With both, the server shows up twice.
 
 ### With the Stripe plugin
 
-The `stripe` plugin from `claude-plugins-official` ships this server together
-with Stripe skills such as `stripe-best-practices` and `upgrade-stripe`. The
-repo `settings.json` lists the plugin but turns it off.
+The `stripe` plugin ships this server together with Stripe skills such as
+`stripe-best-practices` and `upgrade-stripe`. Two marketplaces carry it:
 
-1. Turn it on for the home in its `settings.overrides.json`, so
-   `make update-settings` does not turn it off again:
+| Plugin ID | Install with |
+|-----------|--------------|
+| `stripe@anthropic-plugin-directory` | `stripe agent setup` |
+| `stripe@claude-plugins-official` | `settings.overrides.json` |
+
+Turn on only one of them. With both, the skills and the server load twice.
+
+#### With `stripe agent setup`
+
+This needs the [Stripe CLI](../guides/external-tools.md#stripe-cli).
+
+1. Check what is installed. This changes nothing:
+   ```bash
+   stripe agent setup --status --client claude-code
+   ```
+2. Install the plugin:
+   ```bash
+   stripe agent setup --client claude-code
+   ```
+   It runs `claude plugin install stripe@anthropic-plugin-directory`. That
+   marketplace is built into Claude Code, so there is nothing to add first.
+   For a custom home, put `CLAUDE_CONFIG_DIR=<home>` in front of the command.
+3. Start a new Claude Code session. Run `/mcp`, pick `plugin:stripe:stripe`, and
+   choose Authenticate. Sign in to Stripe in the browser and pick the account.
+4. Run `/mcp` again and check that the server is connected.
+
+The repo `settings.json` does not set this plugin ID, so `make update-settings`
+keeps it.
+
+To remove it: `claude plugin uninstall stripe@anthropic-plugin-directory`.
+
+#### With `settings.overrides.json`
+
+The repo `settings.json` lists `stripe@claude-plugins-official` but turns it
+off, so turning it on in `/plugin` gets undone by the next
+`make update-settings`.
+
+1. Turn it on in the home's `settings.overrides.json`:
    ```json
    {
      "enabledPlugins": {
@@ -107,18 +142,17 @@ repo `settings.json` lists the plugin but turns it off.
    See [Per-Machine Overrides](makefile.md#per-machine-overrides).
 2. Run `make update-settings`, or `make update-settings TARGET_DIR=<home>` for a
    custom home.
-3. Start a new Claude Code session. Run `/mcp`, pick `plugin:stripe:stripe`, and
-   choose Authenticate. Sign in to Stripe in the browser and pick the account.
-4. Run `/mcp` again and check that the server is connected.
+3. Sign in from `/mcp` as in steps 3 and 4 above.
+
+To remove it, set the value back to `false` in `settings.overrides.json` and
+run `make update-settings`.
+
+#### Telemetry
 
 The plugin sends the name of each Stripe skill you use to Stripe. Set
 `DISABLE_TELEMETRY=1` or `DO_NOT_TRACK=1` to stop it. At session start it also
 checks for a newer Stripe CLI and may suggest installing it, but it never
-installs anything. The CLI is optional, see
-[External Tools](../guides/external-tools.md#stripe-cli).
-
-To remove it, set the value back to `false` in `settings.overrides.json` and
-run `make update-settings`.
+installs anything.
 
 ### Server only
 
