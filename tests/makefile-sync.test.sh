@@ -94,7 +94,7 @@ rm -rf "$TMP_TARGET_CONFIG"
 # --- the removed targets are gone ---
 no_rule_for() {
   make -C "$REPO_ROOT" --no-print-directory -n "$1" TARGET_DIR="$TMP_TARGET" 2>&1 \
-    | grep -qF "No rule to make target '$1'"
+    | grep -qE "No rule to make target .$1'"
 }
 
 check "make install no longer exists" no_rule_for install
