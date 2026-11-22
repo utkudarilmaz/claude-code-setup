@@ -11,6 +11,7 @@ ones you use on each machine with the steps below.
 | gopls-lsp plugin | `gopls` | `command -v gopls` |
 | claudish-to-english plugin | a local model server | `/claudish` in Claude Code |
 | terraform MCP server | Docker | see [MCP Servers](../reference/mcp-servers.md) |
+| stripe plugin | Stripe CLI | `command -v stripe` |
 | google-maps-scraper skill | Node.js (`npx`) | `ls ~/.claude/skills` |
 | anatomy skill | Node.js (`npx`) | `ls ~/.claude/skills` |
 
@@ -32,6 +33,19 @@ go install golang.org/x/tools/gopls@latest
 ```
 
 On macOS, `brew install typescript-language-server gopls` works too.
+
+## Stripe CLI
+
+`stripe agent setup` installs the stripe plugin, so you need the CLI to use
+that path. The plugin's skills also use it, for example `stripe listen` to
+forward webhooks to a local server. The plugin and its MCP server are set up
+in [MCP Servers](../reference/mcp-servers.md#stripe).
+
+- macOS: `brew install stripe/stripe-cli/stripe`
+- Linux: the `.deb` or `.rpm` package, or the release tarball, from
+  [docs.stripe.com/stripe-cli](https://docs.stripe.com/stripe-cli)
+
+Then run `stripe login` once.
 
 ## Third-Party Skills
 
