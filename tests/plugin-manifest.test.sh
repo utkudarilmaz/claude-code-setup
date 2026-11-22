@@ -69,8 +69,8 @@ check "release-tag invokes core:changelog through the Skill tool" \
 
 missing_skills=$(grep -rhoE 'Skill tool to invoke `[^`]+`' "$PLUGIN" | sed -E 's/.*`([^`]+)`$/\1/' | sort -u | while read -r ref; do
   case "$ref" in
-    core:*) test -f "$PLUGIN/skills/${ref#core:}/SKILL.md" || echo "$ref" ;;
-    *) echo "$ref" ;;
+    (core:*) test -f "$PLUGIN/skills/${ref#core:}/SKILL.md" || echo "$ref" ;;
+    (*) echo "$ref" ;;
   esac
 done)
 check "every Skill tool call names a core: skill that exists" test -z "$missing_skills"
@@ -107,8 +107,8 @@ done
 
 missing_agents=$(grep -rhoE 'subagent_type="[^"]*"' "$PLUGIN" | sed 's/subagent_type="//; s/"$//' | sort -u | while read -r ref; do
   case "$ref" in
-    core:*) test -f "$PLUGIN/agents/${ref#core:}.md" || echo "$ref" ;;
-    *) echo "$ref" ;;
+    (core:*) test -f "$PLUGIN/agents/${ref#core:}.md" || echo "$ref" ;;
+    (*) echo "$ref" ;;
   esac
 done)
 check "every subagent_type names a core: agent that exists" test -z "$missing_agents"
