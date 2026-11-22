@@ -87,9 +87,8 @@ OpenAI API format, and `CLAUDISH_MODEL=gemma4-26b`. These steps use
    "CLAUDISH_OPENAI_KEY": "<the key from step 3>"
    ```
    Then make the file readable only by you with
-   `chmod 600 ~/.claude/settings.json`. If `~/.claude` is a symlink to this
-   repo, do not add the key there, because it would land in the tracked
-   `.claude/settings.json`. Sync with `make update-all` instead.
+   `chmod 600 ~/.claude/settings.json`. Never add the key to the repo's
+   `config/settings.json`, which is public.
 6. Start a new Claude Code session and run `/claudish` to check the provider
    and the model.
 
