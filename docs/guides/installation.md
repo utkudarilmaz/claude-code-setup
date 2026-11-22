@@ -103,12 +103,23 @@ for one session:
 claude --plugin-dir ./plugins/core
 ```
 
-Or add the checkout as the marketplace, so the plugin loads in place from your
-working tree:
+To keep one machine on your checkout, so the plugin loads in place from the
+working tree, point the marketplace at it in that home's
+`settings.overrides.json`:
 
+```json
+{
+  "extraKnownMarketplaces": {
+    "claude-code-setup": {
+      "source": { "source": "directory", "path": "/path/to/claude-code-setup", "repo": null }
+    }
+  }
+}
 ```
-/plugin marketplace add /path/to/claude-code-setup
-```
+
+Then run `make update-settings`. Adding the checkout with
+`/plugin marketplace add` alone also works, but the next `make update-config`
+puts the GitHub source back.
 
 ## Troubleshooting
 
