@@ -35,8 +35,20 @@ searches the public Terraform registry docs.
    claude mcp add --scope user terraform -- \
      docker run -i --rm -e TFE_TOKEN -e TFE_ADDRESS hashicorp/terraform-mcp-server
    ```
-4. Export `TFE_TOKEN`, and `TFE_ADDRESS` if you need it, in your shell profile,
-   then start a new Claude Code session.
+   Keep `-e TFE_TOKEN` without a value. `-e TFE_TOKEN=<token>` would store the
+   token in plain text in `.claude.json`.
+4. Put the token in a file only you can read, then load it from your shell
+   profile. Shell profiles are often readable by others or kept in a dotfiles
+   repo, so do not write the token there:
+   ```bash
+   mkdir -p ~/.config/terraform-mcp
+   (umask 077; printf 'TFE_TOKEN: '; stty -echo; read -r t; stty echo; echo
+    printf "export TFE_TOKEN='%s'\n" "$t" > ~/.config/terraform-mcp/env)
+   chmod 600 ~/.config/terraform-mcp/env
+   ```
+   Add `[ -f ~/.config/terraform-mcp/env ] && . ~/.config/terraform-mcp/env` to
+   your shell profile. Export `TFE_ADDRESS` there too if you need it. Then start
+   a new Claude Code session.
 5. Run `/mcp` and check that `terraform` is connected.
 
 To remove it: `claude mcp remove terraform --scope user`.

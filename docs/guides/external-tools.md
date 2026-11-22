@@ -69,6 +69,7 @@ OpenAI API format, and `CLAUDISH_MODEL=gemma4-26b`. These steps use
    ```bash
    mkdir -p ~/.config/llama-server
    (umask 077; printf 'sk-local-%s\n' "$(openssl rand -hex 24)" > ~/.config/llama-server/api-key)
+   chmod 600 ~/.config/llama-server/api-key
    ```
 4. Start the server. The alias must match `CLAUDISH_MODEL`. Thinking is off
    because the plugin does not turn it off for this kind of server:
@@ -85,9 +86,15 @@ OpenAI API format, and `CLAUDISH_MODEL=gemma4-26b`. These steps use
    "CLAUDISH_OPENAI_URL": "http://127.0.0.1:11435/v1",
    "CLAUDISH_OPENAI_KEY": "<the key from step 3>"
    ```
+   Then make the file readable only by you with
+   `chmod 600 ~/.claude/settings.json`. If `~/.claude` is a symlink to this
+   repo, do not add the key there, because it would land in the tracked
+   `.claude/settings.json`. Sync with `make update-all` instead.
 6. Start a new Claude Code session and run `/claudish` to check the provider
    and the model.
 
 The URL and the key are not in the repo, so `make update-settings` keeps them.
 A machine without its own server can set `CLAUDISH_OPENAI_URL` to another host
-that runs the server with `--host 0.0.0.0`.
+that runs the server. On that host, set `--host` to an address on a private
+network you trust, such as a VPN address, not `0.0.0.0`. The server speaks
+plain HTTP, so the key and every message cross the network unencrypted.
