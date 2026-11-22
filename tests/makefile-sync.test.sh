@@ -76,6 +76,30 @@ check "hook command follows CLAUDE_CONFIG_DIR rather than falling back" \
 # --- MCP servers are set up by hand, so the sync never writes .claude.json ---
 check "update-all leaves .claude.json alone" test ! -e "$TMP_TARGET/.claude.json"
 
+TMP_HOME=$(mktemp -d)
+HOME="$TMP_HOME" run_make update-all
+check "update-all with the default home leaves ~/.claude.json alone" test ! -e "$TMP_HOME/.claude.json"
+rm -rf "$TMP_HOME"
+
+# --- update-config runs only update-settings and update-claude-md ---
+TMP_TARGET_CONFIG=$(mktemp -d)
+run_make update-config TARGET_DIR="$TMP_TARGET_CONFIG"
+
+check "update-config copies settings.json" test -f "$TMP_TARGET_CONFIG/settings.json"
+check "update-config copies CLAUDE.md" test -f "$TMP_TARGET_CONFIG/CLAUDE.md"
+check "update-config writes nothing else" \
+  test "$(ls -A "$TMP_TARGET_CONFIG" | sort | tr '\n' ' ')" = "CLAUDE.md settings.json "
+rm -rf "$TMP_TARGET_CONFIG"
+
+# --- the removed targets are gone ---
+no_rule_for() {
+  make -C "$REPO_ROOT" --no-print-directory -n "$1" TARGET_DIR="$TMP_TARGET" 2>&1 \
+    | grep -qF "No rule to make target '$1'"
+}
+
+check "make install no longer exists" no_rule_for install
+check "make update-mcp no longer exists" no_rule_for update-mcp
+
 # --- update-settings syncs settings.json without touching the other config files ---
 run_make update-settings TARGET_DIR="$TMP_TARGET_SETTINGS"
 
