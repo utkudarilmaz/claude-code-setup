@@ -2,15 +2,6 @@ REPO_DIR := $(shell pwd)/.claude
 TARGET_DIR := $(HOME)/.claude
 BACKUP_DIR := $(HOME)/.claude-backups
 
-# Claude Code reads MCP servers from .claude.json, not from settings.json.
-# For the default home it lives next to ~/.claude; for a custom home
-# (CLAUDE_CONFIG_DIR, e.g. ~/.claude-personal) it lives inside the target dir.
-ifeq ($(TARGET_DIR),$(HOME)/.claude)
-CLAUDE_JSON := $(HOME)/.claude.json
-else
-CLAUDE_JSON := $(TARGET_DIR)/.claude.json
-endif
-
 GREEN := \033[0;32m
 YELLOW := \033[0;33m
 RED := \033[0;31m
@@ -52,18 +43,9 @@ help:
 	@echo "  $(GREEN)update-agents$(NC)    Update .claude/agents/ only"
 	@echo "  $(GREEN)update-skills$(NC)    Update .claude/skills/ only"
 	@echo "  $(GREEN)update-hooks$(NC)     Update .claude/hooks/ only"
-	@echo "  $(GREEN)update-config$(NC)    Run update-settings, update-claude-md, and update-mcp"
+	@echo "  $(GREEN)update-config$(NC)    Run update-settings and update-claude-md"
 	@echo "  $(GREEN)update-settings$(NC)  Update settings.json only (merged)"
 	@echo "  $(GREEN)update-claude-md$(NC) Update CLAUDE.md only"
-	@echo "  $(GREEN)update-mcp$(NC)       Update MCP servers in $(CLAUDE_JSON) only"
-	@echo ""
-	@echo "$(BOLD)Install Commands$(NC) (install external tools and requirements):"
-	@echo "  $(GREEN)install$(NC)          Go through every registered target, asking for each"
-	@echo "  $(GREEN)install sync$(NC)     Repo files synced into the target: $(INSTALL_SYNC)"
-	@echo "  $(GREEN)install skills$(NC)   Skill installs: $(INSTALL_SKILLS)"
-	@echo "  $(GREEN)install plugins$(NC)  Plugin requirements: $(INSTALL_PLUGINS)"
-	@echo "  $(GREEN)install mcps$(NC)     MCP server requirements: $(INSTALL_MCPS)"
-	@echo "  $(GREEN)install <target>$(NC) Install a single target"
 	@echo ""
 	@echo "$(BOLD)Remove Commands$(NC) (remove repo files from $(TARGET_DIR)):"
 	@echo "  $(RED)rm-agents$(NC)      Remove matching agents"
@@ -83,51 +65,12 @@ help:
 	@echo ""
 	@echo "$(BOLD)Examples$(NC):"
 	@echo "  make update-all              # Update files in $(TARGET_DIR)"
-	@echo "  make install                 # Ask for each registered target"
-	@echo "  make install google-maps-scraper  # Install a specific target"
 	@echo "  make DRY_RUN=1 rm-agents     # Preview agent removal"
 	@echo "  make FORCE=1 rm-skills       # Remove skills without confirmation"
 
 # ============================================================================
-# INSTALL TARGETS REGISTRY
-# ============================================================================
-
-# To add an install target:
-#   1. Append its <name> to the matching group below
-#   2. Add a matching `install-<name>` recipe in the INSTALL COMMANDS section
-INSTALL_SKILLS := google-maps-scraper anatomy
-INSTALL_PLUGINS := claude-hud claude-pray typescript-lsp gopls-lsp
-INSTALL_MCPS := terraform-mcp
-INSTALL_SYNC := hooks config
-INSTALL_GROUPS := sync skills plugins mcps
-INSTALL_TARGETS := $(INSTALL_SYNC) $(INSTALL_SKILLS) $(INSTALL_PLUGINS) $(INSTALL_MCPS)
-
-# ============================================================================
 # UTILITY FUNCTIONS
 # ============================================================================
-
-define install_brew_pkg
-	@if command -v $(2) >/dev/null 2>&1; then \
-		echo "Present: $(2)"; \
-	elif [ "$(DRY_RUN)" = "1" ]; then \
-		echo "Would ask, then install: $(1)"; \
-	elif ! command -v brew >/dev/null 2>&1; then \
-		echo "$(RED)Homebrew not found. Install it from https://brew.sh first.$(NC)"; \
-		exit 1; \
-	else \
-		install=1; \
-		if [ "$(FORCE)" != "1" ]; then \
-			printf "$(YELLOW)Install $(1) with brew? [y/N]: $(NC)"; \
-			read -r answer; \
-			case "$$answer" in y|Y) ;; *) install=0;; esac; \
-		fi; \
-		if [ "$$install" = "1" ]; then \
-			brew install $(1); \
-		else \
-			echo "Skipped. Run later with: brew install $(1)"; \
-		fi; \
-	fi
-endef
 
 define confirm
 	@if [ "$(FORCE)" != "1" ] && [ "$(DRY_RUN)" != "1" ]; then \
@@ -146,32 +89,6 @@ endef
 
 define cleanup_empty_dirs
 	@find $(TARGET_DIR) -type d -empty -delete 2>/dev/null || true
-endef
-
-define sync_mcp_servers
-	@echo "$(BOLD)Updating MCP servers...$(NC) $(DRY_RUN_MSG)"
-	@if [ -f $(REPO_DIR)/mcp-servers.json ]; then \
-		if ! command -v jq >/dev/null 2>&1; then \
-			echo "$(YELLOW)Warning: jq not found, skipping MCP server sync$(NC)"; \
-		elif [ ! -f $(CLAUDE_JSON) ]; then \
-			if [ "$(DRY_RUN)" = "1" ]; then \
-				echo "Would add: mcpServers to $(CLAUDE_JSON)"; \
-			else \
-				jq '{mcpServers: .mcpServers}' $(REPO_DIR)/mcp-servers.json > $(CLAUDE_JSON); \
-				echo "Added: mcpServers to $(CLAUDE_JSON)"; \
-			fi \
-		else \
-			merged=$$(jq -s '.[0] * {mcpServers: ((.[0].mcpServers // {}) + .[1].mcpServers)}' $(CLAUDE_JSON) $(REPO_DIR)/mcp-servers.json); \
-			if printf '%s\n' "$$merged" | diff -q - $(CLAUDE_JSON) > /dev/null 2>&1; then \
-				echo "Unchanged: mcpServers in $(CLAUDE_JSON)"; \
-			elif [ "$(DRY_RUN)" = "1" ]; then \
-				echo "Would merge: mcpServers into $(CLAUDE_JSON) (repo servers win, local servers kept)"; \
-			else \
-				printf '%s\n' "$$merged" > $(CLAUDE_JSON); \
-				echo "Merged: mcpServers into $(CLAUDE_JSON) (repo servers win, local servers kept)"; \
-			fi \
-		fi \
-	fi
 endef
 
 define sync_dir
@@ -303,7 +220,7 @@ update-hooks:
 	$(call sync_dir,hooks)
 
 .PHONY: update-config
-update-config: update-settings update-claude-md update-mcp
+update-config: update-settings update-claude-md
 
 .PHONY: update-settings
 update-settings:
@@ -360,157 +277,6 @@ update-claude-md:
 		echo "Unchanged: CLAUDE.md"; \
 	fi
 
-.PHONY: update-mcp
-update-mcp:
-	$(call ensure_target_dir)
-	$(call sync_mcp_servers)
-
-# ============================================================================
-# INSTALL COMMANDS (install external tools and skills)
-# ============================================================================
-
-.PHONY: install
-install:
-	@targets="$(filter-out install,$(MAKECMDGOALS))"; \
-	if [ -z "$$targets" ]; then \
-		targets="all"; \
-	fi; \
-	expanded=""; \
-	for t in $$targets; do \
-		case "$$t" in \
-			all) expanded="$$expanded $(addprefix ask:,$(INSTALL_TARGETS))" ;; \
-			sync) expanded="$$expanded $(addprefix ask:,$(INSTALL_SYNC))" ;; \
-			skills) expanded="$$expanded $(addprefix ask:,$(INSTALL_SKILLS))" ;; \
-			plugins) expanded="$$expanded $(addprefix ask:,$(INSTALL_PLUGINS))" ;; \
-			mcps) expanded="$$expanded $(addprefix ask:,$(INSTALL_MCPS))" ;; \
-			*) expanded="$$expanded $$t" ;; \
-		esac; \
-	done; \
-	for item in $$expanded; do \
-		t="$${item#ask:}"; \
-		if ! echo " $(INSTALL_TARGETS) " | grep -q " $$t "; then \
-			echo "$(RED)Unknown install target: $$t$(NC)"; \
-			echo "Available groups: $(INSTALL_GROUPS)"; \
-			echo "Available targets: $(INSTALL_TARGETS)"; \
-			exit 1; \
-		fi; \
-		if [ "$$item" != "$$t" ] && [ "$(FORCE)" != "1" ] && [ "$(DRY_RUN)" != "1" ]; then \
-			printf "$(YELLOW)Install $$t? [y/N]: $(NC)"; \
-			answer=""; \
-			read -r answer || true; \
-			case "$$answer" in \
-				y|Y) ;; \
-				*) echo "Skipped $$t. Run later with: make install $$t"; continue ;; \
-			esac; \
-		fi; \
-		$(MAKE) --no-print-directory install-$$t; \
-	done
-
-.PHONY: install-hooks
-install-hooks: update-hooks
-
-.PHONY: install-config
-install-config: update-config
-
-.PHONY: install-google-maps-scraper
-install-google-maps-scraper:
-	@echo "$(BOLD)Installing google-maps-scraper...$(NC) $(DRY_RUN_MSG)"
-	@if [ "$(DRY_RUN)" = "1" ]; then \
-		echo "Would run: npx skills add gosom/google-maps-scraper"; \
-	else \
-		npx skills add gosom/google-maps-scraper; \
-	fi
-
-.PHONY: install-anatomy
-install-anatomy:
-	@echo "$(BOLD)Installing anatomy...$(NC) $(DRY_RUN_MSG)"
-	@if [ "$(DRY_RUN)" = "1" ]; then \
-		echo "Would run: CLAUDE_CONFIG_DIR=$(TARGET_DIR) npx skills add wheresryan22/anatomy -g -a claude-code"; \
-	else \
-		CLAUDE_CONFIG_DIR="$(TARGET_DIR)" npx skills add wheresryan22/anatomy -g -a claude-code; \
-	fi
-
-.PHONY: install-claude-hud
-install-claude-hud:
-	@echo "$(BOLD)Installing claude-hud requirements...$(NC) $(DRY_RUN_MSG)"
-	$(call install_brew_pkg,node,node)
-	@echo "$(GREEN)claude-hud requirements done.$(NC)"
-
-.PHONY: install-claude-pray
-install-claude-pray:
-	@echo "$(BOLD)Installing claude-pray requirements...$(NC) $(DRY_RUN_MSG)"
-	$(call install_brew_pkg,node,node)
-	@echo "$(GREEN)claude-pray requirements done.$(NC)"
-
-.PHONY: install-typescript-lsp
-install-typescript-lsp:
-	@echo "$(BOLD)Installing typescript-lsp requirements...$(NC) $(DRY_RUN_MSG)"
-	$(call install_brew_pkg,typescript-language-server,typescript-language-server)
-	@echo "$(GREEN)typescript-lsp requirements done.$(NC)"
-
-.PHONY: install-gopls-lsp
-install-gopls-lsp:
-	@echo "$(BOLD)Installing gopls-lsp requirements...$(NC) $(DRY_RUN_MSG)"
-	$(call install_brew_pkg,gopls,gopls)
-	@echo "$(GREEN)gopls-lsp requirements done.$(NC)"
-
-.PHONY: install-terraform-mcp
-install-terraform-mcp:
-	@echo "$(BOLD)Installing terraform-mcp requirements...$(NC) $(DRY_RUN_MSG)"
-	@if command -v docker >/dev/null 2>&1; then \
-		echo "Present: docker"; \
-	elif [ "$(DRY_RUN)" = "1" ]; then \
-		echo "Would ask, then install: docker (brew cask)"; \
-	elif ! command -v brew >/dev/null 2>&1; then \
-		echo "$(RED)Homebrew not found. Install it from https://brew.sh first.$(NC)"; \
-		exit 1; \
-	else \
-		install=1; \
-		if [ "$(FORCE)" != "1" ]; then \
-			printf "$(YELLOW)Install Docker Desktop with brew (--cask docker)? [y/N]: $(NC)"; \
-			read -r answer; \
-			case "$$answer" in y|Y) ;; *) install=0;; esac; \
-		fi; \
-		if [ "$$install" = "1" ]; then \
-			brew install --cask docker; \
-		else \
-			echo "Skipped. Run later with: brew install --cask docker"; \
-		fi; \
-	fi
-	@if ! command -v docker >/dev/null 2>&1; then \
-		:; \
-	elif ! docker info >/dev/null 2>&1; then \
-		echo "$(YELLOW)Docker is not running. Start it, then rerun to pull the server image.$(NC)"; \
-	elif docker image inspect hashicorp/terraform-mcp-server >/dev/null 2>&1; then \
-		echo "Present: hashicorp/terraform-mcp-server image"; \
-	elif [ "$(DRY_RUN)" = "1" ]; then \
-		echo "Would ask, then pull: hashicorp/terraform-mcp-server"; \
-	else \
-		pull=1; \
-		if [ "$(FORCE)" != "1" ]; then \
-			printf "$(YELLOW)Pull the hashicorp/terraform-mcp-server image? [y/N]: $(NC)"; \
-			read -r answer; \
-			case "$$answer" in y|Y) ;; *) pull=0;; esac; \
-		fi; \
-		if [ "$$pull" = "1" ]; then \
-			docker pull hashicorp/terraform-mcp-server; \
-		else \
-			echo "Skipped. Run later with: docker pull hashicorp/terraform-mcp-server"; \
-		fi; \
-	fi
-	@if [ -n "$$TFE_TOKEN" ]; then \
-		echo "Present: TFE_TOKEN"; \
-	else \
-		echo "$(YELLOW)TFE_TOKEN is not set. Export it before launching Claude Code or the HCP Terraform tools stay hidden.$(NC)"; \
-	fi
-	@echo "$(GREEN)terraform-mcp requirements done.$(NC)"
-
-# `make install claude-hud` also makes `claude-hud` a goal of its own; these
-# no-op rules stop Make failing with "No rule to make target".
-.PHONY: all $(INSTALL_GROUPS) $(INSTALL_TARGETS)
-all $(INSTALL_GROUPS) $(INSTALL_TARGETS):
-	@:
-
 # ============================================================================
 # REMOVE COMMANDS (remove repo files from ~/.claude)
 # ============================================================================
@@ -555,25 +321,6 @@ status:
 		fi \
 	done
 	@echo ""
-	@echo "$(BOLD)MCP Servers ($(CLAUDE_JSON)):$(NC)"
-	@if [ ! -f $(REPO_DIR)/mcp-servers.json ]; then \
-		echo "  No mcp-servers.json in repo."; \
-	elif ! command -v jq >/dev/null 2>&1; then \
-		echo "  jq not found, cannot inspect MCP servers."; \
-	else \
-		for s in $$(jq -r '.mcpServers | keys[]' $(REPO_DIR)/mcp-servers.json); do \
-			repo=$$(jq -c ".mcpServers[\"$$s\"]" $(REPO_DIR)/mcp-servers.json); \
-			installed=$$(jq -c ".mcpServers[\"$$s\"] // empty" $(CLAUDE_JSON) 2>/dev/null); \
-			if [ -z "$$installed" ]; then \
-				printf "  $(RED)●$(NC) $$s $(RED)(missing)$(NC)\n"; \
-			elif [ "$$repo" = "$$installed" ]; then \
-				printf "  $(GREEN)●$(NC) $$s $(GREEN)(synced)$(NC)\n"; \
-			else \
-				printf "  $(YELLOW)●$(NC) $$s $(YELLOW)(differs)$(NC)\n"; \
-			fi; \
-		done; \
-	fi
-	@echo ""
 	@echo "$(BOLD)Legend:$(NC) $(GREEN)●$(NC) synced  $(YELLOW)●$(NC) differs  $(RED)●$(NC) missing  $(BLUE)●$(NC) extra"
 
 .PHONY: diff
@@ -594,24 +341,6 @@ diff:
 			echo ""; \
 		fi \
 	done
-	@echo ""
-	@echo "$(BOLD)MCP Servers ($(CLAUDE_JSON)):$(NC)"
-	@if [ -f $(REPO_DIR)/mcp-servers.json ] && command -v jq >/dev/null 2>&1; then \
-		for s in $$(jq -r '.mcpServers | keys[]' $(REPO_DIR)/mcp-servers.json); do \
-			repo=$$(jq ".mcpServers[\"$$s\"]" $(REPO_DIR)/mcp-servers.json); \
-			installed=$$(jq ".mcpServers[\"$$s\"] // empty" $(CLAUDE_JSON) 2>/dev/null); \
-			if [ -z "$$installed" ]; then \
-				printf "  $(GREEN)●$(NC) $$s $(GREEN)(would add - not in $(CLAUDE_JSON))$(NC)\n"; \
-			elif [ "$$repo" != "$$installed" ]; then \
-				echo "$(YELLOW)--- $$s ---$(NC)"; \
-				tmp_local=$$(mktemp); tmp_repo=$$(mktemp); \
-				printf '%s\n' "$$installed" > "$$tmp_local"; printf '%s\n' "$$repo" > "$$tmp_repo"; \
-				diff $(DIFF_COLOR) "$$tmp_local" "$$tmp_repo" || true; \
-				rm -f "$$tmp_local" "$$tmp_repo"; \
-				echo ""; \
-			fi; \
-		done; \
-	fi
 
 .PHONY: backup
 backup:

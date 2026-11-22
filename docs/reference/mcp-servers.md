@@ -1,15 +1,19 @@
 # MCP Servers
 
-The servers declared in `.claude/mcp-servers.json` are merged into `.claude.json`
-by `make update-config` or `make update-mcp`. See
-[Makefile Commands](makefile.md#mcp-server-sync) for how that merge works.
+The repo does not install or sync MCP servers. Add the ones you want on each
+machine by hand with `claude mcp add`. Claude Code stores user-scoped servers
+in `.claude.json`:
+
+- Default home: `~/.claude.json`
+- Custom home (`CLAUDE_CONFIG_DIR`, for example `~/.claude-personal`):
+  `<home>/.claude.json`
+
+To add a server to a custom home, set `CLAUDE_CONFIG_DIR` on the command, for
+example `CLAUDE_CONFIG_DIR=~/.claude-personal claude mcp add ...`.
 
 | Server | Runs with | Needs |
 |--------|-----------|-------|
 | `terraform` | `docker run -i --rm hashicorp/terraform-mcp-server` | Docker, `TFE_TOKEN` |
-
-`make install mcps` installs these requirements, asking for approval before
-each install. See [Makefile Commands](makefile.md#install-commands).
 
 ## terraform
 
@@ -18,10 +22,41 @@ HCP Terraform or Terraform Enterprise (`list_runs`, `get_run_details`,
 `get_plan_logs`, `get_plan_json_output`, `get_apply_logs`, workspace tools) and
 searches the public Terraform registry docs.
 
+### Setup
+
+1. Install Docker and start it. On macOS: `brew install --cask docker`. On
+   Linux, use your distribution's Docker Engine package.
+2. Pull the image:
+   ```bash
+   docker pull hashicorp/terraform-mcp-server
+   ```
+3. Add the server for your user:
+   ```bash
+   claude mcp add --scope user terraform -- \
+     docker run -i --rm -e TFE_TOKEN -e TFE_ADDRESS hashicorp/terraform-mcp-server
+   ```
+   Keep `-e TFE_TOKEN` without a value. `-e TFE_TOKEN=<token>` would store the
+   token in plain text in `.claude.json`.
+4. Put the token in a file only you can read, then load it from your shell
+   profile. Shell profiles are often readable by others or kept in a dotfiles
+   repo, so do not write the token there:
+   ```bash
+   mkdir -p ~/.config/terraform-mcp
+   (umask 077; printf 'TFE_TOKEN: '; stty -echo; read -r t; stty echo; echo
+    printf "export TFE_TOKEN='%s'\n" "$t" > ~/.config/terraform-mcp/env)
+   chmod 600 ~/.config/terraform-mcp/env
+   ```
+   Add `[ -f ~/.config/terraform-mcp/env ] && . ~/.config/terraform-mcp/env` to
+   your shell profile. Export `TFE_ADDRESS` there too if you need it. Then start
+   a new Claude Code session.
+5. Run `/mcp` and check that `terraform` is connected.
+
+To remove it: `claude mcp remove terraform --scope user`.
+
 ### Environment
 
-Docker receives both variables from the environment of the process that starts
-Claude Code, so export them before you launch it.
+`docker run -e NAME` with no value copies the variable from the environment of
+the process that starts Claude Code, so export both before you launch it.
 
 | Variable | Required | Default |
 |----------|----------|---------|

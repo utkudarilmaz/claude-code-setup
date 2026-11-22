@@ -11,13 +11,12 @@ make update-all       # Update agents, skills, hooks, and config
 make update-agents    # Update .claude/agents/ only
 make update-skills    # Update .claude/skills/ only
 make update-hooks     # Update .claude/hooks/ only
-make update-config    # Run update-settings, update-claude-md, and update-mcp
+make update-config    # Run update-settings and update-claude-md
 make update-settings  # Update settings.json only (merged)
 make update-claude-md # Update CLAUDE.md only
-make update-mcp       # Update MCP servers in .claude.json only
 ```
 
-`update-config` is a group target. Each of the three targets under it can be
+`update-config` is a group target. Each of the two targets under it can be
 run alone and touches only its own file.
 
 ### settings.json Merge
@@ -35,83 +34,15 @@ local-only keys are lost.
 
 `update-claude-md` always makes a plain copy of `CLAUDE.md`.
 
-### MCP Server Sync
+## What the Makefile Does Not Do
 
-Claude Code does not read MCP servers from `settings.json` or from any file
-inside `~/.claude/`. User-scoped servers live in `.claude.json`:
+The Makefile writes only inside `TARGET_DIR`, plus `~/.claude-backups` for
+`make backup`. It does not install programs, third-party skills, or MCP
+servers, and it never touches `.claude.json`. Set those up by hand:
 
-- Default home: `~/.claude.json` (next to `~/.claude`)
-- Custom home (`CLAUDE_CONFIG_DIR`, e.g. `TARGET_DIR=$HOME/.claude-personal`):
-  `<target dir>/.claude.json`
-
-`update-mcp` merges the `mcpServers` block from the repo's
-`.claude/mcp-servers.json` into that file, without touching `settings.json` or
-`CLAUDE.md`. `update-config` runs it as its last step:
-
-- Servers defined in the repo replace the local definition of the same name
-  wholesale (no stale keys survive inside a repo-managed server)
-- Servers that exist only locally are kept
-- Everything else in `.claude.json` (session state, auth, projects) is
-  untouched
-
-Removing a server from `.claude/mcp-servers.json` does not remove it from an
-already synced `.claude.json`. Run `claude mcp remove <name> -s user` to remove
-it there, with `CLAUDE_CONFIG_DIR` set when the target is a custom home.
-
-The merge requires `jq`; without it the MCP sync is skipped with a warning.
-The servers themselves are documented in [MCP Servers](mcp-servers.md).
-`make status` and `make diff` report each repo-managed server as synced,
-differing, or missing against the resolved `.claude.json`.
-
-## Install Commands
-
-Install external tools and the requirements they need to run, from a registry
-of named targets split into groups:
-
-```bash
-make install                    # Ask for each registered target
-make install sync               # Ask for hooks and config
-make install skills             # Ask for each skill install
-make install plugins            # Ask for each plugin requirement
-make install mcps               # Ask for each MCP server requirement
-make install <target>           # Install a single target without asking
-make DRY_RUN=1 install anatomy  # Preview without installing
-```
-
-`make install`, `make install all`, and the group forms ask `Install <target>?
-[y/N]` before each target and install only the ones you approve. A declined
-target is skipped and the run moves on to the next one. Naming a target
-yourself (`make install anatomy`) installs it without that question. `FORCE=1`
-installs everything without asking, and `DRY_RUN=1` previews every target
-without asking.
-
-Registered targets:
-
-| Group | Target | Action |
-|-------|--------|--------|
-| sync | `hooks` | Same as `make update-hooks`: copies the hook scripts into `TARGET_DIR/hooks` |
-| sync | `config` | Same as `make update-config`: merges `settings.json` (repo values win), copies `CLAUDE.md`, and merges the MCP servers |
-| skills | `google-maps-scraper` | `npx skills add gosom/google-maps-scraper` |
-| skills | `anatomy` | `npx skills add wheresryan22/anatomy -g -a claude-code` into `TARGET_DIR/skills`; turned off by default in `skillOverrides` |
-| plugins | `claude-hud` | `node` via brew, needed by the statusline |
-| plugins | `claude-pray` | `node` via brew, needed by the statusline |
-| plugins | `typescript-lsp` | `typescript-language-server` via brew, the language server the TypeScript LSP plugin talks to |
-| plugins | `gopls-lsp` | `gopls` via brew, the language server the Go LSP plugin talks to |
-| mcps | `terraform-mcp` | Docker Desktop via brew cask, the `hashicorp/terraform-mcp-server` image pulled, and a warning when `TFE_TOKEN` is not exported |
-
-The remaining enabled plugins need no local installs: superpowers,
-commit-commands, explanatory-output-style, and code-review are skills and
-commands only. The claudish plugin needs a model server that is set up by
-hand, see [Installation](../guides/installation.md#claudish-plugin).
-
-Inside a target, each step is skipped when the requirement is already present, and each asks
-for approval first, only when actually needed: installing missing brew
-packages and pulling the terraform server image.
-Declining a step skips it and the run continues. `FORCE=1` skips all prompts.
-
-To add a new target, append its name to the matching group variable in the
-Makefile (`INSTALL_SYNC`, `INSTALL_SKILLS`, `INSTALL_PLUGINS`, or `INSTALL_MCPS`) and add a
-matching `install-<name>` recipe in the INSTALL COMMANDS section.
+- [External Tools](../guides/external-tools.md) - Node.js, language servers,
+  the claudish model server, and third-party skills
+- [MCP Servers](mcp-servers.md) - `claude mcp add` steps for each server
 
 ## Remove Commands
 
@@ -158,10 +89,10 @@ repo into both.
 ## Diff Output (`make diff`)
 
 `make diff` compares `TARGET_DIR` against `REPO_DIR` in that order, so the
-colors match what `make update` would do to the target:
+colors match what `make update-all` would do to the target:
 
-- **Green** lines are lines `make update` would add to the target
-- **Red** lines are lines `make update` would remove from the target
+- **Green** lines are lines `make update-all` would add to the target
+- **Red** lines are lines `make update-all` would remove from the target
 
 A legend line is printed at the top of the output as a reminder. The
 Makefile detects once, via the `DIFF_COLOR` variable, whether the local
@@ -176,13 +107,9 @@ shared through parameterized `define` blocks in the Makefile (`sync_dir`,
 `rm_dir`, `status_dir`, `diff_dir`), so all three directories behave the
 same way. `make test` runs `tests/makefile-sync.test.sh`, which exercises
 the sync commands against a temporary `TARGET_DIR`, including the
-`NO_RSYNC=1` fallback path, the settings.json merge, and the MCP server
-merge into `.claude.json` from both `update-config` and `update-mcp`. It
-checks that `update-settings`, `update-claude-md`, and `update-mcp` each
-leave the other two config files alone. It
-also checks that `DRY_RUN=1 install anatomy` prints the command without
-running `npx`, and that `install` asks for each target and installs only the
-approved ones, including `hooks` and `config`.
+`NO_RSYNC=1` fallback path and the settings.json merge. It checks that
+`update-settings` and `update-claude-md` each leave the other config file
+alone, and that `update-all` does not write `.claude.json`.
 
 ## Status Legend
 
