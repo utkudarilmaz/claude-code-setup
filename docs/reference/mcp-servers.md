@@ -116,6 +116,15 @@ This needs the [Stripe CLI](../guides/external-tools.md#stripe-cli).
    It runs `claude plugin install stripe@anthropic-plugin-directory`. That
    marketplace is built into Claude Code, so there is nothing to add first.
    For a custom home, put `CLAUDE_CONFIG_DIR=<home>` in front of the command.
+
+   Then run `claude plugin list` and check the ID. It can come out as
+   `stripe@claude-plugins-official`, which the repo turns off. If it does,
+   switch it:
+   ```bash
+   claude plugin uninstall stripe@claude-plugins-official
+   claude plugin install stripe@anthropic-plugin-directory
+   make update-settings
+   ```
 3. Start a new Claude Code session. Run `/mcp`, pick `plugin:stripe:stripe`, and
    choose Authenticate. Sign in to Stripe in the browser and pick the account.
 4. Run `/mcp` again and check that the server is connected.
