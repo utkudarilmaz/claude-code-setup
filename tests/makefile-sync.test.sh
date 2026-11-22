@@ -96,7 +96,7 @@ check "update-settings PRUNE=env fails" bash -c '! make -C "$0" --no-print-direc
 TMP_TARGET_DIFF=$(mktemp -d)
 printf '{"effortLevel":"local-drift","env":{"MY_TOKEN":"diff-secret"}}\n' > "$TMP_TARGET_DIFF/settings.json"
 cp "$TMP_TARGET_DIFF/settings.json" "$TMP_TARGET_DIFF.before"
-REPO_EFFORT=$(jq -r '.effortLevel' "$REPO_ROOT/.claude/settings.json")
+REPO_EFFORT=$(jq -r '.effortLevel' "$REPO_ROOT/config/settings.json")
 
 DIFF_OUTPUT=$(cd "$TMP_TARGET_DIFF" && make -C "$REPO_ROOT" --no-print-directory diff TARGET_DIR="$TMP_TARGET_DIFF" 2>&1)
 export DIFF_OUTPUT REPO_EFFORT

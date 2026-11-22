@@ -365,7 +365,7 @@ new_home "with space"
 echo '{"effortLevel":"medium"}' > "$BASE"
 apply
 check "a home path with spaces works" test "$(value .effortLevel)" = '"medium"'
-bash "$APPLY" "$REPO_ROOT/.claude/settings.json" "$HOME_DIR" >/dev/null 2>&1
+bash "$APPLY" "$REPO_ROOT/config/settings.json" "$HOME_DIR" >/dev/null 2>&1
 STATUS_OUTPUT=$(make -C "$REPO_ROOT" --no-print-directory status TARGET_DIR="$HOME_DIR" 2>&1)
 check "make status works with a TARGET_DIR with spaces" \
   bash -c 'printf "%s" "$0" | grep -q "settings.json.*(synced)"' "$STATUS_OUTPUT"
