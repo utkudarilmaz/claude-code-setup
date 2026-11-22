@@ -53,7 +53,7 @@ help:
 	@echo "$(BOLD)Options$(NC):"
 	@echo "  DRY_RUN=1    Preview changes without writing"
 	@echo "  FORCE=1      Skip confirmation prompts"
-	@echo "  PRUNE=\"k ..\" With update-settings, clear stale leaves under these top-level keys (never env)"
+	@echo "  PRUNE=\"k ..\" Clear stale settings.json leaves under these top-level keys (never env)"
 	@echo ""
 	@echo "$(BOLD)Examples$(NC):"
 	@echo "  make update-config                                  # Sync $(TARGET_DIR)"
