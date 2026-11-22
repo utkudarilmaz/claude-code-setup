@@ -39,8 +39,11 @@ $target[0] as $t
     | select(. as $p | ($nulls | index([$p])) != null
         or ($t | getpath($p) | type != "object" or length == 0))
   ] as $removed
+| (($t | delpaths($removed) | prune_empty_parents($removed)) * $managed) as $settings
 | {
-    settings: (($t | delpaths($removed) | prune_empty_parents($removed)) * $managed),
+    settings: $settings,
     managed: (reduce ($managed | leaves[]) as $p ($managed; setpath($p; true))),
-    removed: [$removed[] | select(. as $p | $t | getpath($p) != null) | map(tostring) | join(".")]
+    removed: [$removed[]
+      | select(. as $p | ($t | getpath($p)) != null and (try ($settings | getpath($p)) catch 0) == null)
+      | map(tostring) | join(".")]
   }

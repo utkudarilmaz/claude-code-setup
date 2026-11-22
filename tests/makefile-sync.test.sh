@@ -126,6 +126,34 @@ check "update-settings PRUNE clears a stale leaf" \
   test "$(jq -r '.modelSettings | has("stale-model")' "$TMP_TARGET_SETTINGS/settings.json")" = "false"
 check "update-settings PRUNE=env fails" bash -c '! make -C "$0" --no-print-directory update-settings TARGET_DIR="$1" PRUNE=env >/dev/null 2>&1' "$REPO_ROOT" "$TMP_TARGET_SETTINGS"
 
+# --- diff, status and DRY_RUN show a drifted settings.json without writing, from any directory ---
+TMP_TARGET_DIFF=$(mktemp -d)
+printf '{"effortLevel":"local-drift","env":{"MY_TOKEN":"diff-secret"}}\n' > "$TMP_TARGET_DIFF/settings.json"
+cp "$TMP_TARGET_DIFF/settings.json" "$TMP_TARGET_DIFF.before"
+REPO_EFFORT=$(jq -r '.effortLevel' "$REPO_ROOT/.claude/settings.json")
+
+DIFF_OUTPUT=$(cd "$TMP_TARGET_DIFF" && make -C "$REPO_ROOT" --no-print-directory diff TARGET_DIR="$TMP_TARGET_DIFF" 2>&1)
+export DIFF_OUTPUT REPO_EFFORT
+check "diff run from another directory says settings.json would update" \
+  bash -c 'echo "$DIFF_OUTPUT" | grep -q "^Would update: settings.json"'
+check "diff shows the repo value that would win" \
+  bash -c 'echo "$DIFF_OUTPUT" | grep -q "^+ *\"effortLevel\": \"$REPO_EFFORT\""'
+check "diff does not print env values" bash -c '! echo "$DIFF_OUTPUT" | grep -q "diff-secret"'
+check "diff leaves settings.json alone" cmp -s "$TMP_TARGET_DIFF.before" "$TMP_TARGET_DIFF/settings.json"
+check "diff writes no snapshot" test ! -e "$TMP_TARGET_DIFF/.settings.managed.json"
+
+STATUS_OUTPUT=$(make -C "$REPO_ROOT" --no-print-directory status TARGET_DIR="$TMP_TARGET_DIFF" 2>&1)
+check "status calls a drifted settings.json differs" \
+  bash -c 'echo "$STATUS_OUTPUT" | grep "settings.json" | grep -q "differs"'
+
+run_make update-settings TARGET_DIR="$TMP_TARGET_DIFF" DRY_RUN=1
+check "update-settings DRY_RUN=1 writes nothing" cmp -s "$TMP_TARGET_DIFF.before" "$TMP_TARGET_DIFF/settings.json"
+
+(cd "$TMP_TARGET_DIFF" && run_make update-settings TARGET_DIR="$TMP_TARGET_DIFF")
+check "update-settings run from another directory applies the repo value" \
+  test "$(jq -r '.effortLevel' "$TMP_TARGET_DIFF/settings.json")" = "$REPO_EFFORT"
+rm -rf "$TMP_TARGET_DIFF" "$TMP_TARGET_DIFF.before"
+
 # --- update-claude-md syncs CLAUDE.md without touching the other config files ---
 run_make update-claude-md TARGET_DIR="$TMP_TARGET_CLAUDE_MD"
 
@@ -169,6 +197,18 @@ check "update-settings keeps a local claudish server URL" \
   test "$(jq -r '.env.CLAUDISH_OPENAI_URL' "$TMP_CLAUDISH/settings.json")" = "http://other-host:11435/v1"
 check "update-settings keeps a local claudish API key" \
   test "$(jq -r '.env.CLAUDISH_OPENAI_KEY' "$TMP_CLAUDISH/settings.json")" = "local-key"
+
+# --- a TARGET_DIR with a space that does not exist yet ---
+TMP_SPACE_PARENT=$(mktemp -d)
+SPACE_HOME="$TMP_SPACE_PARENT/new home"
+run_make update-config TARGET_DIR="$SPACE_HOME"
+check "update-config creates a home whose path has a space" test -f "$SPACE_HOME/settings.json"
+check "update-config copies CLAUDE.md into a home whose path has a space" test -f "$SPACE_HOME/CLAUDE.md"
+check "update-config leaves no stray directory in the repo" test ! -e "$REPO_ROOT/home"
+SPACE_STATUS=$(make -C "$REPO_ROOT" --no-print-directory status TARGET_DIR="$SPACE_HOME" 2>&1)
+check "status works for a home whose path has a space" \
+  bash -c '! echo "$0" | grep -q "too many arguments" && echo "$0" | grep "CLAUDE.md" | grep -q synced' "$SPACE_STATUS"
+rm -rf "$TMP_SPACE_PARENT"
 
 echo ""
 if [ "$FAILURES" -gt 0 ]; then

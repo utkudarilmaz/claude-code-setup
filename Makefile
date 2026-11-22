@@ -86,7 +86,7 @@ define confirm
 endef
 
 define ensure_target_dir
-	@mkdir -p $(TARGET_DIR)
+	@mkdir -p "$(TARGET_DIR)"
 endef
 
 define cleanup_empty_dirs
@@ -234,18 +234,18 @@ update-settings:
 update-claude-md:
 	@echo "$(BOLD)Updating CLAUDE.md...$(NC) $(DRY_RUN_MSG)"
 	$(call ensure_target_dir)
-	@if [ ! -f $(TARGET_DIR)/CLAUDE.md ]; then \
+	@if [ ! -f "$(TARGET_DIR)/CLAUDE.md" ]; then \
 		if [ "$(DRY_RUN)" = "1" ]; then \
 			echo "Would add: CLAUDE.md"; \
 		else \
-			cp $(REPO_DIR)/CLAUDE.md $(TARGET_DIR)/CLAUDE.md; \
+			cp "$(REPO_DIR)/CLAUDE.md" "$(TARGET_DIR)/CLAUDE.md"; \
 			echo "Added: CLAUDE.md"; \
 		fi \
-	elif ! diff -q $(REPO_DIR)/CLAUDE.md $(TARGET_DIR)/CLAUDE.md > /dev/null 2>&1; then \
+	elif ! diff -q "$(REPO_DIR)/CLAUDE.md" "$(TARGET_DIR)/CLAUDE.md" > /dev/null 2>&1; then \
 		if [ "$(DRY_RUN)" = "1" ]; then \
 			echo "Would update: CLAUDE.md"; \
 		else \
-			cp $(REPO_DIR)/CLAUDE.md $(TARGET_DIR)/CLAUDE.md; \
+			cp "$(REPO_DIR)/CLAUDE.md" "$(TARGET_DIR)/CLAUDE.md"; \
 			echo "Updated: CLAUDE.md"; \
 		fi \
 	else \
@@ -293,9 +293,9 @@ status:
 	else \
 		printf "  $(YELLOW)●$(NC) settings.json $(YELLOW)(differs)$(NC)\n"; \
 	fi
-	@if [ ! -f $(TARGET_DIR)/CLAUDE.md ]; then \
+	@if [ ! -f "$(TARGET_DIR)/CLAUDE.md" ]; then \
 		printf "  $(RED)●$(NC) CLAUDE.md $(RED)(missing)$(NC)\n"; \
-	elif diff -q $(REPO_DIR)/CLAUDE.md $(TARGET_DIR)/CLAUDE.md > /dev/null 2>&1; then \
+	elif diff -q "$(REPO_DIR)/CLAUDE.md" "$(TARGET_DIR)/CLAUDE.md" > /dev/null 2>&1; then \
 		printf "  $(GREEN)●$(NC) CLAUDE.md $(GREEN)(synced)$(NC)\n"; \
 	else \
 		printf "  $(YELLOW)●$(NC) CLAUDE.md $(YELLOW)(differs)$(NC)\n"; \
@@ -313,25 +313,25 @@ diff:
 	$(call diff_dir,hooks,Hooks)
 	@echo "$(BOLD)Config Files:$(NC)"
 	@DRY_RUN=1 bash scripts/apply-settings.sh "$(REPO_DIR)/settings.json" "$(TARGET_DIR)"
-	@if [ ! -f $(TARGET_DIR)/CLAUDE.md ]; then \
+	@if [ ! -f "$(TARGET_DIR)/CLAUDE.md" ]; then \
 		printf "  $(GREEN)●$(NC) CLAUDE.md $(GREEN)(would add - not in $(TARGET_DIR))$(NC)\n"; \
-	elif ! diff -q $(REPO_DIR)/CLAUDE.md $(TARGET_DIR)/CLAUDE.md > /dev/null 2>&1; then \
+	elif ! diff -q "$(REPO_DIR)/CLAUDE.md" "$(TARGET_DIR)/CLAUDE.md" > /dev/null 2>&1; then \
 		echo "$(YELLOW)--- CLAUDE.md ---$(NC)"; \
-		diff $(DIFF_COLOR) $(TARGET_DIR)/CLAUDE.md $(REPO_DIR)/CLAUDE.md; \
+		diff $(DIFF_COLOR) "$(TARGET_DIR)/CLAUDE.md" "$(REPO_DIR)/CLAUDE.md"; \
 		echo ""; \
 	fi
 
 .PHONY: backup
 backup:
 	@echo "$(BOLD)Creating backup...$(NC)"
-	@if [ -d $(TARGET_DIR) ]; then \
-		mkdir -p $(BACKUP_DIR); \
+	@if [ -d "$(TARGET_DIR)" ]; then \
+		mkdir -p "$(BACKUP_DIR)"; \
 		timestamp=$$(date +%Y%m%d_%H%M%S); \
 		backup_path="$(BACKUP_DIR)/claude_$$timestamp"; \
 		if [ "$(DRY_RUN)" = "1" ]; then \
 			echo "Would create backup at: $$backup_path"; \
 		else \
-			cp -r $(TARGET_DIR) "$$backup_path"; \
+			cp -r "$(TARGET_DIR)" "$$backup_path"; \
 			echo "$(GREEN)Backup created:$(NC) $$backup_path"; \
 		fi \
 	else \

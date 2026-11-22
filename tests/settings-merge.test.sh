@@ -95,6 +95,56 @@ check "a dropped override falls back to the base value" test "$(value .effortLev
 check "a dropped override that is not in the base is deleted" test "$(value '.env | has("HOST")')" = "false"
 check "a dropped null override brings the base key back" test "$(value .statusLine.type)" = '"command"'
 
+new_home overrideobject
+echo '{"effortLevel":"medium"}' > "$BASE"
+echo '{"newObject":{"a":1,"nested":{"b":2}}}' > "$HOME_DIR/settings.overrides.json"
+apply
+check "an override adds a whole new top-level object" test "$(value .newObject)" = '{"a":1,"nested":{"b":2}}'
+echo '{}' > "$HOME_DIR/settings.overrides.json"
+apply
+check "a dropped override object is deleted with its emptied parents" test "$(value 'has("newObject")')" = "false"
+
+new_home nullwhole
+echo '{"permissions":{"allow":["a"]}}' > "$BASE"
+echo '{"model":"opus","permissions":{"deny":["d"]}}' > "$HOME_DIR/settings.json"
+echo '{"model":null,"permissions":null}' > "$HOME_DIR/settings.overrides.json"
+apply
+check "a null override deletes a key only the home has" test "$(value 'has("model")')" = "false"
+check "a null override deletes a whole object with its local children" \
+  test "$(value 'has("permissions")')" = "false"
+
+# --- arrays are replaced whole, never merged ---
+new_home arrays
+echo '{"permissions":{"allow":["a","b"]}}' > "$BASE"
+echo '{"permissions":{"allow":["local"],"deny":["d"]}}' > "$HOME_DIR/settings.json"
+apply
+check "a base array replaces the local array whole" test "$(value .permissions.allow)" = '["a","b"]'
+check "a local-only array survives" test "$(value .permissions.deny)" = '["d"]'
+echo '{"permissions":{"allow":["z"]}}' > "$HOME_DIR/settings.overrides.json"
+apply
+check "an override array replaces the base array whole" test "$(value .permissions.allow)" = '["z"]'
+rm "$HOME_DIR/settings.overrides.json"
+echo '{}' > "$BASE"
+apply
+check "an array dropped from the base is deleted" test "$(value '.permissions | has("allow")')" = "false"
+
+new_home falsy
+echo '{"flag":false}' > "$BASE"
+apply
+check "a false value in the base is written, not treated as a delete" test "$(value .flag)" = "false"
+
+# --- a key that only changes type is not reported as removed ---
+new_home typeswap
+echo '{"statusLine":"plain"}' > "$BASE"
+apply
+echo '{"statusLine":{"type":"command"}}' > "$BASE"
+apply
+check "a scalar that becomes an object is not reported as removed" bash -c '! grep -q "^Removed:" "$0"' "$TMP/out"
+echo '{"statusLine":"plain"}' > "$BASE"
+apply
+check "an object that becomes a scalar is not reported as removed" bash -c '! grep -q "^Removed:" "$0"' "$TMP/out"
+check "the new scalar value is written" test "$(value .statusLine)" = '"plain"'
+
 # --- DRY_RUN ---
 new_home dryrun
 echo '{"effortLevel":"medium"}' > "$BASE"
@@ -123,6 +173,13 @@ apply
 bash "$APPLY" --check "$BASE" "$HOME_DIR" >/dev/null 2>&1
 check "--check exits 0 when the home is up to date" test $? -eq 0
 
+new_home checkempty
+echo '{}' > "$BASE"
+bash "$APPLY" --check "$BASE" "$HOME_DIR" >/dev/null 2>&1
+check "--check exits 1 when settings.json is missing even if the base is empty" test $? -eq 1
+check "--check writes no settings.json" test ! -e "$HOME_DIR/settings.json"
+check "--check writes no snapshot" test ! -e "$HOME_DIR/.settings.managed.json"
+
 # --- PRUNE ---
 new_home prune
 echo '{"modelSettings":{"new":{"effortLevel":"medium"}},"env":{"REPO":"1"}}' > "$BASE"
@@ -141,6 +198,22 @@ PRUNE="modelSettings env" bash "$APPLY" "$BASE" "$HOME_DIR" >"$TMP/out" 2>&1
 check "PRUNE with env fails" test $? -ne 0
 check "PRUNE with env says why" grep -q 'env' "$TMP/out"
 check "PRUNE with env keeps secrets" test "$(value .env.SECRET)" = '"s"'
+
+PRUNE="modelSettings,env" bash "$APPLY" "$BASE" "$HOME_DIR" >"$TMP/out" 2>&1
+check "PRUNE with env after a comma fails" test $? -ne 0
+check "PRUNE with env after a comma keeps secrets" test "$(value .env.SECRET)" = '"s"'
+
+prunes_many() {
+  new_home prunemany
+  echo '{"a":{"keep":1}}' > "$BASE"
+  echo '{"a":{"old":1},"b":{"old":1},"c":{"old":1}}' > "$HOME_DIR/settings.json"
+  PRUNE="$1" bash "$APPLY" "$BASE" "$HOME_DIR" >"$TMP/out" 2>&1 || return 1
+  test "$(jq -S -c . "$HOME_DIR/settings.json")" = '{"a":{"keep":1},"c":{"old":1}}'
+}
+
+check "PRUNE with keys split by spaces clears each key and no other" prunes_many "a b"
+check "PRUNE with keys split by a comma clears each key and no other" prunes_many "a,b"
+check "PRUNE with keys split by a comma and a space clears each key and no other" prunes_many "a, b"
 
 # --- writing in place keeps a symlinked settings.json a symlink ---
 new_home symlink
@@ -200,6 +273,21 @@ check "an empty settings.json is refused" refuses settings.json ''
 check "a settings.json with broken JSON is refused" refuses settings.json '{"env":'
 check "an overrides file that is null is refused" refuses settings.overrides.json 'null'
 check "a broken snapshot is refused" refuses .settings.managed.json '{"a":'
+
+refuses_base() {
+  new_home refusebase
+  echo '{"env":{"SECRET":"s"}}' > "$HOME_DIR/settings.json"
+  printf '%s' "$1" > "$BASE"
+  cp "$HOME_DIR/settings.json" "$TMP/refuse.before"
+  if apply; then return 1; fi
+  cmp -s "$TMP/refuse.before" "$HOME_DIR/settings.json" || return 1
+  test ! -e "$HOME_DIR/.settings.managed.json" || return 1
+  grep -q "must hold one JSON object" "$TMP/out"
+}
+
+check "a base with broken JSON is refused" refuses_base '{"a":'
+check "a base with two JSON values is refused" refuses_base '{"a":1}{"b":2}'
+check "a base that is an array is refused" refuses_base '[]'
 
 new_home refusevalue
 echo '{"effortLevel":"medium"}' > "$BASE"
