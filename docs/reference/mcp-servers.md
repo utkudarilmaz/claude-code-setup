@@ -1,15 +1,19 @@
 # MCP Servers
 
-The servers declared in `.claude/mcp-servers.json` are merged into `.claude.json`
-by `make update-config` or `make update-mcp`. See
-[Makefile Commands](makefile.md#mcp-server-sync) for how that merge works.
+The repo does not install or sync MCP servers. Add the ones you want on each
+machine by hand with `claude mcp add`. Claude Code stores user-scoped servers
+in `.claude.json`:
+
+- Default home: `~/.claude.json`
+- Custom home (`CLAUDE_CONFIG_DIR`, for example `~/.claude-personal`):
+  `<home>/.claude.json`
+
+To add a server to a custom home, set `CLAUDE_CONFIG_DIR` on the command, for
+example `CLAUDE_CONFIG_DIR=~/.claude-personal claude mcp add ...`.
 
 | Server | Runs with | Needs |
 |--------|-----------|-------|
 | `terraform` | `docker run -i --rm hashicorp/terraform-mcp-server` | Docker, `TFE_TOKEN` |
-
-`make install mcps` installs these requirements, asking for approval before
-each install. See [Makefile Commands](makefile.md#install-commands).
 
 ## terraform
 
@@ -18,10 +22,29 @@ HCP Terraform or Terraform Enterprise (`list_runs`, `get_run_details`,
 `get_plan_logs`, `get_plan_json_output`, `get_apply_logs`, workspace tools) and
 searches the public Terraform registry docs.
 
+### Setup
+
+1. Install Docker and start it. On macOS: `brew install --cask docker`. On
+   Linux, use your distribution's Docker Engine package.
+2. Pull the image:
+   ```bash
+   docker pull hashicorp/terraform-mcp-server
+   ```
+3. Add the server for your user:
+   ```bash
+   claude mcp add --scope user terraform -- \
+     docker run -i --rm -e TFE_TOKEN -e TFE_ADDRESS hashicorp/terraform-mcp-server
+   ```
+4. Export `TFE_TOKEN`, and `TFE_ADDRESS` if you need it, in your shell profile,
+   then start a new Claude Code session.
+5. Run `/mcp` and check that `terraform` is connected.
+
+To remove it: `claude mcp remove terraform --scope user`.
+
 ### Environment
 
-Docker receives both variables from the environment of the process that starts
-Claude Code, so export them before you launch it.
+`docker run -e NAME` with no value copies the variable from the environment of
+the process that starts Claude Code, so export both before you launch it.
 
 | Variable | Required | Default |
 |----------|----------|---------|

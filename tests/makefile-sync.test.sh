@@ -4,10 +4,9 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 FAILURES=0
 TMP_TARGET=$(mktemp -d)
 TMP_TARGET_NORSYNC=$(mktemp -d)
-TMP_TARGET_MCP=$(mktemp -d)
 TMP_TARGET_SETTINGS=$(mktemp -d)
 TMP_TARGET_CLAUDE_MD=$(mktemp -d)
-trap 'rm -rf "$TMP_TARGET" "$TMP_TARGET_NORSYNC" "$TMP_TARGET_MCP" "$TMP_TARGET_SETTINGS" "$TMP_TARGET_CLAUDE_MD"' EXIT
+trap 'rm -rf "$TMP_TARGET" "$TMP_TARGET_NORSYNC" "$TMP_TARGET_SETTINGS" "$TMP_TARGET_CLAUDE_MD"' EXIT
 
 run_make() {
   make -C "$REPO_ROOT" --no-print-directory FORCE=1 "$@" >/dev/null 2>&1
@@ -74,43 +73,8 @@ check "hook command resolves to the target home's own script" \
 check "hook command follows CLAUDE_CONFIG_DIR rather than falling back" \
   hook_exit_for_home "$TMP_TARGET/nonexistent-home" 127
 
-# --- update-config merges MCP servers into the target .claude.json ---
-check "update-all creates .claude.json with repo MCP servers" \
-  test "$(jq -r '.mcpServers["terraform"].command' "$TMP_TARGET/.claude.json")" = "docker"
-
-jq '.mcpServers["local-server"] = {command: "echo"}
-    | .mcpServers["terraform"].command = "drifted"
-    | .oauthAccount = "keep-me"
-    | .history = "line1\nline2\ttabbed"' \
-  "$TMP_TARGET/.claude.json" > "$TMP_TARGET/.claude.json.tmp"
-mv "$TMP_TARGET/.claude.json.tmp" "$TMP_TARGET/.claude.json"
-run_make update-config TARGET_DIR="$TMP_TARGET"
-
-check "MCP merge keeps machine-local servers" \
-  test "$(jq -r '.mcpServers["local-server"].command' "$TMP_TARGET/.claude.json")" = "echo"
-check "MCP merge applies repo server config over local drift" \
-  test "$(jq -r '.mcpServers["terraform"].command' "$TMP_TARGET/.claude.json")" = "docker"
-check "MCP merge keeps unrelated .claude.json keys" \
-  test "$(jq -r '.oauthAccount' "$TMP_TARGET/.claude.json")" = "keep-me"
-check "MCP merge preserves backslash escapes in strings" \
-  test "$(jq -r '.history' "$TMP_TARGET/.claude.json")" = "$(printf 'line1\nline2\ttabbed')"
-
-# --- update-mcp syncs MCP servers without touching the other config files ---
-run_make update-mcp TARGET_DIR="$TMP_TARGET_MCP"
-
-check "update-mcp creates .claude.json with repo MCP servers" \
-  test "$(jq -r '.mcpServers["terraform"].command' "$TMP_TARGET_MCP/.claude.json")" = "docker"
-check "update-mcp leaves settings.json alone" test ! -e "$TMP_TARGET_MCP/settings.json"
-check "update-mcp leaves CLAUDE.md alone" test ! -e "$TMP_TARGET_MCP/CLAUDE.md"
-
-jq '.mcpServers["local-server"] = {command: "echo"}' \
-  "$TMP_TARGET_MCP/.claude.json" > "$TMP_TARGET_MCP/.claude.json.tmp"
-mv "$TMP_TARGET_MCP/.claude.json.tmp" "$TMP_TARGET_MCP/.claude.json"
-run_make update-mcp TARGET_DIR="$TMP_TARGET_MCP" DRY_RUN=1
-
-REPO_MCP_COUNT=$(jq '.mcpServers | length' "$REPO_ROOT/.claude/mcp-servers.json")
-check "update-mcp DRY_RUN=1 writes nothing" \
-  test "$(jq -r '.mcpServers | keys | length' "$TMP_TARGET_MCP/.claude.json")" = "$((REPO_MCP_COUNT + 1))"
+# --- MCP servers are set up by hand, so the sync never writes .claude.json ---
+check "update-all leaves .claude.json alone" test ! -e "$TMP_TARGET/.claude.json"
 
 # --- update-settings syncs settings.json without touching the other config files ---
 run_make update-settings TARGET_DIR="$TMP_TARGET_SETTINGS"
@@ -118,7 +82,6 @@ run_make update-settings TARGET_DIR="$TMP_TARGET_SETTINGS"
 check "update-settings copies settings.json" \
   cmp -s "$REPO_ROOT/.claude/settings.json" "$TMP_TARGET_SETTINGS/settings.json"
 check "update-settings leaves CLAUDE.md alone" test ! -e "$TMP_TARGET_SETTINGS/CLAUDE.md"
-check "update-settings leaves .claude.json alone" test ! -e "$TMP_TARGET_SETTINGS/.claude.json"
 
 jq '. + {localOnlyKey: true}' "$TMP_TARGET_SETTINGS/settings.json" > "$TMP_TARGET_SETTINGS/settings.json.tmp"
 mv "$TMP_TARGET_SETTINGS/settings.json.tmp" "$TMP_TARGET_SETTINGS/settings.json"
@@ -133,7 +96,6 @@ run_make update-claude-md TARGET_DIR="$TMP_TARGET_CLAUDE_MD"
 check "update-claude-md copies CLAUDE.md" \
   cmp -s "$REPO_ROOT/.claude/CLAUDE.md" "$TMP_TARGET_CLAUDE_MD/CLAUDE.md"
 check "update-claude-md leaves settings.json alone" test ! -e "$TMP_TARGET_CLAUDE_MD/settings.json"
-check "update-claude-md leaves .claude.json alone" test ! -e "$TMP_TARGET_CLAUDE_MD/.claude.json"
 
 echo "local edit" > "$TMP_TARGET_CLAUDE_MD/CLAUDE.md"
 run_make update-claude-md TARGET_DIR="$TMP_TARGET_CLAUDE_MD" DRY_RUN=1
@@ -143,56 +105,6 @@ check "update-claude-md DRY_RUN=1 writes nothing" \
 run_make update-claude-md TARGET_DIR="$TMP_TARGET_CLAUDE_MD"
 check "update-claude-md refreshes a locally changed CLAUDE.md" \
   cmp -s "$REPO_ROOT/.claude/CLAUDE.md" "$TMP_TARGET_CLAUDE_MD/CLAUDE.md"
-
-# --- install DRY_RUN=1 prints the command and never calls npx ---
-TMP_STUB_BIN=$(mktemp -d)
-printf '#!/bin/sh\ntouch "%s/npx-called"\n' "$TMP_STUB_BIN" > "$TMP_STUB_BIN/npx"
-chmod +x "$TMP_STUB_BIN/npx"
-ANATOMY_OUTPUT=$(PATH="$TMP_STUB_BIN:$PATH" make -C "$REPO_ROOT" --no-print-directory DRY_RUN=1 install anatomy TARGET_DIR="$TMP_TARGET" 2>&1)
-
-export ANATOMY_OUTPUT TMP_TARGET
-check "install anatomy DRY_RUN=1 prints npx command with CLAUDE_CONFIG_DIR" \
-  bash -c 'echo "$ANATOMY_OUTPUT" | grep -qF "Would run: CLAUDE_CONFIG_DIR=$TMP_TARGET npx skills add wheresryan22/anatomy -g -a claude-code"'
-check "install anatomy DRY_RUN=1 does not run npx" test ! -e "$TMP_STUB_BIN/npx-called"
-
-# --- install asks for each item of a group and installs only the approved ones ---
-printf '#!/bin/sh\necho "$*" >> "%s/npx-args"\n' "$TMP_STUB_BIN" > "$TMP_STUB_BIN/npx"
-INSTALL_ASK_OUTPUT=$(printf 'n\ny\n' | PATH="$TMP_STUB_BIN:$PATH" make -C "$REPO_ROOT" --no-print-directory install skills TARGET_DIR="$TMP_TARGET" 2>&1)
-
-export INSTALL_ASK_OUTPUT
-check "install skills asks for each item" \
-  bash -c 'echo "$INSTALL_ASK_OUTPUT" | grep -qF "Install google-maps-scraper? [y/N]" && echo "$INSTALL_ASK_OUTPUT" | grep -qF "Install anatomy? [y/N]"'
-check "install skills skips a declined item" \
-  bash -c 'echo "$INSTALL_ASK_OUTPUT" | grep -qF "Skipped google-maps-scraper. Run later with: make install google-maps-scraper"'
-check "install skills runs only the approved item" \
-  test "$(cat "$TMP_STUB_BIN/npx-args" 2>/dev/null)" = "skills add wheresryan22/anatomy -g -a claude-code"
-
-rm -f "$TMP_STUB_BIN/npx-args"
-PATH="$TMP_STUB_BIN:$PATH" make -C "$REPO_ROOT" --no-print-directory install TARGET_DIR="$TMP_TARGET" </dev/null >/dev/null 2>&1
-check "install with no answers installs nothing" test ! -e "$TMP_STUB_BIN/npx-args"
-
-PATH="$TMP_STUB_BIN:$PATH" make -C "$REPO_ROOT" --no-print-directory install anatomy TARGET_DIR="$TMP_TARGET" </dev/null >/dev/null 2>&1
-check "install <target> runs without asking" \
-  test "$(cat "$TMP_STUB_BIN/npx-args" 2>/dev/null)" = "skills add wheresryan22/anatomy -g -a claude-code"
-rm -rf "$TMP_STUB_BIN"
-
-# --- install sync asks for hooks and config and syncs only the approved one ---
-TMP_TARGET_INSTALL=$(mktemp -d)
-printf 'y\nn\n' | make -C "$REPO_ROOT" --no-print-directory install sync TARGET_DIR="$TMP_TARGET_INSTALL" >/dev/null 2>&1
-check "install sync copies approved hooks" test -f "$TMP_TARGET_INSTALL/hooks/sensitive-file-protection.sh"
-check "install sync skips declined config" test ! -e "$TMP_TARGET_INSTALL/settings.json"
-
-make -C "$REPO_ROOT" --no-print-directory install config TARGET_DIR="$TMP_TARGET_INSTALL" </dev/null >/dev/null 2>&1
-check "install config copies settings.json" test -f "$TMP_TARGET_INSTALL/settings.json"
-check "install config copies CLAUDE.md" test -f "$TMP_TARGET_INSTALL/CLAUDE.md"
-
-# --- every install target has a matching install-<name> recipe ---
-INSTALL_TARGET_NAMES=$(make -C "$REPO_ROOT" --no-print-directory -pn help 2>/dev/null | sed -n 's/^INSTALL_TARGETS := //p')
-export INSTALL_TARGET_NAMES REPO_ROOT TMP_TARGET_INSTALL
-check "install target list is not empty" test -n "$INSTALL_TARGET_NAMES"
-check "every install target has an install-<name> recipe" \
-  bash -c 'for t in $INSTALL_TARGET_NAMES; do make -C "$REPO_ROOT" --no-print-directory -n "install-$t" TARGET_DIR="$TMP_TARGET_INSTALL" >/dev/null 2>&1 || { echo "missing recipe: install-$t"; exit 1; }; done'
-rm -rf "$TMP_TARGET_INSTALL"
 
 # --- rm commands remove repo-managed files only ---
 run_make rm-agents TARGET_DIR="$TMP_TARGET"

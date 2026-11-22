@@ -90,7 +90,7 @@ Single skills are turned off via the `skillOverrides` map, even when the plugin 
 }
 ```
 
-The default settings turn off the built-in `anthropic-skills` for docs, office files (`docx`, `xlsx`, `pptx`, `pdf`), browsers (`built-in-browser`, `chrome-browser`), `computer-use`, `google-workspace`, `doc-coauthoring`, `skill-creator`, `morning`, and `import-memory`. They also turn off `anatomy`, the isometric figure skill that `make install anatomy` adds. Because `make update-all` deep merges `settings.json`, entries you add locally (for example `"seo": "off"`) are kept.
+The default settings turn off the built-in `anthropic-skills` for docs, office files (`docx`, `xlsx`, `pptx`, `pdf`), browsers (`built-in-browser`, `chrome-browser`), `computer-use`, `google-workspace`, `doc-coauthoring`, `skill-creator`, `morning`, and `import-memory`. They also turn off `anatomy`, the isometric figure skill from [External Tools](external-tools.md#third-party-skills). Because `make update-all` deep merges `settings.json`, entries you add locally (for example `"seo": "off"`) are kept.
 
 ## Hook Configuration
 
@@ -154,10 +154,9 @@ The command also prints `user@hostname` in dim text at the start of the first li
 
 ## MCP Servers
 
-MCP servers are not part of `settings.json`. They live in
-`.claude/mcp-servers.json` and are merged into `.claude.json` on sync. See
-[MCP Servers](../reference/mcp-servers.md) for the shipped servers and the
-environment each one needs.
+MCP servers are not part of `settings.json` and the repo does not sync them.
+Add them by hand with `claude mcp add`, see
+[MCP Servers](../reference/mcp-servers.md) for the setup steps.
 
 ## Global Conventions
 

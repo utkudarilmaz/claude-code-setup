@@ -1,6 +1,6 @@
 # Claude Code Configuration
 
-Personal Claude Code configuration: custom agents, skills, hooks, MCP servers, and plugin settings.
+Personal Claude Code configuration: custom agents, skills, hooks, and plugin settings.
 
 ## Overview
 
@@ -8,7 +8,7 @@ Personal Claude Code configuration: custom agents, skills, hooks, MCP servers, a
 - **Agents** - the specialized assistants the skills dispatch to. See [Agents Reference](docs/reference/agents.md).
 - **Hooks** - tool call interception for sensitive file protection, blocking merges with uncommitted changes, and cross-platform notifications.
 - **Plugin Management** - centralized plugin enable/disable configuration.
-- **MCP Servers** - declared in `.claude/mcp-servers.json` and merged into `.claude.json` on sync. See [MCP Servers](docs/reference/mcp-servers.md).
+- **External tools and MCP servers** - not installed by the repo. Their setup steps are in [External Tools](docs/guides/external-tools.md) and [MCP Servers](docs/reference/mcp-servers.md).
 - **Cross-Platform Support** - works on macOS and Linux with dynamic path resolution.
 
 ## Quick Start
@@ -41,11 +41,10 @@ claude-code-setup/
 │   ├── hooks/                  # Hook scripts (PreToolUse, PostToolUse, etc.)
 │   ├── skills/                 # Skill commands
 │   ├── settings.json           # Hooks, plugins, statusLine
-│   ├── mcp-servers.json        # Shared MCP server definitions
 │   └── CLAUDE.md               # Global conventions
 ├── docs/                       # Documentation
 │   ├── architecture/           # Extension model, diagrams
-│   ├── guides/                 # Installation, configuration, contributing
+│   ├── guides/                 # Installation, configuration, external tools, contributing
 │   └── reference/              # Agents, skills, MCP servers, makefile
 ├── tests/                      # Tests for hook scripts and Makefile
 ├── CLAUDE.md                   # Repo guidance for contributors
@@ -60,11 +59,12 @@ claude-code-setup/
 |-------|-------------|
 | [Installation](docs/guides/installation.md) | Setup and verification |
 | [Configuration](docs/guides/configuration.md) | settings.json, plugins, hooks |
+| [External Tools](docs/guides/external-tools.md) | Programs the plugins and skills need, set up by hand |
 | [Contributing](docs/guides/contributing.md) | Adding agents, skills, hooks |
 | [Extension Model](docs/architecture/extension-model.md) | Two-tier architecture |
 | [Agents Reference](docs/reference/agents.md) | Every agent and what it does |
 | [Skills Reference](docs/reference/skills.md) | Every slash command and its modes |
-| [MCP Servers](docs/reference/mcp-servers.md) | Shipped servers and the environment each needs |
+| [MCP Servers](docs/reference/mcp-servers.md) | Servers to add by hand and the environment each needs |
 | [Makefile Commands](docs/reference/makefile.md) | Sync utilities |
 
 ## License
