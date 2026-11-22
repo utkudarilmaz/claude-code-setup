@@ -36,9 +36,9 @@ local-only keys are lost.
 
 ## What the Makefile Does Not Do
 
-The Makefile only writes inside `TARGET_DIR`. It does not install programs,
-third-party skills, or MCP servers, and it never touches `.claude.json`. Set
-those up by hand:
+The Makefile writes only inside `TARGET_DIR`, plus `~/.claude-backups` for
+`make backup`. It does not install programs, third-party skills, or MCP
+servers, and it never touches `.claude.json`. Set those up by hand:
 
 - [External Tools](../guides/external-tools.md) - Node.js, language servers,
   the claudish model server, and third-party skills
@@ -89,10 +89,10 @@ repo into both.
 ## Diff Output (`make diff`)
 
 `make diff` compares `TARGET_DIR` against `REPO_DIR` in that order, so the
-colors match what `make update` would do to the target:
+colors match what `make update-all` would do to the target:
 
-- **Green** lines are lines `make update` would add to the target
-- **Red** lines are lines `make update` would remove from the target
+- **Green** lines are lines `make update-all` would add to the target
+- **Red** lines are lines `make update-all` would remove from the target
 
 A legend line is printed at the top of the output as a reminder. The
 Makefile detects once, via the `DIFF_COLOR` variable, whether the local

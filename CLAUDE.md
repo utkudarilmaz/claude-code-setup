@@ -70,6 +70,6 @@ The Makefile syncs `.claude/` into `~/.claude` (or any `TARGET_DIR`):
 - `make backup` - Timestamped backup of the target before changes
 - `make update-all TARGET_DIR=$HOME/.claude-personal` - Sync a second Claude home from the same repo
 
-The Makefile never installs anything outside the Claude home and never touches `.claude.json`. External tools and MCP servers are set up by hand from [docs/guides/external-tools.md](docs/guides/external-tools.md) and [docs/reference/mcp-servers.md](docs/reference/mcp-servers.md).
+The Makefile installs no programs and never touches `.claude.json`. Set up external tools and MCP servers by hand from [docs/guides/external-tools.md](docs/guides/external-tools.md) and [docs/reference/mcp-servers.md](docs/reference/mcp-servers.md).
 
 See [docs/reference/makefile.md](docs/reference/makefile.md) for the complete command reference.

@@ -8,10 +8,10 @@
   - macOS: Built-in `afplay` command
   - Linux: PulseAudio (`paplay`) or ALSA (`aplay`)
 
-The Makefile installs nothing outside the Claude home. Node.js for the status
-line, the language servers, the claudish model server, and third-party skills
-are set up by hand, see [External Tools](external-tools.md). MCP servers are
-added by hand too, see [MCP Servers](../reference/mcp-servers.md).
+The Makefile only syncs files. Set up Node.js, the language servers, the
+claudish model server, and third-party skills by hand from
+[External Tools](external-tools.md). Add MCP servers by hand from
+[MCP Servers](../reference/mcp-servers.md).
 
 ## Platform Support
 
@@ -96,7 +96,7 @@ make status
 
 If the status line doesn't display:
 
-1. Verify Node.js is installed and in PATH:
+1. Verify Node.js is installed and in PATH, see [External Tools](external-tools.md#nodejs):
    ```bash
    command -v node
    ```

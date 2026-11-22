@@ -57,6 +57,12 @@
   ```
 - Test on both macOS and Linux when possible
 
+### New External Tool or MCP Server
+
+The Makefile does not install programs or MCP servers. When a plugin or skill
+needs a program, add its setup steps to [External Tools](external-tools.md).
+Add MCP server steps to [MCP Servers](../reference/mcp-servers.md).
+
 ## Code Guidelines
 
 1. Follow existing patterns for agents/skills

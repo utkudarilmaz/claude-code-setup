@@ -38,7 +38,7 @@ See [Installation Guide](docs/guides/installation.md) for detailed setup instruc
 claude-code-setup/
 ├── .claude/                    # Claude Code config (becomes ~/.claude)
 │   ├── agents/                 # Agent definitions
-│   ├── hooks/                  # Hook scripts (PreToolUse, PostToolUse, etc.)
+│   ├── hooks/                  # Hook scripts (PreToolUse, Notification)
 │   ├── skills/                 # Skill commands
 │   ├── settings.json           # Hooks, plugins, statusLine
 │   └── CLAUDE.md               # Global conventions

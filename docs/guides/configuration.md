@@ -45,6 +45,7 @@ External plugin marketplaces are configured via `extraKnownMarketplaces` in sett
 | `ui-ux-pro-max-skill` | `nextlevelbuilder/ui-ux-pro-max-skill` | UI/UX design skills |
 | `marketingskills` | `coreyhaines31/marketingskills` | Marketing skill plugins |
 | `claude-pray` | `utkudarilmaz/claude-pray` | Prayer times and status line utilities |
+| `gvzdv-plugins` | `gvzdv/claudish-to-english` | Plain English rewrite plugin |
 
 The official `claude-plugins-official` marketplace from Anthropic is built-in and doesn't require configuration.
 
@@ -67,16 +68,15 @@ Plugins are toggled via `enabledPlugins` map:
 |--------|--------|---------|
 | `claude-hud` | `claude-hud` | Status line UI |
 | `claude-pray` | `claude-pray` | Prayer times and status line utilities |
-| `claude-md-management` | `claude-plugins-official` | CLAUDE.md lifecycle management |
-| `feature-dev` | `claude-plugins-official` | Feature development workflows |
+| `claudish-to-english` | `gvzdv-plugins` | Rewrites each message in plain English, see [External Tools](external-tools.md#claudish-plugin) |
 | `superpowers` | `claude-plugins-official` | Advanced skill framework |
 | `commit-commands` | `claude-plugins-official` | Git commit helpers |
 | `explanatory-output-style` | `claude-plugins-official` | Output formatting |
 | `code-review` | `claude-plugins-official` | Code review assistance |
-| `typescript-lsp` | `claude-plugins-official` | TypeScript and JavaScript code intelligence via `typescript-language-server` |
-| `gopls-lsp` | `claude-plugins-official` | Go code intelligence via `gopls` |
+| `typescript-lsp` | `claude-plugins-official` | TypeScript and JavaScript code intelligence via `typescript-language-server`, see [External Tools](external-tools.md#language-servers) |
+| `gopls-lsp` | `claude-plugins-official` | Go code intelligence via `gopls`, see [External Tools](external-tools.md#language-servers) |
 
-Disabled plugins (set to `false`) remain registered but inactive. Notable disabled plugins include `code-simplifier@claude-plugins-official`, `security-guidance@claude-plugins-official`, `marketing-skills@marketingskills`, and various design/animation skills from `claude-design-skillstack`.
+Disabled plugins (set to `false`) remain registered but inactive. Notable disabled plugins include `claude-md-management@claude-plugins-official`, `feature-dev@claude-plugins-official`, `code-simplifier@claude-plugins-official`, `security-guidance@claude-plugins-official`, `marketing-skills@marketingskills`, and various design/animation skills from `claude-design-skillstack`.
 
 ## Skill Overrides
 
@@ -155,8 +155,8 @@ The command also prints `user@hostname` in dim text at the start of the first li
 ## MCP Servers
 
 MCP servers are not part of `settings.json` and the repo does not sync them.
-Add them by hand with `claude mcp add`, see
-[MCP Servers](../reference/mcp-servers.md) for the setup steps.
+Add them by hand with `claude mcp add`. The steps are in
+[MCP Servers](../reference/mcp-servers.md).
 
 ## Global Conventions
 
