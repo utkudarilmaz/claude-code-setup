@@ -286,9 +286,9 @@ status:
 	$(call status_dir,skills,Skills)
 	$(call status_dir,hooks,Hooks)
 	@echo "$(BOLD)Config Files:$(NC)"
-	@if [ ! -f $(TARGET_DIR)/settings.json ]; then \
+	@if [ ! -f "$(TARGET_DIR)/settings.json" ]; then \
 		printf "  $(RED)●$(NC) settings.json $(RED)(missing)$(NC)\n"; \
-	elif bash scripts/apply-settings.sh --check $(REPO_DIR)/settings.json $(TARGET_DIR); then \
+	elif bash scripts/apply-settings.sh --check "$(REPO_DIR)/settings.json" "$(TARGET_DIR)"; then \
 		printf "  $(GREEN)●$(NC) settings.json $(GREEN)(synced)$(NC)\n"; \
 	else \
 		printf "  $(YELLOW)●$(NC) settings.json $(YELLOW)(differs)$(NC)\n"; \
@@ -312,7 +312,7 @@ diff:
 	$(call diff_dir,skills,Skills)
 	$(call diff_dir,hooks,Hooks)
 	@echo "$(BOLD)Config Files:$(NC)"
-	@DRY_RUN=1 bash scripts/apply-settings.sh $(REPO_DIR)/settings.json $(TARGET_DIR)
+	@DRY_RUN=1 bash scripts/apply-settings.sh "$(REPO_DIR)/settings.json" "$(TARGET_DIR)"
 	@if [ ! -f $(TARGET_DIR)/CLAUDE.md ]; then \
 		printf "  $(GREEN)●$(NC) CLAUDE.md $(GREEN)(would add - not in $(TARGET_DIR))$(NC)\n"; \
 	elif ! diff -q $(REPO_DIR)/CLAUDE.md $(TARGET_DIR)/CLAUDE.md > /dev/null 2>&1; then \

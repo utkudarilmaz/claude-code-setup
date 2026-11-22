@@ -38,8 +38,8 @@ echo '{"effortLevel":"medium","env":{"REPO":"1"}}' > "$BASE"
 apply
 check "first apply creates settings.json from the base" \
   test "$(value .)" = '{"effortLevel":"medium","env":{"REPO":"1"}}'
-check "first apply writes the managed snapshot" \
-  test "$(jq -c . "$HOME_DIR/.settings.managed.json")" = '{"effortLevel":"medium","env":{"REPO":"1"}}'
+check "first apply writes the managed key paths to the snapshot" \
+  test "$(jq -c . "$HOME_DIR/.settings.managed.json")" = '{"effortLevel":true,"env":{"REPO":true}}'
 
 # --- local keys stay, repo values win ---
 new_home local
@@ -151,6 +151,139 @@ apply
 check "a symlinked settings.json stays a symlink" test -L "$HOME_DIR/settings.json"
 check "a symlinked settings.json gets the change" \
   test "$(jq -c .effortLevel "$TMP/real-settings.json")" = '"medium"'
+
+# --- the snapshot holds no values from the overrides ---
+new_home snapshotsecret
+echo '{"env":{"REPO":"1"}}' > "$BASE"
+echo '{"env":{"API_KEY":"override-secret"}}' > "$HOME_DIR/settings.overrides.json"
+apply
+check "an override secret reaches settings.json" test "$(value .env.API_KEY)" = '"override-secret"'
+check "the snapshot does not copy an override secret" \
+  bash -c '! grep -q "override-secret" "$0"' "$HOME_DIR/.settings.managed.json"
+echo '{}' > "$HOME_DIR/settings.overrides.json"
+apply
+check "a key dropped from the overrides is still deleted with a value-free snapshot" \
+  test "$(value '.env | has("API_KEY")')" = "false"
+
+# --- new files are private, existing modes are kept ---
+file_mode() {
+  ls -l "$1" | cut -c1-10
+}
+
+new_home modes
+echo '{"effortLevel":"medium"}' > "$BASE"
+apply
+check "a new settings.json is readable only by the owner" test "$(file_mode "$HOME_DIR/settings.json")" = "-rw-------"
+check "a new snapshot is readable only by the owner" \
+  test "$(file_mode "$HOME_DIR/.settings.managed.json")" = "-rw-------"
+chmod 640 "$HOME_DIR/settings.json"
+echo '{"effortLevel":"high"}' > "$BASE"
+apply
+check "an update keeps the mode of settings.json" test "$(file_mode "$HOME_DIR/settings.json")" = "-rw-r-----"
+
+# --- a broken or non-object file is never replaced ---
+refuses() {
+  local file="$1" content="$2"
+  new_home refuse
+  echo '{"effortLevel":"medium"}' > "$BASE"
+  echo '{"env":{"SECRET":"s"}}' > "$HOME_DIR/settings.json"
+  printf '%s' "$content" > "$HOME_DIR/$file"
+  cp "$HOME_DIR/settings.json" "$TMP/refuse.before"
+  if apply; then return 1; fi
+  cmp -s "$TMP/refuse.before" "$HOME_DIR/settings.json" || return 1
+  grep -q "must hold one JSON object" "$TMP/out"
+}
+
+check "a settings.json with two JSON values is refused" refuses settings.json '{"a":1}{"env":{"SECRET":"s"}}'
+check "a settings.json that is an array is refused" refuses settings.json '[]'
+check "an empty settings.json is refused" refuses settings.json ''
+check "a settings.json with broken JSON is refused" refuses settings.json '{"env":'
+check "an overrides file that is null is refused" refuses settings.overrides.json 'null'
+check "a broken snapshot is refused" refuses .settings.managed.json '{"a":'
+
+new_home refusevalue
+echo '{"effortLevel":"medium"}' > "$BASE"
+echo '{"env":{"SECRET":"hidden-value"}} []' > "$HOME_DIR/settings.json"
+apply
+check "a refused settings.json is not printed" bash -c '! grep -q "hidden-value" "$0"' "$TMP/out"
+
+new_home nobase
+echo '{"env":{"SECRET":"s"}}' > "$HOME_DIR/settings.json"
+apply
+check "a missing base fails" test $? -ne 0
+check "a missing base leaves settings.json alone" test "$(value .env.SECRET)" = '"s"'
+
+# --- env can not be wiped by the base or the overrides ---
+new_home envnull
+echo '{"env":{"REPO":"1"}}' > "$BASE"
+echo '{"env":{"SECRET":"s"}}' > "$HOME_DIR/settings.json"
+echo '{"env":null}' > "$HOME_DIR/settings.overrides.json"
+apply
+check "a null env override fails" test $? -ne 0
+check "a null env override keeps secrets" test "$(value .env.SECRET)" = '"s"'
+echo '{"env":"x"}' > "$HOME_DIR/settings.overrides.json"
+apply
+check "a non-object env override fails" test $? -ne 0
+check "a non-object env override keeps secrets" test "$(value .env.SECRET)" = '"s"'
+echo '{"env":{"REPO":null}}' > "$HOME_DIR/settings.overrides.json"
+apply
+check "a null override of one env key still works" test "$(value .env)" = '{"SECRET":"s"}'
+
+new_home emptyenv
+echo '{"env":{}}' > "$BASE"
+echo '{"env":{"SECRET":"s"}}' > "$HOME_DIR/settings.json"
+apply
+echo '{"env":{"REPO":"1"}}' > "$BASE"
+apply
+check "an empty env in the base that later gets keys keeps secrets" test "$(value .env.SECRET)" = '"s"'
+check "an empty env in the base that later gets keys is not reported removed" \
+  bash -c '! grep -q "Removed: env" "$0"' "$TMP/out"
+
+new_home emptyobject
+echo '{"permissions":{}}' > "$BASE"
+apply
+echo '{}' > "$BASE"
+apply
+check "a managed empty object that is still empty is deleted" test "$(value 'has("permissions")')" = "false"
+
+# --- DRY_RUN hides env values ---
+new_home dryrunsecret
+echo '{"effortLevel":"medium","env":{"REPO":"1"}}' > "$BASE"
+echo '{"effortLevel":"high","env":{"API_KEY":"old-secret","REPO":"1"}}' > "$HOME_DIR/settings.json"
+echo '{"env":{"API_KEY":"new-secret"}}' > "$HOME_DIR/settings.overrides.json"
+DRY_RUN=1 bash "$APPLY" "$BASE" "$HOME_DIR" >"$TMP/out" 2>&1
+check "DRY_RUN=1 does not print an old env value" bash -c '! grep -q "old-secret" "$0"' "$TMP/out"
+check "DRY_RUN=1 does not print a new env value" bash -c '! grep -q "new-secret" "$0"' "$TMP/out"
+check "DRY_RUN=1 marks a changed env value" grep -q '^+ *"API_KEY": "<hidden, changed>"' "$TMP/out"
+check "DRY_RUN=1 still prints other changes" grep -q '^+ *"effortLevel": "medium"' "$TMP/out"
+
+# --- a failed write keeps the old settings.json ---
+if [ "$(id -u)" != "0" ]; then
+  new_home writefail
+  echo '{"effortLevel":"medium"}' > "$BASE"
+  echo '{"env":{"SECRET":"s"}}' > "$HOME_DIR/settings.json"
+  chmod 400 "$HOME_DIR/settings.json"
+  apply
+  check "a failed write exits non-zero" test $? -ne 0
+  check "a failed write leaves settings.json whole" test "$(value .env.SECRET)" = '"s"'
+  saved=$(sed -n 's/.*The old file is saved in //p' "$TMP/out")
+  check "a failed write that can not put the file back says where the old file is" test -f "$saved"
+  [ -n "$saved" ] && rm -rf "$(dirname "$saved")"
+  chmod 600 "$HOME_DIR/settings.json"
+fi
+
+# --- paths with spaces ---
+new_home "with space"
+echo '{"effortLevel":"medium"}' > "$BASE"
+apply
+check "a home path with spaces works" test "$(value .effortLevel)" = '"medium"'
+bash "$APPLY" "$REPO_ROOT/.claude/settings.json" "$HOME_DIR" >/dev/null 2>&1
+STATUS_OUTPUT=$(make -C "$REPO_ROOT" --no-print-directory status TARGET_DIR="$HOME_DIR" 2>&1)
+check "make status works with a TARGET_DIR with spaces" \
+  bash -c 'printf "%s" "$0" | grep -q "settings.json.*(synced)"' "$STATUS_OUTPUT"
+DIFF_OUTPUT=$(make -C "$REPO_ROOT" --no-print-directory diff TARGET_DIR="$HOME_DIR" 2>&1)
+check "make diff works with a TARGET_DIR with spaces" \
+  bash -c 'printf "%s" "$0" | grep -q "Unchanged: settings.json"' "$DIFF_OUTPUT"
 
 # --- jq is required ---
 new_home nojq

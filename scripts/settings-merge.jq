@@ -27,12 +27,20 @@ $target[0] as $t
 | if any($pruneKeys[]; . == "env")
   then error("PRUNE must not include env, it holds machine secrets")
   else . end
+| if ($merged | has("env")) and ($merged.env | type) != "object"
+  then error("env in the repo or the overrides must be an object, it holds machine secrets")
+  else . end
 | ($managed | leaves) as $keep
 | (($l | leaves) + [$t | leaves[] | select(.[0] as $k | any($pruneKeys[]; . == $k))] + $nulls)
   as $candidates
-| [$candidates | unique[] | select(. as $p | $keep | index([$p]) | not) | reachable($t)] as $removed
+| [$candidates | unique[]
+    | select(. as $p | $keep | index([$p]) | not)
+    | reachable($t)
+    | select(. as $p | ($nulls | index([$p])) != null
+        or ($t | getpath($p) | type != "object" or length == 0))
+  ] as $removed
 | {
     settings: (($t | delpaths($removed) | prune_empty_parents($removed)) * $managed),
-    managed: $managed,
+    managed: (reduce ($managed | leaves[]) as $p ($managed; setpath($p; true))),
     removed: [$removed[] | select(. as $p | $t | getpath($p) != null) | map(tostring) | join(".")]
   }

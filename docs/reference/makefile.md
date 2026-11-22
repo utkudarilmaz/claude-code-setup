@@ -38,12 +38,18 @@ The rules:
   target on the next run. An object left empty by that is deleted too.
 - Arrays are replaced whole, never merged item by item.
 
-To know what it set last time, the script saves the merged repo and override
-layers to `.settings.managed.json` in the target. Leave that file alone. On
-the first run it does not exist yet, so nothing is deleted.
+To know what it set last time, the script saves the key paths of the merged
+repo and override layers to `.settings.managed.json` in the target. It saves
+no values. Leave that file alone. On the first run it does not exist yet, so
+nothing is deleted.
 
 `jq` is required. `DRY_RUN=1` prints a diff of the change and writes nothing.
-Each deleted key is printed as `Removed: <key path>`.
+Values under `env` show as `<hidden>`, or `<hidden, changed>` when the update
+changes them. Each deleted key is printed as `Removed: <key path>`.
+
+The script stops without writing when `settings.json`, the overrides file or
+`.settings.managed.json` is not one JSON object, or when the repo or the
+overrides set `env` to anything but an object.
 
 ### Per-Machine Overrides
 
