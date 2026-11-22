@@ -13,28 +13,28 @@ home="$2"
 dry_run="${DRY_RUN:-0}"
 renamed="agents/security-review.md skills/security-review"
 
+if [ "$dry_run" = "1" ]; then
+  verb="Would remove"
+else
+  verb="Removed"
+fi
+
 remove() {
-  if [ "$dry_run" = "1" ]; then
-    echo "Would remove: $1"
-  else
-    rm -rf "$1"
-    echo "Removed: $1"
+  if [ -e "$1" ]; then
+    [ "$dry_run" = "1" ] || rm -rf "$1"
+    echo "$verb: $1"
   fi
 }
 
 for kind in agents skills hooks; do
   for src in "$plugin/$kind"/*; do
     name=$(basename "$src")
-    if [ "$name" != "hooks.json" ] && [ -e "$home/$kind/$name" ]; then
-      remove "$home/$kind/$name"
-    fi
+    [ "$name" = "hooks.json" ] || remove "$home/$kind/$name"
   done
 done
 
 for old in $renamed; do
-  if [ -e "$home/$old" ]; then
-    remove "$home/$old"
-  fi
+  remove "$home/$old"
 done
 
 settings="$home/settings.json"
@@ -42,7 +42,7 @@ if [ ! -f "$settings" ]; then
   exit 0
 fi
 
-scripts=$(cd "$plugin/hooks" && ls -- *.sh | jq -R . | jq -s -c .)
+scripts=$(cd "$plugin/hooks" && ls -- *.sh | jq -Rnc '[inputs]')
 old_hook='def old_hook: (.command // "") | rtrimstr("\"") as $c | any($scripts[]; . as $n | $c | endswith("/hooks/" + $n));'
 list="$old_hook"' (.hooks // {}) | objects | .[] | arrays | .[] | (.hooks // [])[] | select(old_hook) | .command'
 clean="$old_hook"'
@@ -57,11 +57,7 @@ if [ -z "$old_hooks" ]; then
 fi
 
 while IFS= read -r command; do
-  if [ "$dry_run" = "1" ]; then
-    echo "Would remove hook: $command"
-  else
-    echo "Removed hook: $command"
-  fi
+  echo "$verb hook: $command"
 done <<< "$old_hooks"
 
 if [ "$dry_run" != "1" ]; then

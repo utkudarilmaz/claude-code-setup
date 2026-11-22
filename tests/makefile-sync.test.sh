@@ -170,7 +170,6 @@ check "migrate DRY_RUN=1 leaves settings.json alone" \
 check "migrate DRY_RUN=1 makes no backup" test -z "$(ls -A "$TMP_BACKUPS")"
 
 STATUS_OUTPUT=$(make -C "$REPO_ROOT" --no-print-directory status TARGET_DIR="$OLD_HOME" 2>&1)
-export STATUS_OUTPUT
 check "status asks for make migrate when old copies exist" \
   bash -c 'echo "$STATUS_OUTPUT" | grep -q "run make migrate"'
 
