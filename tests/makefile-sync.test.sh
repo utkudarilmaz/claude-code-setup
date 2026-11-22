@@ -3,13 +3,13 @@
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 FAILURES=0
 TMP_TARGET=$(mktemp -d)
-TMP_TARGET_NORSYNC=$(mktemp -d)
+TMP_BACKUPS=$(mktemp -d)
 TMP_TARGET_SETTINGS=$(mktemp -d)
 TMP_TARGET_CLAUDE_MD=$(mktemp -d)
-trap 'rm -rf "$TMP_TARGET" "$TMP_TARGET_NORSYNC" "$TMP_TARGET_SETTINGS" "$TMP_TARGET_CLAUDE_MD"' EXIT
+trap 'rm -rf "$TMP_TARGET" "$TMP_BACKUPS" "$TMP_TARGET_SETTINGS" "$TMP_TARGET_CLAUDE_MD"' EXIT
 
 run_make() {
-  make -C "$REPO_ROOT" --no-print-directory FORCE=1 "$@" >/dev/null 2>&1
+  make -C "$REPO_ROOT" --no-print-directory FORCE=1 BACKUP_DIR="$TMP_BACKUPS" "$@" >/dev/null 2>&1
 }
 
 check() {
@@ -23,25 +23,14 @@ check() {
   fi
 }
 
-# --- update-all populates an empty target ---
-run_make update-all TARGET_DIR="$TMP_TARGET"
+# --- update-config writes settings.json and CLAUDE.md and nothing else ---
+run_make update-config TARGET_DIR="$TMP_TARGET"
 
-check "update-all copies agents" test -f "$TMP_TARGET/agents/docs.md"
-check "update-all copies skills with references" test -f "$TMP_TARGET/skills/docs/references/comprehensive-mode.md"
-check "update-all copies hooks" test -f "$TMP_TARGET/hooks/sensitive-file-protection.sh"
-check "update-all copies settings.json" test -f "$TMP_TARGET/settings.json"
-check "update-all copies CLAUDE.md" test -f "$TMP_TARGET/CLAUDE.md"
-check "synced hook script is executable" test -x "$TMP_TARGET/hooks/sensitive-file-protection.sh"
+check "update-config copies settings.json" test -f "$TMP_TARGET/settings.json"
+check "update-config copies CLAUDE.md" test -f "$TMP_TARGET/CLAUDE.md"
+check "update-config writes nothing else" \
+  test "$(ls -A "$TMP_TARGET" | LC_ALL=C sort | tr '\n' ' ')" = ".settings.managed.json CLAUDE.md settings.json "
 
-# --- update keeps extra files and refreshes changed ones ---
-touch "$TMP_TARGET/agents/extra-agent.md"
-echo "local edit" > "$TMP_TARGET/agents/docs.md"
-run_make update-agents TARGET_DIR="$TMP_TARGET"
-
-check "update keeps extra files in target" test -f "$TMP_TARGET/agents/extra-agent.md"
-check "update refreshes locally changed files" cmp -s "$REPO_ROOT/.claude/agents/docs.md" "$TMP_TARGET/agents/docs.md"
-
-# --- update-config merges settings.json instead of clobbering it ---
 jq '. + {localOnlyKey: true} | .effortLevel = "low"' "$TMP_TARGET/settings.json" > "$TMP_TARGET/settings.json.tmp"
 mv "$TMP_TARGET/settings.json.tmp" "$TMP_TARGET/settings.json"
 run_make update-config TARGET_DIR="$TMP_TARGET"
@@ -49,62 +38,39 @@ run_make update-config TARGET_DIR="$TMP_TARGET"
 check "update-config keeps machine-local keys" \
   test "$(jq -r '.localOnlyKey' "$TMP_TARGET/settings.json")" = "true"
 check "update-config applies repo values over local drift" \
-  test "$(jq -r '.effortLevel' "$TMP_TARGET/settings.json")" = "$(jq -r '.effortLevel' "$REPO_ROOT/.claude/settings.json")"
-
-# --- config paths stay portable across a custom TARGET_DIR ---
-# Hook and statusLine commands must resolve against the active Claude home.
-# A hardcoded ~/.claude makes a second home silently run the first home's
-# scripts, which breaks the moment the first home is removed.
-hook_exit_for_home() {
-  local home="$1" expected="$2" cmd status
-  cmd=$(jq -r '.hooks.PreToolUse[0].hooks[0].command' "$TMP_TARGET/settings.json")
-  printf '{"tool_input":{"file_path":"/tmp/app/.env"}}' \
-    | CLAUDE_CONFIG_DIR="$home" bash -c "$cmd" >/dev/null 2>&1
-  status=$?
-  test "$status" -eq "$expected"
-}
-
-check "repo settings.json has no hardcoded ~/.claude path" \
-  bash -c '! grep -q "~/\.claude" "$0/.claude/settings.json"' "$REPO_ROOT"
-check "synced settings.json has no hardcoded ~/.claude path" \
-  bash -c '! grep -q "~/\.claude" "$0/settings.json"' "$TMP_TARGET"
-check "hook command resolves to the target home's own script" \
-  hook_exit_for_home "$TMP_TARGET" 2
-check "hook command follows CLAUDE_CONFIG_DIR rather than falling back" \
-  hook_exit_for_home "$TMP_TARGET/nonexistent-home" 127
-
-# --- MCP servers are set up by hand, so the sync never writes .claude.json ---
-check "update-all leaves .claude.json alone" test ! -e "$TMP_TARGET/.claude.json"
+  test "$(jq -r '.effortLevel' "$TMP_TARGET/settings.json")" = "$(jq -r '.effortLevel' "$REPO_ROOT/config/settings.json")"
 
 TMP_HOME=$(mktemp -d)
-HOME="$TMP_HOME" run_make update-all
-check "update-all with the default home leaves ~/.claude.json alone" test ! -e "$TMP_HOME/.claude.json"
+HOME="$TMP_HOME" run_make update-config
+check "update-config with the default home writes ~/.claude" test -f "$TMP_HOME/.claude/settings.json"
+check "update-config with the default home leaves ~/.claude.json alone" test ! -e "$TMP_HOME/.claude.json"
 rm -rf "$TMP_HOME"
 
-# --- update-config runs only update-settings and update-claude-md ---
-TMP_TARGET_CONFIG=$(mktemp -d)
-run_make update-config TARGET_DIR="$TMP_TARGET_CONFIG"
+# --- the base settings install the plugin and stay portable across homes ---
+check "base settings enable the core plugin" \
+  test "$(jq -r '.enabledPlugins["core@claude-code-setup"]' "$REPO_ROOT/config/settings.json")" = "true"
+check "base settings declare the repo marketplace with auto update" \
+  test "$(jq -c '.extraKnownMarketplaces["claude-code-setup"] | [.source.repo, .autoUpdate]' "$REPO_ROOT/config/settings.json")" = '["utkudarilmaz/claude-code-setup",true]'
+check "base settings wire no hooks, the plugin does" \
+  test "$(jq 'has("hooks")' "$REPO_ROOT/config/settings.json")" = "false"
+check "base settings have no hardcoded ~/.claude path" \
+  bash -c '! grep -q "~/\.claude" "$0/config/settings.json"' "$REPO_ROOT"
 
-check "update-config copies settings.json" test -f "$TMP_TARGET_CONFIG/settings.json"
-check "update-config copies CLAUDE.md" test -f "$TMP_TARGET_CONFIG/CLAUDE.md"
-check "update-config writes nothing else" \
-  test "$(ls -A "$TMP_TARGET_CONFIG" | LC_ALL=C sort | tr '\n' ' ')" = ".settings.managed.json CLAUDE.md settings.json "
-rm -rf "$TMP_TARGET_CONFIG"
-
-# --- the removed targets are gone ---
+# --- the old file sync targets are gone ---
 no_rule_for() {
   make -C "$REPO_ROOT" --no-print-directory -n "$1" TARGET_DIR="$TMP_TARGET" 2>&1 \
     | grep -qE "No rule to make target .$1'"
 }
 
-check "make install no longer exists" no_rule_for install
-check "make update-mcp no longer exists" no_rule_for update-mcp
+for target in install update-mcp update-all update-agents update-skills update-hooks rm-agents rm-skills rm-hooks; do
+  check "make $target no longer exists" no_rule_for "$target"
+done
 
 # --- update-settings syncs settings.json without touching the other config files ---
 run_make update-settings TARGET_DIR="$TMP_TARGET_SETTINGS"
 
 check "update-settings copies settings.json" \
-  test "$(jq -S . "$REPO_ROOT/.claude/settings.json")" = "$(jq -S . "$TMP_TARGET_SETTINGS/settings.json")"
+  test "$(jq -S . "$REPO_ROOT/config/settings.json")" = "$(jq -S . "$TMP_TARGET_SETTINGS/settings.json")"
 check "update-settings leaves CLAUDE.md alone" test ! -e "$TMP_TARGET_SETTINGS/CLAUDE.md"
 
 jq '. + {localOnlyKey: true}' "$TMP_TARGET_SETTINGS/settings.json" > "$TMP_TARGET_SETTINGS/settings.json.tmp"
@@ -130,7 +96,7 @@ check "update-settings PRUNE=env fails" bash -c '! make -C "$0" --no-print-direc
 TMP_TARGET_DIFF=$(mktemp -d)
 printf '{"effortLevel":"local-drift","env":{"MY_TOKEN":"diff-secret"}}\n' > "$TMP_TARGET_DIFF/settings.json"
 cp "$TMP_TARGET_DIFF/settings.json" "$TMP_TARGET_DIFF.before"
-REPO_EFFORT=$(jq -r '.effortLevel' "$REPO_ROOT/.claude/settings.json")
+REPO_EFFORT=$(jq -r '.effortLevel' "$REPO_ROOT/config/settings.json")
 
 DIFF_OUTPUT=$(cd "$TMP_TARGET_DIFF" && make -C "$REPO_ROOT" --no-print-directory diff TARGET_DIR="$TMP_TARGET_DIFF" 2>&1)
 export DIFF_OUTPUT REPO_EFFORT
@@ -158,7 +124,7 @@ rm -rf "$TMP_TARGET_DIFF" "$TMP_TARGET_DIFF.before"
 run_make update-claude-md TARGET_DIR="$TMP_TARGET_CLAUDE_MD"
 
 check "update-claude-md copies CLAUDE.md" \
-  cmp -s "$REPO_ROOT/.claude/CLAUDE.md" "$TMP_TARGET_CLAUDE_MD/CLAUDE.md"
+  cmp -s "$REPO_ROOT/config/CLAUDE.md" "$TMP_TARGET_CLAUDE_MD/CLAUDE.md"
 check "update-claude-md leaves settings.json alone" test ! -e "$TMP_TARGET_CLAUDE_MD/settings.json"
 
 echo "local edit" > "$TMP_TARGET_CLAUDE_MD/CLAUDE.md"
@@ -168,31 +134,152 @@ check "update-claude-md DRY_RUN=1 writes nothing" \
 
 run_make update-claude-md TARGET_DIR="$TMP_TARGET_CLAUDE_MD"
 check "update-claude-md refreshes a locally changed CLAUDE.md" \
-  cmp -s "$REPO_ROOT/.claude/CLAUDE.md" "$TMP_TARGET_CLAUDE_MD/CLAUDE.md"
+  cmp -s "$REPO_ROOT/config/CLAUDE.md" "$TMP_TARGET_CLAUDE_MD/CLAUDE.md"
 
-# --- rm commands remove repo-managed files only ---
-run_make rm-agents TARGET_DIR="$TMP_TARGET"
+# --- migrate removes the old file sync copies and keeps everything else ---
+new_old_home() {
+  OLD_HOME=$(mktemp -d)
+  mkdir -p "$OLD_HOME/agents" "$OLD_HOME/skills/docs/references" "$OLD_HOME/skills/security-review" "$OLD_HOME/skills/extra-skill" "$OLD_HOME/hooks"
+  touch "$OLD_HOME/agents/docs.md" "$OLD_HOME/agents/security-review.md" "$OLD_HOME/agents/extra-agent.md"
+  touch "$OLD_HOME/skills/docs/SKILL.md" "$OLD_HOME/skills/extra-skill/SKILL.md"
+  touch "$OLD_HOME/hooks/notification.sh" "$OLD_HOME/hooks/extra.sh"
+  cat > "$OLD_HOME/settings.json" <<'JSON'
+{
+  "model": "opus",
+  "hooks": {
+    "PreToolUse": [
+      {"matcher": "Edit|Write", "hooks": [{"type": "command", "command": "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/sensitive-file-protection.sh"}]},
+      {"matcher": "Bash", "hooks": [
+        {"type": "command", "command": "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/dirty-merge-protection.sh"},
+        {"type": "command", "command": "/usr/local/bin/my-hook.sh"}
+      ]}
+    ],
+    "Notification": [
+      {"hooks": [{"type": "command", "command": "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/notification.sh"}]}
+    ]
+  }
+}
+JSON
+}
 
-check "rm-agents removes repo-managed agents" test ! -e "$TMP_TARGET/agents/docs.md"
-check "rm-agents keeps extra agents" test -f "$TMP_TARGET/agents/extra-agent.md"
+new_old_home
+run_make migrate TARGET_DIR="$OLD_HOME" DRY_RUN=1
+check "migrate DRY_RUN=1 removes nothing" test -f "$OLD_HOME/agents/docs.md"
+check "migrate DRY_RUN=1 leaves settings.json alone" \
+  test "$(jq '.hooks.Notification | length' "$OLD_HOME/settings.json")" = "1"
+check "migrate DRY_RUN=1 makes no backup" test -z "$(ls -A "$TMP_BACKUPS")"
 
-# --- NO_RSYNC=1 exercises the copy fallback path ---
-NORSYNC_OUTPUT=$(make -C "$REPO_ROOT" --no-print-directory FORCE=1 update-all TARGET_DIR="$TMP_TARGET_NORSYNC" NO_RSYNC=1 2>&1)
+STATUS_OUTPUT=$(make -C "$REPO_ROOT" --no-print-directory status TARGET_DIR="$OLD_HOME" 2>&1)
+check "status asks for make migrate when old copies exist" \
+  bash -c 'echo "$STATUS_OUTPUT" | grep -q "run make migrate"'
 
-export NORSYNC_OUTPUT
-check "fallback path is used when NO_RSYNC=1" \
-  bash -c "echo \"\$NORSYNC_OUTPUT\" | grep -q 'Added: agents/'"
-check "fallback path copies agents" test -f "$TMP_TARGET_NORSYNC/agents/docs.md"
-check "fallback path copies skills with references" test -f "$TMP_TARGET_NORSYNC/skills/docs/references/comprehensive-mode.md"
-check "fallback path makes hook scripts executable" test -x "$TMP_TARGET_NORSYNC/hooks/sensitive-file-protection.sh"
+run_make migrate TARGET_DIR="$OLD_HOME"
+check "migrate makes a backup first" test -n "$(ls -A "$TMP_BACKUPS")"
+check "migrate removes an old agent copy" test ! -e "$OLD_HOME/agents/docs.md"
+check "migrate removes an old skill copy" test ! -e "$OLD_HOME/skills/docs"
+check "migrate removes an old hook script" test ! -e "$OLD_HOME/hooks/notification.sh"
+check "migrate removes the agent under its old name" test ! -e "$OLD_HOME/agents/security-review.md"
+check "migrate removes the skill under its old name" test ! -e "$OLD_HOME/skills/security-review"
+check "migrate keeps an extra agent" test -f "$OLD_HOME/agents/extra-agent.md"
+check "migrate keeps an extra skill" test -f "$OLD_HOME/skills/extra-skill/SKILL.md"
+check "migrate keeps an extra hook script" test -f "$OLD_HOME/hooks/extra.sh"
+check "migrate removes the old hook entries" \
+  test "$(jq '[.hooks[][].hooks[].command | select(test("/hooks/"))] | length' "$OLD_HOME/settings.json")" = "0"
+check "migrate keeps a local hook entry" \
+  test "$(jq -r '.hooks.PreToolUse[0].hooks[0].command' "$OLD_HOME/settings.json")" = "/usr/local/bin/my-hook.sh"
+check "migrate drops an event left empty" test "$(jq '.hooks | has("Notification")' "$OLD_HOME/settings.json")" = "false"
+check "migrate keeps other settings" test "$(jq -r '.model' "$OLD_HOME/settings.json")" = "opus"
+
+STATUS_OUTPUT=$(make -C "$REPO_ROOT" --no-print-directory status TARGET_DIR="$OLD_HOME" 2>&1)
+check "status stops asking for make migrate afterwards" \
+  bash -c '! echo "$0" | grep -q "run make migrate"' "$STATUS_OUTPUT"
+check "a second migrate has nothing to do" \
+  test -z "$(DRY_RUN=1 bash "$REPO_ROOT/scripts/migrate.sh" "$REPO_ROOT/plugins/core" "$OLD_HOME")"
+rm -rf "$OLD_HOME"
+
+new_old_home
+printf 'n\n' | make -C "$REPO_ROOT" --no-print-directory migrate TARGET_DIR="$OLD_HOME" BACKUP_DIR="$TMP_BACKUPS" >/dev/null 2>&1
+check "migrate stops when the answer is no" test -f "$OLD_HOME/agents/docs.md"
+rm -rf "$OLD_HOME"
+
+# --- migrate never deletes outside the home ---
+MIGRATE="$REPO_ROOT/scripts/migrate.sh"
+PLUGIN_DIR="$REPO_ROOT/plugins/core"
+check "migrate refuses an empty home" \
+  bash -c '! DRY_RUN=1 bash "$0" "$1" "" >/dev/null 2>&1' "$MIGRATE" "$PLUGIN_DIR"
+check "migrate refuses a home that does not exist" \
+  bash -c '! DRY_RUN=1 bash "$0" "$1" "$1/no-such-home" >/dev/null 2>&1' "$MIGRATE" "$PLUGIN_DIR"
+check "migrate refuses the plugin folder as the home" \
+  bash -c '! DRY_RUN=1 bash "$0" "$1" "$1" >/dev/null 2>&1' "$MIGRATE" "$PLUGIN_DIR"
+check "make migrate with an empty TARGET_DIR fails" \
+  bash -c '! make -C "$0" --no-print-directory FORCE=1 DRY_RUN=1 migrate TARGET_DIR= >/dev/null 2>&1' "$REPO_ROOT"
+
+new_old_home
+OUTSIDE=$(mktemp -d)
+mv "$OLD_HOME/agents" "$OUTSIDE/agents"
+ln -s "$OUTSIDE/agents" "$OLD_HOME/agents"
+ln -s "$OLD_HOME/missing" "$OLD_HOME/skills/tester"
+run_make migrate TARGET_DIR="$OLD_HOME"
+check "migrate does not delete through a symlinked agents folder" test -f "$OUTSIDE/agents/docs.md"
+check "migrate still cleans the folders that are not symlinks" test ! -e "$OLD_HOME/skills/docs"
+check "migrate removes a dangling symlink copy" test ! -L "$OLD_HOME/skills/tester"
+rm -rf "$OLD_HOME" "$OUTSIDE"
+
+new_old_home
+cat > "$OLD_HOME/settings.json" <<'JSON'
+{
+  "hooks": {
+    "PreToolUse": [
+      {"matcher": "Bash", "hooks": [
+        {"type": "command", "command": "~/.claude/hooks/dirty-merge-protection.sh"},
+        {"type": "command", "command": "bash \"$HOME/.claude/hooks/sensitive-file-protection.sh\""},
+        {"type": "command", "command": "/opt/tools/hooks/notification.sh"},
+        {"type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/notification.sh"}
+      ]},
+      {"matcher": "Read", "hooks": []}
+    ],
+    "Stop": []
+  }
+}
+JSON
+run_make migrate TARGET_DIR="$OLD_HOME"
+check "migrate removes old hook entries in their older spellings" \
+  test "$(jq '[.hooks.PreToolUse[].hooks[].command | select(test("\\.claude/hooks/(dirty|sensitive)"))] | length' "$OLD_HOME/settings.json")" = "0"
+check "migrate keeps a user hook with the same name in another folder" \
+  test "$(jq '[.hooks.PreToolUse[0].hooks[].command | select(endswith("/hooks/notification.sh"))] | length' "$OLD_HOME/settings.json")" = "2"
+check "migrate keeps entries it did not touch, even empty ones" \
+  test "$(jq -c '[.hooks.PreToolUse[1].matcher, .hooks.Stop]' "$OLD_HOME/settings.json")" = '["Read",[]]'
+rm -rf "$OLD_HOME"
+
+# --- backup copies the real files behind a symlinked home ---
+REAL_HOME=$(mktemp -d)
+LINK_PARENT=$(mktemp -d)
+touch "$REAL_HOME/settings.json"
+ln -s "$REAL_HOME" "$LINK_PARENT/home"
+LINK_BACKUPS=$(mktemp -d)
+make -C "$REPO_ROOT" --no-print-directory backup TARGET_DIR="$LINK_PARENT/home" BACKUP_DIR="$LINK_BACKUPS" >/dev/null 2>&1
+LINK_BACKUP=$(ls -d "$LINK_BACKUPS"/claude_* 2>/dev/null | head -1)
+check "backup of a symlinked home is a real copy" \
+  bash -c '[ -n "$0" ] && [ ! -L "$0" ] && [ -f "$0/settings.json" ]' "$LINK_BACKUP"
+rm -rf "$REAL_HOME" "$LINK_PARENT" "$LINK_BACKUPS"
+
+if [ "$(id -u)" != "0" ]; then
+  new_old_home
+  touch "$OLD_HOME/unreadable"
+  chmod 000 "$OLD_HOME/unreadable"
+  run_make migrate TARGET_DIR="$OLD_HOME"
+  check "migrate deletes nothing when the backup fails" test -f "$OLD_HOME/agents/docs.md"
+  chmod 600 "$OLD_HOME/unreadable"
+  rm -rf "$OLD_HOME"
+fi
 
 # --- the claudish server URL and API key stay machine-local ---
-TMP_CLAUDISH="$TMP_TARGET/claudish-test"
+TMP_CLAUDISH="$TMP_TARGET_SETTINGS/claudish-test"
 mkdir -p "$TMP_CLAUDISH"
 printf '{"env":{"CLAUDISH_OPENAI_URL":"http://other-host:11435/v1","CLAUDISH_OPENAI_KEY":"local-key"}}\n' > "$TMP_CLAUDISH/settings.json"
 run_make update-settings TARGET_DIR="$TMP_CLAUDISH"
 check "repo settings.json holds no claudish server URL or API key" \
-  test "$(jq -r '.env | has("CLAUDISH_OPENAI_URL") or has("CLAUDISH_OPENAI_KEY")' "$REPO_ROOT/.claude/settings.json")" = "false"
+  test "$(jq -r '.env | has("CLAUDISH_OPENAI_URL") or has("CLAUDISH_OPENAI_KEY")' "$REPO_ROOT/config/settings.json")" = "false"
 check "update-settings keeps a local claudish server URL" \
   test "$(jq -r '.env.CLAUDISH_OPENAI_URL' "$TMP_CLAUDISH/settings.json")" = "http://other-host:11435/v1"
 check "update-settings keeps a local claudish API key" \
@@ -209,6 +296,51 @@ SPACE_STATUS=$(make -C "$REPO_ROOT" --no-print-directory status TARGET_DIR="$SPA
 check "status works for a home whose path has a space" \
   bash -c '! echo "$0" | grep -q "too many arguments" && echo "$0" | grep "CLAUDE.md" | grep -q synced' "$SPACE_STATUS"
 rm -rf "$TMP_SPACE_PARENT"
+
+# --- help lists every target and only targets that exist ---
+ESC=$(printf '\033')
+HELP_OUTPUT=$(make -C "$REPO_ROOT" --no-print-directory help 2>&1 | sed -e 's/\\033\[[0-9;]*m//g' -e "s/$ESC\[[0-9;]*m//g")
+HELP_COMMANDS=$(echo "$HELP_OUTPUT" | sed -nE 's/^  ([a-z][a-z-]*) +[A-Z].*/\1/p')
+HELP_EXAMPLES=$(echo "$HELP_OUTPUT" | sed -nE 's/^  make ([a-z][a-z-]*) .*/\1/p' | sort -u)
+MAKE_TARGETS=" $(grep -oE '^[a-z][a-z-]*:' "$REPO_ROOT/Makefile" | tr -d ':' | tr '\n' ' ') "
+
+check "help lists commands" test -n "$HELP_COMMANDS"
+for target in $HELP_COMMANDS $HELP_EXAMPLES; do
+  check "help names make $target, which exists" \
+    bash -c 'case "$1" in *" $0 "*) ;; *) exit 1 ;; esac' "$target" "$MAKE_TARGETS"
+done
+for target in $MAKE_TARGETS; do
+  [ "$target" = "help" ] && continue
+  check "help lists make $target" \
+    bash -c 'echo "$1" | grep -qx "$0"' "$target" "$HELP_COMMANDS"
+done
+
+# --- status and diff on an empty or missing home only report ---
+EMPTY_HOME=$(mktemp -d)
+MISSING_HOME="$EMPTY_HOME/missing"
+for home in "$EMPTY_HOME" "$MISSING_HOME"; do
+  label=$([ "$home" = "$EMPTY_HOME" ] && echo "an empty home" || echo "a missing home")
+
+  HOME_STATUS=$(make -C "$REPO_ROOT" --no-print-directory status TARGET_DIR="$home" 2>&1)
+  check "status on $label exits 0" test $? -eq 0
+  check "status on $label calls settings.json missing" \
+    bash -c 'echo "$0" | grep "settings.json" | grep -q "missing"' "$HOME_STATUS"
+  check "status on $label calls CLAUDE.md missing" \
+    bash -c 'echo "$0" | grep "CLAUDE.md" | grep -q "missing"' "$HOME_STATUS"
+  check "status on $label prints no migrate error" \
+    bash -c '! echo "$0" | grep -q "migrate:"' "$HOME_STATUS"
+  check "status on $label does not ask for make migrate" \
+    bash -c '! echo "$0" | grep -q "run make migrate"' "$HOME_STATUS"
+
+  HOME_DIFF=$(make -C "$REPO_ROOT" --no-print-directory diff TARGET_DIR="$home" 2>&1)
+  check "diff on $label exits 0" test $? -eq 0
+  check "diff on $label shows the base settings it would add" \
+    bash -c 'echo "$0" | grep -q "^+ *\"enabledPlugins\""' "$HOME_DIFF"
+  check "diff on $label says CLAUDE.md would be added" \
+    bash -c 'echo "$0" | grep "CLAUDE.md" | grep -q "would add"' "$HOME_DIFF"
+done
+check "status and diff write nothing and do not create a missing home" test -z "$(ls -A "$EMPTY_HOME")"
+rm -rf "$EMPTY_HOME"
 
 echo ""
 if [ "$FAILURES" -gt 0 ]; then

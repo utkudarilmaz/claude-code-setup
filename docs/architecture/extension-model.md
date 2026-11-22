@@ -1,162 +1,137 @@
 # Extension Architecture
 
+Agents, skills and hooks ship as the `core` plugin in `plugins/core/`. The
+marketplace in `.claude-plugin/marketplace.json` lists it.
+
 ## Two-Tier Extension Model
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                    User Input                        │
-│                   /docs all                          │
+│                    User Input                       │
+│              /docs all  or  /core:docs all          │
 └─────────────────────┬───────────────────────────────┘
                       │
 ┌─────────────────────▼───────────────────────────────┐
-│              Skills Layer (SKILL.md)                 │
-│  • Parses command arguments                          │
-│  • Determines invocation mode                        │
-│  • Dispatches to agent via Task tool                 │
+│          Skills Layer (skills/*/SKILL.md)           │
+│  • Parses command arguments                         │
+│  • Determines invocation mode                       │
+│  • Dispatches core:<agent> via the Task tool        │
 └─────────────────────┬───────────────────────────────┘
                       │
 ┌─────────────────────▼───────────────────────────────┐
-│              Agents Layer (*.md)                     │
-│  • Contains domain expertise                         │
-│  • Defines workflows and rules                       │
-│  • Executes actual work                              │
+│             Agents Layer (agents/*.md)              │
+│  • Contains domain expertise                        │
+│  • Defines workflows and rules                      │
+│  • Executes actual work                             │
 └─────────────────────────────────────────────────────┘
 ```
 
-**Skills** provide the `/command` interface and dispatch logic. Skills follow a progressive disclosure pattern: SKILL.md is a lean dispatch layer; detailed mode content (checklists, patterns, execution flows) lives in `references/` subdirectories.
+**Skills** provide the `/command` interface and dispatch logic. SKILL.md stays
+a lean dispatch layer. Detailed mode content (checklists, patterns, execution
+flows) lives in the skill's `references/` folder.
 **Agents** contain the specialized knowledge and execution workflows.
+
+## Names
+
+| Kind | Loads as | Example |
+|------|----------|---------|
+| Agent | `core:<name>` | `subagent_type="core:docs"` |
+| Skill | `/<name>`, or `/core:<name>` | `/docs`, `/core:docs` |
+
+The bare skill name works unless another command has the same name.
+`/core:<name>` always works. A skill must never take the name of a built-in
+command. That is why the security skill is `/security-audit`, not
+`/security-review`. `tests/plugin-manifest.test.sh` keeps the list of built-in
+names.
+
+One skill calls another with the Skill tool and the `core:` name, as
+`/release-tag` does with `core:changelog`.
+
+## Path Resolution
+
+Plugin files are installed into a cache folder, so no path may point at
+`~/.claude`. Two variables give the real location:
+
+| Variable | Points at | Used in |
+|----------|-----------|---------|
+| `${CLAUDE_SKILL_DIR}` | The running skill's folder | SKILL.md, for its own `references/` |
+| `${CLAUDE_PLUGIN_ROOT}` | `plugins/core/` as installed | SKILL.md for another skill's files, agents, `hooks.json` |
+
+Claude Code replaces both in a skill when it loads it, so the prompt a skill
+passes to an agent already holds the full path. For example:
+
+```
+Consult ${CLAUDE_SKILL_DIR}/references/comprehensive-mode.md
+Consult ${CLAUDE_PLUGIN_ROOT}/skills/code-slop-cleaner/references/change-patterns.md
+```
 
 ## Hook System
 
-Hooks intercept tool calls for pre/post processing:
+Hooks are wired in `plugins/core/hooks/hooks.json`, not in `settings.json`:
 
 ```json
 {
   "hooks": {
     "PreToolUse": [{
       "matcher": "Edit|Write",
-      "hooks": [{"type": "command", "command": "script.sh"}]
+      "hooks": [{"type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/sensitive-file-protection.sh\""}]
     }]
   }
 }
 ```
 
+Quote the command, because the plugin path can hold spaces. PreToolUse hooks
+get the tool call as JSON on stdin and exit with code 2 to block it. Scripts
+must be executable and run on macOS and Linux.
+
 ### Current Hooks
 
-| Hook | Trigger | Purpose | Platform Support |
-|------|---------|---------|------------------|
-| `sensitive-file-protection` | Edit\|Write | Blocks writes to protected files (.env, credentials, secrets, lock files; .env.example is allowed) via exit code 2 | All |
-| `dirty-merge-protection` | Bash | Blocks `git merge` and `gh pr merge` while the repo has uncommitted changes (merge `--abort`, `--continue`, and `--quit` are allowed) via exit code 2 | All |
-| `notification` | All notifications | Plays audio notification when Claude Code sends a notification | macOS (afplay), Linux (paplay/aplay) |
+| Hook | Event and matcher | Purpose | Platform Support |
+|------|-------------------|---------|------------------|
+| `sensitive-file-protection` | PreToolUse, `Edit\|Write` | Blocks writes to protected files (.env, credentials, secrets, lock files; .env.example is allowed) via exit code 2 | All |
+| `dirty-merge-protection` | PreToolUse, `Bash` | Blocks `git merge` and `gh pr merge` while the repo has uncommitted changes (merge `--abort`, `--continue`, and `--quit` are allowed) via exit code 2 | All |
+| `notification` | Notification, any | Plays a sound when Claude Code sends a notification | macOS (afplay), Linux (paplay/aplay) |
 
-**Cross-platform notification implementation:**
+The notification hook tries each player in turn and stays silent when none
+works:
+
 - macOS: `afplay /System/Library/Sounds/Glass.aiff`
 - Linux (PulseAudio): `paplay /usr/share/sounds/freedesktop/stereo/complete.oga`
 - Linux (ALSA): `aplay /usr/share/sounds/alsa/Front_Center.wav`
-- Fallback chain ensures compatibility across platforms
+
+[Configuration](../guides/configuration.md#current-hooks) has the details of
+each hook.
 
 ## Directory Structure
 
 ```
-.claude/
-├── agents/           # Agent definitions (domain expertise)
-│   ├── docs.md
-│   ├── tester.md
-│   ├── security-review.md
-│   ├── simplifier.md
-│   ├── release-notes.md
-│   ├── changelog-generator.md
-│   ├── seo.md
-│   ├── create-pr.md
-│   ├── text-slop-cleaner.md
-│   ├── code-slop-cleaner.md
-│   ├── review-analyzer.md
-│   └── pr-comment-cleaner.md
-├── hooks/            # Hook scripts (tool call interception)
-│   ├── sensitive-file-protection.sh
-│   ├── dirty-merge-protection.sh
-│   └── notification.sh
-├── skills/           # Skill commands (user interface)
-│   ├── docs/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       ├── comprehensive-mode.md
-│   │       └── simplifier-mode.md
-│   ├── tester/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       └── comprehensive-mode.md
-│   ├── security-review/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       └── comprehensive-mode.md
-│   ├── simplifier/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       ├── go-patterns.md
-│   │       ├── js-ts-patterns.md
-│   │       └── python-patterns.md
-│   ├── changelog/SKILL.md
-│   ├── release-tag/SKILL.md
-│   ├── seo/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       ├── comprehensive-mode.md
-│   │       └── audit-mode.md
-│   ├── create-pr/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       └── pr-creation.md
-│   ├── text-slop-cleaner/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       └── slop-patterns.md
-│   ├── code-slop-cleaner/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       └── change-patterns.md
-│   ├── review-analyzer/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       └── fix-validity-patterns.md
-│   └── pr-comment-cleaner/
-│       ├── SKILL.md
-│       └── references/
-│           └── comment-necessity.md
-├── settings.json     # Hooks, plugins, statusLine (cross-platform)
-└── CLAUDE.md         # Global conventions
+.claude-plugin/
+└── marketplace.json            # Marketplace "claude-code-setup", lists core
+plugins/core/
+├── .claude-plugin/plugin.json  # Plugin manifest, no version
+├── agents/<name>.md            # 12 agents, loaded as core:<name>
+├── skills/<name>/              # 12 skills
+│   ├── SKILL.md
+│   └── references/             # Mode checklists and patterns (not in changelog or release-tag)
+├── hooks/
+│   ├── hooks.json              # Hook wiring
+│   └── *.sh                    # 3 hook scripts
+└── README.md
+config/
+├── settings.json               # Base settings, synced by make update-config
+└── CLAUDE.md                   # Global conventions, synced by make update-config
 ```
 
-## Platform Compatibility
-
-### Node.js Path Resolution
-
-The `statusLine` configuration uses dynamic node path resolution for cross-platform compatibility:
-
-```json
-{
-  "statusLine": {
-    "type": "command",
-    "command": "bash -c '... $(\"$(command -v node)\" ...) ...'"
-  }
-}
-```
-
-This avoids hardcoding `/usr/bin/node` and works on:
-- macOS (Homebrew): `/opt/homebrew/bin/node`
-- macOS (nvm): `~/.nvm/versions/node/*/bin/node`
-- Linux: `/usr/bin/node`
-- Any custom installation location
-
-### Audio Notification Support
-
-The notification hook uses a fallback chain to support multiple platforms and audio systems. See **Current Hooks** section above for details.
+A plugin cannot ship `settings.json` or `CLAUDE.md`, so those two live in
+`config/`. The status line in `config/settings.json` is described in
+[Configuration](../guides/configuration.md#statusline-configuration).
 
 ## Flow Example
 
 1. User invokes `/docs all`
-2. Skills layer (SKILL.md) parses arguments, determines "comprehensive" mode
-3. Skills layer reads `references/comprehensive-mode.md` for the full aspect checklist
-4. Skills layer dispatches to `docs` agent via Task tool with checklist embedded in prompt
-5. Agent layer (docs.md) creates TodoWrite plan, executes documentation tasks
-6. Agent completes work, returns summary
+2. The skill (`skills/docs/SKILL.md`) parses the arguments and picks comprehensive mode
+3. The skill dispatches `core:docs` via the Task tool. The prompt points at
+   `${CLAUDE_SKILL_DIR}/references/comprehensive-mode.md`, already resolved
+   to the full path
+4. The agent (`agents/docs.md`) reads that checklist, creates a TodoWrite plan, and runs the documentation tasks
+5. The agent completes the work and returns a summary

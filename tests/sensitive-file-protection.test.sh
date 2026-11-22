@@ -1,8 +1,8 @@
 #!/bin/bash
-# Tests for .claude/hooks/sensitive-file-protection.sh
+# Tests for plugins/core/hooks/sensitive-file-protection.sh
 # The hook receives PreToolUse JSON on stdin and must exit 2 to block.
 
-HOOK="$(cd "$(dirname "$0")/.." && pwd)/.claude/hooks/sensitive-file-protection.sh"
+HOOK="$(cd "$(dirname "$0")/.." && pwd)/plugins/core/hooks/sensitive-file-protection.sh"
 FAILURES=0
 
 run_case() {

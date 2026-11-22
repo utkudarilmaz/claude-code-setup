@@ -1,10 +1,10 @@
 #!/bin/bash
-# Tests for .claude/hooks/notification.sh
+# Tests for plugins/core/hooks/notification.sh
 # The hook plays a sound through the first available player and must always
 # exit 0. Players are replaced with stubs on a private PATH so no sound is
 # played and the same cases run on macOS and Linux.
 
-HOOK="$(cd "$(dirname "$0")/.." && pwd)/.claude/hooks/notification.sh"
+HOOK="$(cd "$(dirname "$0")/.." && pwd)/plugins/core/hooks/notification.sh"
 BASH_BIN="$(command -v bash)"
 STUB_DIR=$(mktemp -d)
 CALL_LOG="$STUB_DIR/calls.log"

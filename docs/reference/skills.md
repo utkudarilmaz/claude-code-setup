@@ -1,6 +1,8 @@
 # Skills Reference
 
-Skills are user-facing slash commands that dispatch work to agents. Each skill supports multiple invocation modes.
+Skills are slash commands that dispatch work to `core:<agent>` agents. Each skill supports several invocation modes.
+
+Every skill ships in the `core` plugin and works as `/core:<name>`. The bare `/<name>` works too, unless another command has the same name. Then use `/core:<name>`, for example `/core:docs`.
 
 ## /docs
 
@@ -70,15 +72,15 @@ Verify and create test coverage.
 
 ---
 
-## /security-review
+## /security-audit
 
-Perform security-focused code review.
+Perform security-focused code review. Formerly `/security-review`, renamed because Claude Code has a built-in `/security-review` command.
 
 | Mode | Command | Description |
 |------|---------|-------------|
-| Default | `/security-review` | Review recent changes for security vulnerabilities |
-| Scoped | `/security-review <path>` | Review specific file/module for security issues |
-| Comprehensive | `/security-review all` | Complete security audit with TodoWrite planning |
+| Default | `/security-audit` | Review recent changes for security vulnerabilities |
+| Scoped | `/security-audit <path>` | Review specific file/module for security issues |
+| Comprehensive | `/security-audit all` | Complete security audit with TodoWrite planning |
 
 **What it does:**
 - **Default:** Reviews recent commits for security vulnerabilities
@@ -104,12 +106,12 @@ Perform security-focused code review.
 
 **Examples:**
 ```
-/security-review                  # Review recent changes
-/security-review src/auth         # Deep review of authentication module
-/security-review api/handlers     # Review API endpoints
-/security-review lib/payment.ts   # Review specific file
-/security-review controllers/     # Review all controllers
-/security-review all              # Comprehensive security audit with planning
+/security-audit                  # Review recent changes
+/security-audit src/auth         # Deep review of authentication module
+/security-audit api/handlers     # Review API endpoints
+/security-audit lib/payment.ts   # Review specific file
+/security-audit controllers/     # Review all controllers
+/security-audit all              # Comprehensive security audit with planning
 ```
 
 ---
@@ -130,9 +132,9 @@ Generate or update changelog, or create release notes.
 - **Versioned mode:** Generates release notes for specific version or version range
 
 **Agent Dispatch:**
-- `/changelog` → `changelog-generator` agent (CHANGELOG.md file)
-- `/changelog release` → `release-notes` agent (release announcement markdown)
-- `/changelog <version>` → `release-notes` agent (version-specific notes)
+- `/changelog` → `core:changelog-generator` agent (CHANGELOG.md file)
+- `/changelog release` → `core:release-notes` agent (release announcement markdown)
+- `/changelog <version>` → `core:release-notes` agent (version-specific notes)
 
 **Examples:**
 ```
@@ -228,7 +230,7 @@ Bump semantic version, update changelog, and create annotated git tag.
 - Reads the latest git tag and keeps its prefix (`1.2.3` or `v1.2.3`); defaults to `0.0.0` and asks about the prefix if no tags exist
 - Calculates new version based on bump type
 - Verifies clean working tree (refuses to tag with uncommitted changes)
-- Invokes `/changelog` to update CHANGELOG.md, then commits the changelog
+- Invokes `core:changelog` with the Skill tool to update CHANGELOG.md, then commits the changelog
 - Builds tag message from grouped commit summary (conventional commit types)
 - Creates annotated git tag with the same prefix as the previous tag
 - Pushes the changelog commit and the tag in one atomic push (never force pushes)
@@ -265,7 +267,7 @@ A branch that already has an open PR routes to the update path in every mode, so
 
 Anything typed after the mode is passed through as plain text: `/create-pr base develop`, `/create-pr draft reviewer alice`, `/create-pr label bug`.
 
-**Cleanup pass:** Every mode except show ends with a cleanup pass over each PR the run created or updated. The skill dispatches three agents against the finished PR: `pr-comment-cleaner` removes unnecessary code comments in the PR's changed files, which the skill then commits and pushes unless a [skip condition](#pr-comment-cleaner) holds; `text-slop-cleaner` rewrites the PR body and your own comments into plain English; and `code-slop-cleaner` reports whether the diff matches its scope. They run concurrently when the run was for the current branch; a targeted PR runs `pr-comment-cleaner` first because it checks the PR branch out. Add `no-clean` to skip the pass.
+**Cleanup pass:** Every mode except show ends with a cleanup pass over each PR the run created or updated. The skill dispatches three agents against the finished PR: `core:pr-comment-cleaner` removes unnecessary code comments in the PR's changed files, which the skill then commits and pushes unless a [skip condition](#pr-comment-cleaner) holds; `core:text-slop-cleaner` rewrites the PR body and your own comments into plain English; and `core:code-slop-cleaner` reports whether the diff matches its scope. They run concurrently when the run was for the current branch; a targeted PR runs `core:pr-comment-cleaner` first because it checks the PR branch out. Add `no-clean` to skip the pass.
 
 **Title:** Conventional commit form, under 70 characters, lower case after the type, no ticket ID. The repository's own convention wins when recent merged PRs show one.
 
@@ -472,7 +474,7 @@ Check each issue in a code review against the actual code, judge the proposed fi
 
 **Scope:** Report only. Terminal output, no code edits, no files written. Never fetches pull requests or review comments with gh; given a PR number or URL, it asks for the text or a file. If no review is given at all, it stops and asks.
 
-**Rules:** Every parsed issue gets its own section with all six questions answered; no item is skipped or merged, and every item ends with one concrete closing recommendation. Every verdict names its evidence in the code, and nothing is judged from the review text alone. Better fixes are proposed in words, never applied. A review that is entirely right is reported as such. Never `simply`, `just`, `obviously`, `of course`, or `as you know`.
+**Rules:** Every parsed issue gets its own section with all five questions answered; no item is skipped or merged, and every item ends with one concrete closing recommendation. Every verdict names its evidence in the code, and nothing is judged from the review text alone. Better fixes are proposed in words, never applied. A review that is entirely right is reported as such. Never `simply`, `just`, `obviously`, `of course`, or `as you know`.
 
 **Examples:**
 ```

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-code-setup",
+  "description": "One shared Claude Code setup of agents, skills and hooks for every machine",
+  "owner": {
+    "name": "Utku Darilmaz"
+  },
+  "plugins": [
+    {
+      "name": "core",
+      "source": "./plugins/core",
+      "description": "Agents, skills and hooks for docs, tests, reviews, cleanups, changelogs and PRs",
+      "category": "productivity"
+    }
+  ]
+}

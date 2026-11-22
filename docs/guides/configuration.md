@@ -2,12 +2,13 @@
 
 ## settings.json Structure
 
+The base settings live in `config/settings.json`. `make update-settings` merges
+them into each home, see [Makefile Commands](../reference/makefile.md#settingsjson-merge).
+
 ```json
 {
-  "hooks": {
-    "PreToolUse": [...],             // Tool call interception
-    "Notification": [...]            // Notification events
-  },
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {...},                       // CLAUDISH_* settings for the claudish plugin
   "statusLine": {...},                // Status bar configuration
   "enabledPlugins": {...},            // Plugin enable/disable map
   "skillOverrides": {...},            // Skill on/off map
@@ -40,6 +41,7 @@ External plugin marketplaces are configured via `extraKnownMarketplaces` in sett
 
 | Marketplace | Repository | Description |
 |-------------|------------|-------------|
+| `claude-code-setup` | `utkudarilmaz/claude-code-setup` | This repo, with the `core` plugin. Auto update is on |
 | `claude-hud` | `jarrodwatts/claude-hud` | Status line HUD plugin |
 | `claude-design-skillstack` | `freshtechbro/claudedesignskills` | Design and animation plugins |
 | `ui-ux-pro-max-skill` | `nextlevelbuilder/ui-ux-pro-max-skill` | UI/UX design skills |
@@ -66,6 +68,7 @@ Plugins are toggled via `enabledPlugins` map:
 
 | Plugin | Source | Purpose |
 |--------|--------|---------|
+| `core` | `claude-code-setup` | This repo's agents, skills and hooks |
 | `claude-hud` | `claude-hud` | Status line UI |
 | `claude-pray` | `claude-pray` | Prayer times and status line utilities |
 | `claudish-to-english` | `gvzdv-plugins` | Rewrites each message in plain English, see [External Tools](external-tools.md#claudish-plugin) |
@@ -94,28 +97,13 @@ The default settings turn off the built-in `anthropic-skills` for docs, office f
 
 ## Hook Configuration
 
-Hooks intercept tool calls for automation. See [Extension Model](../architecture/extension-model.md) for details.
-
-### Adding a Hook
-
-```json
-{
-  "hooks": {
-    "PreToolUse": [{
-      "matcher": "ToolPattern",
-      "hooks": [{"type": "command", "command": "path/to/script.sh"}]
-    }]
-  }
-}
-```
+Hook scripts live in `plugins/core/hooks/` and are wired in `plugins/core/hooks/hooks.json` with `${CLAUDE_PLUGIN_ROOT}`, so they run from the installed plugin. The base `settings.json` has no `hooks` block. To add a hook, follow [Contributing](contributing.md#new-hook). The wiring format is in [Extension Model](../architecture/extension-model.md#hook-system).
 
 ### Current Hooks
 
-Hook scripts live in `.claude/hooks/` and are referenced from settings.json by their `~/.claude/hooks/` path after sync.
-
 #### sensitive-file-protection
 
-Script: `.claude/hooks/sensitive-file-protection.sh`
+Script: `plugins/core/hooks/sensitive-file-protection.sh`
 
 Blocks Edit and Write calls on protected files (.env, credentials, secrets, lock files). `.env.example` is allowed because it holds placeholder values, not real secrets. Claude Code sends the tool call as JSON on stdin; the script extracts `tool_input.file_path` (with `jq`, or a `sed` fallback when jq is not installed) and exits with code 2 to block the call. Exit code 2 is required: it is the only exit code that blocks a tool call, and the script's stderr message is fed back to Claude.
 
@@ -123,7 +111,7 @@ Tests: `tests/sensitive-file-protection.test.sh`
 
 #### dirty-merge-protection
 
-Script: `.claude/hooks/dirty-merge-protection.sh`
+Script: `plugins/core/hooks/dirty-merge-protection.sh`
 
 Blocks Bash calls that run `git merge` or `gh pr merge` while the repo has uncommitted changes, including untracked files. It checks the directory from `git -C <dir>`, else the last `cd <dir>` anywhere in the command (subshells included), else the session's `cwd`. `git merge --abort`, `--continue`, and `--quit` are allowed so a merge in progress can still be finished or undone. Commands outside a git repo pass through. The hook runs git with `core.fsmonitor` and git hooks turned off, so the target repo's config cannot run commands.
 
@@ -131,7 +119,7 @@ Tests: `tests/dirty-merge-protection.test.sh`
 
 #### notification
 
-Script: `.claude/hooks/notification.sh`
+Script: `plugins/core/hooks/notification.sh`
 
 Plays a sound whenever Claude Code sends a notification (idle prompts, permission prompts, and other notification events). Cross-platform support for macOS and Linux.
 
@@ -148,7 +136,7 @@ The status line uses dynamic node path resolution for cross-platform compatibili
 bash -c 'EXISTING=$(\"$(command -v node)\" ...) ...'
 ```
 
-This approach works on both macOS (where node may be at `/opt/homebrew/bin/node`) and Linux (typically `/usr/bin/node`), avoiding hardcoded paths.
+This finds `node` wherever it is installed: `/opt/homebrew/bin/node` with Homebrew, `~/.nvm/versions/node/*/bin/node` with nvm, or `/usr/bin/node` on Linux.
 
 The command also prints `user@hostname` in dim text at the start of the first line, before the claude-hud output. It reads `id -un` and `hostname -s` on every refresh, so each machine shows its own values and no claude-hud setting is needed.
 
@@ -160,5 +148,5 @@ Add them by hand with `claude mcp add`. The steps are in
 
 ## Global Conventions
 
-`.claude/CLAUDE.md` holds the conventions applied to all projects. Read that
+`config/CLAUDE.md` holds the conventions applied to all projects. `make update-claude-md` copies it into each home. Read that
 file for the current list.

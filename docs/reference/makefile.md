@@ -1,24 +1,19 @@
 # Makefile Commands
 
-The Makefile provides granular control over syncing between this repo and `~/.claude`.
+Agents, skills and hooks reach each machine through the `core` plugin, so the
+Makefile only syncs the two files a plugin cannot ship: `settings.json` and
+`CLAUDE.md`. It also cleans up homes that were synced the old way.
 
-## Update Commands (non-destructive)
-
-Add missing files and update changed files, keep extras:
+## Sync Commands
 
 ```bash
-make update-all       # Update agents, skills, hooks, and config
-make update-agents    # Update .claude/agents/ only
-make update-skills    # Update .claude/skills/ only
-make update-hooks     # Update .claude/hooks/ only
 make update-config    # Run update-settings and update-claude-md
-make update-settings  # Update settings.json only (merged)
-make update-claude-md # Update CLAUDE.md only
+make update-settings  # Merge config/settings.json into the home's settings.json
+make update-claude-md # Copy config/CLAUDE.md
 ```
 
-`update-config` is a group target. Each of the two targets under it can be
-run alone and touches only its own file. `update-claude-md` always makes a
-plain copy of `CLAUDE.md`.
+Each of the two targets under `update-config` can be run alone and touches
+only its own file.
 
 ### settings.json Merge
 
@@ -26,7 +21,7 @@ plain copy of `CLAUDE.md`.
 `scripts/apply-settings.sh`. Later layers win:
 
 1. The current target `settings.json`, with its machine-local keys
-2. The repo base, `.claude/settings.json`
+2. The repo base, `config/settings.json`
 3. The home's own `settings.overrides.json`, if it exists
 
 The rules:
@@ -103,85 +98,64 @@ servers, and it never touches `.claude.json`. Set those up by hand:
   the claudish model server, and third-party skills
 - [MCP Servers](mcp-servers.md) - `claude mcp add` steps for each server
 
-## Remove Commands
-
-Remove repo-managed files from `~/.claude`:
+## Moving From the Old File Sync
 
 ```bash
-make rm-agents    # Remove matching agents
-make rm-skills    # Remove matching skills
-make rm-hooks     # Remove matching hooks
+make migrate DRY_RUN=1   # List what would go
+make migrate             # Ask, back up the home, then remove the old copies
 ```
+
+Before the plugin, the Makefile copied agents, skills and hooks into the home
+and wired the hooks in `settings.json`. `make migrate` asks first, makes a
+backup with `make backup`, then runs `scripts/migrate.sh`, which:
+
+- removes each `agents/`, `skills/` and `hooks/` entry in the home whose name
+  the plugin ships, plus the old `agents/security-review.md` and
+  `skills/security-review/`
+- removes the hook entries in `settings.json` whose command runs one of the
+  plugin's scripts from `<home>/hooks/`, then any matcher group or event that
+  this left empty
+
+Anything else in the home stays, including your own agents, skills and hooks.
+It stops when the backup fails, when `TARGET_DIR` is empty, or when the home
+is missing, is `/`, or is inside the plugin. When `agents/`, `skills/` or `hooks/` is a symlink, it leaves that
+folder alone and names the files to remove by hand. `FORCE=1` skips the
+question. Running it again does nothing.
 
 ## Utility Commands
 
 ```bash
-make status    # Show sync status with colored indicators
-make diff      # Show file differences
-make backup    # Create timestamped backup of ~/.claude
+make status    # Show whether settings.json and CLAUDE.md match, and whether migrate is needed
+make diff      # Show what update-config would change
+make backup    # Create a timestamped backup of the home in ~/.claude-backups
 make test      # Run all tests/*.test.sh suites
 make help      # Display all commands
 ```
+
+`make status` calls `settings.json` synced when an update would change
+nothing, so local keys and overrides do not count as a difference. `make diff`
+prints the same diff as `make update-settings DRY_RUN=1`, with `env` values
+hidden, then the `CLAUDE.md` diff.
 
 ## Options
 
 | Option | Description |
 |--------|-------------|
-| `DRY_RUN=1` | Preview changes without executing |
+| `TARGET_DIR=<path>` | Sync a Claude home other than `~/.claude` |
+| `DRY_RUN=1` | Preview changes without writing |
 | `FORCE=1` | Skip confirmation prompts |
-| `TARGET_DIR=<path>` | Sync to a directory other than `~/.claude` |
-| `NO_RSYNC=1` | Force the plain-copy fallback path even when rsync exists |
-| `PRUNE="key ..."` | Clear stale `settings.json` leaves under these top-level keys, never `env`. See [Clearing Old Keys](#clearing-old-keys) |
+| `PRUNE="<keys>"` | With `update-settings` or `update-config`, clear stale leaves under these top-level keys once |
+| `BACKUP_DIR=<path>` | Where `make backup` and `make migrate` put backups (default `~/.claude-backups`) |
 
-Examples:
+To keep more than one Claude home, such as a work and a personal profile, sync
+each one with its own `TARGET_DIR`:
+
 ```bash
-make update-all               # Add missing + update changed
-make DRY_RUN=1 rm-agents      # Preview agent removal
-make status                   # Check what needs updating
-make update-all TARGET_DIR=$HOME/.claude-personal   # Sync a second Claude home
+make update-config TARGET_DIR=$HOME/.claude-personal
 ```
-
-`TARGET_DIR` defaults to `~/.claude` but can be overridden on the command
-line. This is useful if you keep more than one Claude home directory (for
-example a work profile and a personal profile) and want to sync the same
-repo into both.
-
-## Diff Output (`make diff`)
-
-`make diff` compares `TARGET_DIR` against `REPO_DIR` in that order, so the
-colors match what `make update-all` would do to the target:
-
-- **Green** lines are lines `make update-all` would add to the target
-- **Red** lines are lines `make update-all` would remove from the target
-
-A legend line is printed at the top of the output as a reminder. The
-Makefile detects once, via the `DIFF_COLOR` variable, whether the local
-`diff` supports `--color=always`, and reuses that result for every file
-comparison instead of retrying colored diff on each call, which used to
-print the same diff twice when color wasn't supported.
-
-For `settings.json`, `make diff` prints the `DRY_RUN=1` output of the merge.
-`+` lines are what the update writes, `-` lines what it removes.
-
-## Implementation Notes
-
-The update, remove, status, and diff logic for agents, skills, and hooks is
-shared through parameterized `define` blocks in the Makefile (`sync_dir`,
-`rm_dir`, `status_dir`, `diff_dir`), so all three directories behave the
-same way. `make test` runs every `tests/*.test.sh` suite.
-`tests/settings-merge.test.sh` covers each merge rule above.
-`tests/makefile-sync.test.sh` exercises the sync commands against a temporary
-`TARGET_DIR`, including the `NO_RSYNC=1` fallback path. It checks that
-`update-settings` and `update-claude-md` each leave the other config file
-alone, and that `update-all` does not write `.claude.json`.
 
 ## Status Legend
 
-- **Green (●)** - File is synced (identical)
-- **Yellow (●)** - File differs between repo and target
-- **Red (●)** - File missing from target
-- **Blue (●)** - Extra file in target (not in repo)
-
-For `settings.json`, `make status` runs the merge with `--check`. It shows
-synced when `make update-settings` would change nothing, so local-only keys do
-not count as a difference.
+- **Green (●)** - In sync with the repo
+- **Yellow (●)** - Differs from the repo, or old copies are still there
+- **Red (●)** - Missing from the home

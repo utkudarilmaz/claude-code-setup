@@ -365,7 +365,7 @@ new_home "with space"
 echo '{"effortLevel":"medium"}' > "$BASE"
 apply
 check "a home path with spaces works" test "$(value .effortLevel)" = '"medium"'
-bash "$APPLY" "$REPO_ROOT/.claude/settings.json" "$HOME_DIR" >/dev/null 2>&1
+bash "$APPLY" "$REPO_ROOT/config/settings.json" "$HOME_DIR" >/dev/null 2>&1
 STATUS_OUTPUT=$(make -C "$REPO_ROOT" --no-print-directory status TARGET_DIR="$HOME_DIR" 2>&1)
 check "make status works with a TARGET_DIR with spaces" \
   bash -c 'printf "%s" "$0" | grep -q "settings.json.*(synced)"' "$STATUS_OUTPUT"
@@ -382,9 +382,9 @@ check "without jq the script says jq is required" grep -q 'jq is required' "$TMP
 check "without jq nothing is written" test ! -e "$HOME_DIR/settings.json"
 
 # --- the repo base is valid and holds no machine secrets ---
-check "repo settings.json is valid JSON" jq empty "$REPO_ROOT/.claude/settings.json"
+check "repo settings.json is valid JSON" jq empty "$REPO_ROOT/config/settings.json"
 check "repo settings.json has no null values" \
-  test "$(jq '[paths(. == null)] | length' "$REPO_ROOT/.claude/settings.json")" = "0"
+  test "$(jq '[paths(. == null)] | length' "$REPO_ROOT/config/settings.json")" = "0"
 
 echo ""
 if [ "$FAILURES" -gt 0 ]; then
