@@ -3,7 +3,7 @@
 ## Requirements
 
 - **Bash** - For hook scripts and status line commands
-- **jq** - Merges `settings.json` on sync; without it `settings.json` is copied over
+- **jq** - Required to merge `settings.json` on sync
 - **Audio system** (optional) - For notification sounds:
   - macOS: Built-in `afplay` command
   - Linux: PulseAudio (`paplay`) or ALSA (`aplay`)
@@ -81,16 +81,11 @@ make backup    # Creates timestamped backup of ~/.claude
 
 ### Sync Status
 
-Check sync status with color-coded indicators:
-
 ```bash
 make status
 ```
 
-- **Green (●)** - File is synced (identical)
-- **Yellow (●)** - File differs between repo and target
-- **Red (●)** - File missing from target
-- **Blue (●)** - Extra file in target (not in repo)
+The colors are explained in the [Status Legend](../reference/makefile.md#status-legend).
 
 ### StatusLine Not Working
 

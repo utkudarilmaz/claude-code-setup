@@ -17,7 +17,8 @@ claude-code-setup/              # This repository (shareable)
 │   ├── settings.json           # Configuration
 │   └── CLAUDE.md               # Global AI conventions (applied to all projects)
 ├── docs/                       # Detailed documentation
-├── tests/                      # Tests for hook scripts and Makefile
+├── scripts/                    # settings.json merge used by the Makefile
+├── tests/                      # Tests for hook scripts, the Makefile, and the settings merge
 ├── Makefile                    # Sync management between repo and ~/.claude
 ├── CLAUDE.md                   # This file (repo-specific guidance)
 ├── LICENSE                     # MIT license
@@ -56,13 +57,13 @@ To add a new agent, skill, or hook, follow [docs/guides/contributing.md](docs/gu
 
 ## Testing
 
-Run `make test` to execute every `tests/*.test.sh` suite. Hook scripts and Makefile sync behavior are covered; add tests when changing either.
+Run `make test` to execute every `tests/*.test.sh` suite. Hook scripts, Makefile sync, and the settings merge are covered; add tests when changing any of them.
 
 ## Makefile Sync Management
 
 The Makefile syncs `.claude/` into `~/.claude` (or any `TARGET_DIR`):
 
-- `make update-all` - Add missing and update changed files, keep extras; `settings.json` is merged with `jq` so machine-local keys survive (repo values win on conflicts)
+- `make update-all` - Add missing and update changed files, keep extras; `settings.json` is merged in three layers by `scripts/apply-settings.sh`, see [settings.json Merge](docs/reference/makefile.md#settingsjson-merge)
 - `make update-config` - Run the two config targets below in one go
 - `make update-settings` - Merge only `settings.json`
 - `make update-claude-md` - Copy only `CLAUDE.md`

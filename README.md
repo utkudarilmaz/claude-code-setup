@@ -46,7 +46,8 @@ claude-code-setup/
 │   ├── architecture/           # Extension model, diagrams
 │   ├── guides/                 # Installation, configuration, external tools, contributing
 │   └── reference/              # Agents, skills, MCP servers, makefile
-├── tests/                      # Tests for hook scripts and Makefile
+├── scripts/                    # settings.json merge used by the Makefile
+├── tests/                      # Tests for hook scripts, the Makefile, and the settings merge
 ├── CLAUDE.md                   # Repo guidance for contributors
 ├── LICENSE                     # MIT license
 ├── Makefile                    # Sync management

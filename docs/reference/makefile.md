@@ -17,22 +17,81 @@ make update-claude-md # Update CLAUDE.md only
 ```
 
 `update-config` is a group target. Each of the two targets under it can be
-run alone and touches only its own file.
+run alone and touches only its own file. `update-claude-md` always makes a
+plain copy of `CLAUDE.md`.
 
 ### settings.json Merge
 
-`update-settings` does not overwrite the target `settings.json`. When `jq` is
-available, it deep-merges the repo file into the target file:
+`update-settings` builds the target `settings.json` from three layers with
+`scripts/apply-settings.sh`. Later layers win:
 
-- Keys that exist only in the target (machine-local state) are kept
-- Keys present in the repo win on conflicts
-- Keys deleted from the repo file are NOT removed from the target; delete
-  them manually if needed
+1. The current target `settings.json`, with its machine-local keys
+2. The repo base, `.claude/settings.json`
+3. The home's own `settings.overrides.json`, if it exists
 
-Without `jq`, the old copy behavior is used and a warning is printed because
-local-only keys are lost.
+The rules:
 
-`update-claude-md` always makes a plain copy of `CLAUDE.md`.
+- Keys that only the target has are kept, such as secrets in `env` and keys
+  Claude Code writes itself.
+- Repo keys win over the target, and overrides win over the repo.
+- A key set to `null` in the overrides file is removed from the result, even
+  when only the target has it.
+- A key that the repo or the overrides file stops setting is deleted from the
+  target on the next run. An object left empty by that is deleted too.
+- Arrays are replaced whole, never merged item by item.
+
+To know what it set last time, the script saves the key paths of the merged
+repo and override layers to `.settings.managed.json` in the target. It saves
+no values. Leave that file alone. On the first run it does not exist yet, so
+no dropped keys are deleted. [Clearing Old Keys](#clearing-old-keys) covers
+those.
+
+`jq` is required. The script prints `Updated: settings.json` or
+`Unchanged: settings.json`, and `Removed: <key path>` for each deleted key.
+`DRY_RUN=1` writes nothing. It prints `Would update: settings.json` with a diff,
+and `Would remove: <key path>` for each key. In the diff, values under `env`
+show as `<hidden>`, or `<hidden, changed>` when the update adds or changes them.
+
+The script stops without writing when the repo base is missing, when the base,
+`settings.json`, the overrides file or `.settings.managed.json` is not one JSON
+object, or when the repo or the overrides set `env` to anything but an object.
+
+It writes `settings.json` in place, so a symlink stays a symlink and the file
+keeps its mode. New files are readable only by you. If the write fails, the
+script puts the old file back, or prints where it saved a copy.
+
+### Per-Machine Overrides
+
+Put values that differ on one machine in `<target>/settings.overrides.json`.
+It is never in the repo. For example, a machine that wants a higher effort
+level and no status line:
+
+```json
+{
+  "effortLevel": "high",
+  "statusLine": null
+}
+```
+
+Settings that Claude Code saves for you, such as `/effort` or a plugin you
+turn on in `/plugin`, are written to `settings.json`. If the repo also sets
+that key, the next `make update-settings` puts the repo value back. Move the
+value into the overrides file to keep it.
+
+### Clearing Old Keys
+
+A home synced before `.settings.managed.json` existed can still hold keys the
+repo dropped long ago. `PRUNE` deletes every leaf under the named top-level
+keys that neither the repo nor the overrides file sets. Split the keys with
+spaces or commas:
+
+```bash
+make update-settings DRY_RUN=1 PRUNE="modelSettings enabledPlugins"  # Preview
+make update-settings PRUNE="modelSettings enabledPlugins"
+```
+
+Move anything you want to keep into the overrides file first. `PRUNE` refuses
+`env`, because that is where local secrets live.
 
 ## What the Makefile Does Not Do
 
@@ -72,6 +131,7 @@ make help      # Display all commands
 | `FORCE=1` | Skip confirmation prompts |
 | `TARGET_DIR=<path>` | Sync to a directory other than `~/.claude` |
 | `NO_RSYNC=1` | Force the plain-copy fallback path even when rsync exists |
+| `PRUNE="key ..."` | Clear stale `settings.json` leaves under these top-level keys, never `env`. See [Clearing Old Keys](#clearing-old-keys) |
 
 Examples:
 ```bash
@@ -100,14 +160,18 @@ Makefile detects once, via the `DIFF_COLOR` variable, whether the local
 comparison instead of retrying colored diff on each call, which used to
 print the same diff twice when color wasn't supported.
 
+For `settings.json`, `make diff` prints the `DRY_RUN=1` output of the merge.
+`+` lines are what the update writes, `-` lines what it removes.
+
 ## Implementation Notes
 
 The update, remove, status, and diff logic for agents, skills, and hooks is
 shared through parameterized `define` blocks in the Makefile (`sync_dir`,
 `rm_dir`, `status_dir`, `diff_dir`), so all three directories behave the
-same way. `make test` runs `tests/makefile-sync.test.sh`, which exercises
-the sync commands against a temporary `TARGET_DIR`, including the
-`NO_RSYNC=1` fallback path and the settings.json merge. It checks that
+same way. `make test` runs every `tests/*.test.sh` suite.
+`tests/settings-merge.test.sh` covers each merge rule above.
+`tests/makefile-sync.test.sh` exercises the sync commands against a temporary
+`TARGET_DIR`, including the `NO_RSYNC=1` fallback path. It checks that
 `update-settings` and `update-claude-md` each leave the other config file
 alone, and that `update-all` does not write `.claude.json`.
 
@@ -117,3 +181,7 @@ alone, and that `update-all` does not write `.claude.json`.
 - **Yellow (●)** - File differs between repo and target
 - **Red (●)** - File missing from target
 - **Blue (●)** - Extra file in target (not in repo)
+
+For `settings.json`, `make status` runs the merge with `--check`. It shows
+synced when `make update-settings` would change nothing, so local-only keys do
+not count as a difference.
