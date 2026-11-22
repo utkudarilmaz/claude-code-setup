@@ -1,6 +1,5 @@
 - Never add Claude Code references, Co-Authored-By Claude, or any AI attribution to commits
 - Never reply human comments without asking
-- Never commit to main before user manually asks
 - Never merge a PR or merge into main while there are uncommitted changes
 - Never mention task IDs or names on the comment lines
 - Never use double dashes
@@ -9,6 +8,5 @@
 - Always commit with conventional commits standards
 - Always use camelCase for JSON field names
 - Always check available skills, agents, plugins, and MCP servers when planning or working on tasks
-- Always use tofu instead of terraform
 - Always give PR addresses as links
 - Always create a git worktree before starting any task, code change, or PR; never edit files on the main checkout, and open the PR from the worktree branch
