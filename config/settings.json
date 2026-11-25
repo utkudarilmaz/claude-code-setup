@@ -29,7 +29,6 @@
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": false,
     "feature-dev@claude-plugins-official": false,
-    "superpowers@claude-plugins-official": true,
     "commit-commands@claude-plugins-official": true,
     "explanatory-output-style@claude-plugins-official": true,
     "code-review@claude-plugins-official": true,
