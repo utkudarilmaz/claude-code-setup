@@ -72,7 +72,6 @@ Plugins are toggled via `enabledPlugins` map:
 | `claude-hud` | `claude-hud` | Status line UI |
 | `claude-pray` | `claude-pray` | Prayer times and status line utilities |
 | `claudish-to-english` | `gvzdv-plugins` | Rewrites each message in plain English, see [External Tools](external-tools.md#claudish-plugin) |
-| `superpowers` | `claude-plugins-official` | Advanced skill framework |
 | `commit-commands` | `claude-plugins-official` | Git commit helpers |
 | `explanatory-output-style` | `claude-plugins-official` | Output formatting |
 | `code-review` | `claude-plugins-official` | Code review assistance |
